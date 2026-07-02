@@ -212,10 +212,10 @@ export default function App() {
       onClick={() => audioManager.ensureAudioUnlocked()}
     >
       {/* Top Border Accent */}
-      <div className="h-3 w-full bg-orange-500 border-b-4 border-black" />
+      <div className="h-3 w-full bg-orange-500 border-b-4 border-black print:hidden" />
 
       {/* Header Container */}
-      <header className="w-full max-w-6xl mx-auto px-6 py-6 flex flex-col gap-4 border-b-4 border-black">
+      <header className="w-full max-w-6xl mx-auto px-6 py-6 flex flex-col gap-4 border-b-4 border-black print:hidden">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
           {/* Waving brand / Left logo */}
           <div
@@ -226,7 +226,7 @@ export default function App() {
               <span className="text-3xl filter drop-shadow-sm select-none">🧸</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-xs uppercase tracking-widest font-black text-orange-50 leading-none mb-1">ADVENTURE PORTAL</span>
+              <span className="text-xs uppercase tracking-widest font-black text-orange-500 leading-none mb-1">ADVENTURE PORTAL</span>
               <h1 className="text-4xl font-black tracking-tighter leading-none italic uppercase" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
                 WONDERKIDS
               </h1>
@@ -277,15 +277,10 @@ export default function App() {
             >
               {muted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
             </button>
-
-            {/* Decorative JD Avatar */}
-            <div className="w-11 h-11 bg-orange-500 rounded-full border-4 border-black flex items-center justify-center font-black text-white text-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] select-none">
-              JD
-            </div>
           </div>
         </div>
 
-        {/* Navigation Quick Links (Visible on all screens, wrap-friendly) */}
+        {/* Navigation Quick Links */}
         <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-6 gap-y-2 font-bold text-xs sm:text-sm tracking-wide border-t-2 border-dashed border-black/15 pt-3 mt-1">
           <button onClick={goBack} className={`pb-1 border-b-3 transition-colors cursor-pointer ${!activeGame ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-black'}`}>ALL GAMES</button>
           <button onClick={() => selectGame('phonics')} className={`pb-1 border-b-3 transition-colors cursor-pointer ${activeGame === 'phonics' ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-black'}`}>PHONICS</button>
@@ -296,7 +291,7 @@ export default function App() {
       </header>
 
       {/* Main Body */}
-      <main className="flex-grow w-full max-w-5xl mx-auto px-6 py-8 relative">
+      <main className="flex-grow w-full max-w-5xl mx-auto px-6 py-8 relative print:p-0 print:max-w-none print:w-full print:m-0">
         <AnimatePresence mode="wait">
           {activeGame === null ? (
             // DASHBOARD MENU
@@ -438,10 +433,10 @@ export default function App() {
               className="flex flex-col gap-8"
             >
               {/* Game toolbar control row */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
+              <div className="flex flex-col sm:flex-row gap-4 justify-between items-center print:hidden">
                 <button
                   onClick={goBack}
-                  className="flex items-center gap-2 px-6 py-3 bg-white hover:bg-gray-100 text-black font-black rounded-2xl text-sm font-sans transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[2px] active:translate-y-[2px] cursor-pointer select-none"
+                  className="flex items-center gap-2 px-6 py-3 bg-white hover:bg-gray-100 text-black font-black rounded-2xl text-sm font-sans transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[2px] active:translate-y-[2px] cursor-pointer select-none print:hidden"
                   id="back-playground-btn"
                 >
                   <ArrowLeft className="w-4 h-4 stroke-[3]" />
@@ -449,7 +444,7 @@ export default function App() {
                 </button>
 
                 {/* Show active game title floating */}
-                <div className="flex items-center gap-2 bg-yellow-300 border-4 border-black px-4 py-2 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] select-none">
+                <div className="flex items-center gap-2 bg-yellow-300 border-4 border-black px-4 py-2 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] select-none print:hidden">
                   <Sparkles className="w-4 h-4 text-black animate-spin" />
                   <span className="text-xs font-black text-black uppercase tracking-wider font-sans">
                     PLAYING: {activeGame === 'sorter' ? 'Color Sorter' : activeGame === 'matcher' ? 'Shape Matcher' : activeGame === 'pattern' ? 'Pattern Train' : activeGame === 'garden' ? 'Counting Garden' : activeGame === 'phonics' ? 'Phonics Safari' : activeGame === 'math' ? 'Math Addition' : activeGame === 'subtraction' ? 'Math Subtraction' : 'Simple Reading'}
@@ -462,7 +457,7 @@ export default function App() {
                 initial={{ scale: 0.98, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: 'spring', damping: 15 }}
-                className="w-full bg-white rounded-[44px] p-8 border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]"
+                className="w-full bg-white rounded-[44px] p-8 border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] print:border-none print:shadow-none print:p-0 print:bg-white"
               >
                 {activeGame === 'sorter' && (
                   <ColorSorter onGameWin={handleGameWin} />
@@ -494,13 +489,13 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      {/* Playful child-friendly floating decorative elements on background */}
-      <div className="absolute top-1/4 -left-12 text-6xl opacity-10 select-none pointer-events-none hover:rotate-12 transition-transform">🎈</div>
-      <div className="absolute top-2/3 -right-12 text-6xl opacity-10 select-none pointer-events-none hover:rotate-12 transition-transform">🧸</div>
-      <div className="absolute bottom-12 left-12 text-5xl opacity-10 select-none pointer-events-none hover:rotate-12 transition-transform">🌸</div>
+      {/* Decorative Floating visual nodes */}
+      <div className="absolute top-1/4 -left-12 text-6xl opacity-10 select-none pointer-events-none hover:rotate-12 transition-transform print:hidden">🎈</div>
+      <div className="absolute top-2/3 -right-12 text-6xl opacity-10 select-none pointer-events-none hover:rotate-12 transition-transform print:hidden">🧸</div>
+      <div className="absolute bottom-12 left-12 text-5xl opacity-10 select-none pointer-events-none hover:rotate-12 transition-transform print:hidden">🌸</div>
 
       {/* Footer credits block */}
-      <footer className="w-full text-center py-6 text-[10px] sm:text-xs font-bold text-amber-800/40 font-sans mt-auto">
+      <footer className="w-full text-center py-6 text-[10px] sm:text-xs font-bold text-amber-800/40 font-sans mt-auto print:hidden">
         <span>© 2026 Storybook Education. Built for active play & early learning.</span>
       </footer>
     </div>
