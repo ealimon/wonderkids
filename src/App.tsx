@@ -223,12 +223,12 @@ export default function App() {
             className="flex items-center gap-4 cursor-pointer group select-none"
           >
             <div className="bg-yellow-300 w-14 h-14 rounded-2xl flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-4 border-black transition-transform group-hover:scale-105 group-hover:rotate-3">
-              <span className="text-3xl filter drop-shadow-sm select-none">📖</span>
+              <span className="text-3xl filter drop-shadow-sm select-none">🧸</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-xs uppercase tracking-widest font-black text-orange-500 leading-none mb-1">ADVENTURE PORTAL</span>
+              <span className="text-xs uppercase tracking-widest font-black text-orange-50 leading-none mb-1">ADVENTURE PORTAL</span>
               <h1 className="text-4xl font-black tracking-tighter leading-none italic uppercase" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
-                STORYBOOK EDUCATION
+                WONDERKIDS
               </h1>
             </div>
           </div>
