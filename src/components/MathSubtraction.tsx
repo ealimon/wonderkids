@@ -12,7 +12,7 @@ import {
   RefreshCw,
   FileText,
   Check,
-  Sparkles,
+  Sparkles
 } from 'lucide-react';
 
 interface SubtractionProblem {
@@ -52,6 +52,7 @@ const SUBTRACTION_POOL: SubtractionProblem[] = [
 ];
 
 export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: number) => void }) {
+  // Navigation / Tabs state
   const [activeTab, setActiveTab] = useState<'game' | 'worksheet'>('game');
 
   // Interactive Game State
@@ -89,6 +90,7 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
 
   const setupRound = (problem: SubtractionProblem) => {
     const correctAnswer = problem.total - problem.takeAway;
+    
     const list = new Set<number>();
     list.add(correctAnswer);
 
@@ -198,9 +200,7 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
             setActiveTab('game');
           }}
           className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-xs sm:text-sm tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
-            activeTab === 'game'
-              ? 'bg-teal-400 text-gray-950'
-              : 'bg-white text-gray-700 hover:bg-gray-100'
+            activeTab === 'game' ? 'bg-teal-400 text-gray-950' : 'bg-white text-gray-700 hover:bg-gray-100'
           }`}
         >
           🎮 PLAY INTERACTIVE GAME
@@ -211,9 +211,7 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
             setActiveTab('worksheet');
           }}
           className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-xs sm:text-sm tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
-            activeTab === 'worksheet'
-              ? 'bg-purple-400 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-100'
+            activeTab === 'worksheet' ? 'bg-purple-400 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
           }`}
         >
           📝 PRINTABLE WORKSHEETS (PDF)
@@ -231,7 +229,6 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
           >
             <ConfettiEffect active={gameComplete} />
 
-            {/* Progress Bar */}
             <div className="w-full flex flex-col sm:flex-row justify-between items-center gap-4 bg-teal-300 px-6 py-4 rounded-3xl mb-8 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <div className="flex items-center gap-3">
                 <span className="text-xs font-black uppercase tracking-wider">CHALLENGES:</span>
@@ -243,11 +240,7 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
                       <div
                         key={idx}
                         className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 ${
-                          isSolved
-                            ? 'bg-emerald-400 text-black'
-                            : isCurrent
-                            ? 'bg-orange-500 text-white animate-pulse'
-                            : 'bg-white text-black'
+                          isSolved ? 'bg-emerald-400 text-black' : isCurrent ? 'bg-orange-500 text-white animate-pulse' : 'bg-white text-black'
                         }`}
                       >
                         {idx + 1}
@@ -263,7 +256,6 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
               </div>
             </div>
 
-            {/* Main Board */}
             {rounds.length > 0 && activeProblem ? (
               <div className="w-full bg-teal-100 rounded-[36px] border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6 sm:p-8 flex flex-col justify-between min-h-[380px] relative overflow-hidden">
                 <div className="absolute top-2 right-2 text-3xl opacity-20 select-none">🎈</div>
@@ -272,9 +264,7 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
                 <div className="text-center mb-6">
                   <div className="inline-block bg-teal-300 border-3 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] p-3 rounded-2xl mb-3 text-xl">➖</div>
                   <h2 className="text-2xl font-black uppercase tracking-tight">SUBTRACTION SAFARI</h2>
-                  <p className="text-xs font-bold text-gray-700 mt-1">
-                    Subtract the numbers to find how many are left!
-                  </p>
+                  <p className="text-xs font-bold text-gray-700 mt-1">Subtract the numbers to find how many are left!</p>
                 </div>
 
                 <div className="flex flex-col md:flex-row items-center justify-center gap-6 my-6">
@@ -318,9 +308,7 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
                           <span className="text-4xl font-black font-mono">
                             {activeProblem.total - activeProblem.takeAway}
                           </span>
-                          <span className="text-[10px] font-black uppercase text-teal-950 mt-1">
-                            CORRECT!
-                          </span>
+                          <span className="text-[10px] font-black uppercase text-teal-950 mt-1">CORRECT!</span>
                         </motion.div>
                       ) : (
                         <motion.span
@@ -367,9 +355,7 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
                       </motion.div>
                     ) : (
                       <div className="flex flex-col items-center w-full" key="options-picker">
-                        <span className="text-xs font-black uppercase tracking-wider text-teal-950 mb-4 font-sans">
-                          TAP THE CORRECT ANSWER BUBBLE:
-                        </span>
+                        <span className="text-xs font-black uppercase tracking-wider text-teal-950 mb-4 font-sans">TAP THE CORRECT ANSWER BUBBLE:</span>
                         <div className="flex gap-3 sm:gap-4 justify-center">
                           {options.map((opt) => {
                             const isWrong = wrongAnswer === opt;
@@ -382,9 +368,7 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
                                 animate={isWrong ? { x: [-10, 10, -10, 10, 0] } : {}}
                                 transition={{ duration: 0.4 }}
                                 className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full border-4 border-black font-black text-xl sm:text-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center cursor-pointer hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all ${
-                                  isWrong
-                                    ? 'bg-red-400 text-white'
-                                    : 'bg-white hover:bg-yellow-100 text-black'
+                                  isWrong ? 'bg-red-400 text-white' : 'bg-white hover:bg-yellow-100 text-black'
                                 }`}
                               >
                                 {opt}
@@ -412,7 +396,7 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
             </div>
           </motion.div>
         ) : (
-          /* PRINTABLE WORKSHEETS GENERATOR */
+          // PRINTABLE WORKSHEETS GENERATOR
           <motion.div
             key="worksheet-tab"
             initial={{ opacity: 0, y: 10 }}
@@ -443,9 +427,7 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
                           setWsDifficulty(diff);
                         }}
                         className={`px-4 py-2 text-left rounded-xl border-2 border-black font-bold text-xs uppercase transition-all flex items-center justify-between ${
-                          wsDifficulty === diff
-                            ? 'bg-purple-400 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
-                            : 'bg-white text-gray-700 hover:bg-gray-50'
+                          wsDifficulty === diff ? 'bg-purple-400 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'bg-white text-gray-700 hover:bg-gray-50'
                         }`}
                       >
                         <span>{diff === 'easy' ? 'Easy (Sums to 10)' : diff === 'medium' ? 'Medium (Sums to 20)' : 'Hard (Sums to 100)'}</span>
@@ -466,9 +448,7 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
                           setWsProblemCount(count);
                         }}
                         className={`px-4 py-2 text-left rounded-xl border-2 border-black font-bold text-xs uppercase transition-all flex items-center justify-between ${
-                          wsProblemCount === count
-                            ? 'bg-purple-400 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
-                            : 'bg-white text-gray-700 hover:bg-gray-50'
+                          wsProblemCount === count ? 'bg-purple-400 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'bg-white text-gray-700 hover:bg-gray-50'
                         }`}
                       >
                         <span>{count} Sums</span>
@@ -481,22 +461,20 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
                 <div className="flex flex-col gap-2">
                   <span className="text-xs font-black uppercase tracking-wider text-purple-950">Mascot Theme</span>
                   <div className="flex flex-col gap-1.5">
-                    {[
+                    {([
                       { id: 'fruits', name: '🍎 Fruits' },
                       { id: 'animals', name: '🦖 Animals' },
                       { id: 'stars', name: '⭐ Magical' },
                       { id: 'classic', name: '✏️ Classic math' }
-                    ].map((t) => (
+                    ] as const).map((t) => (
                       <button
                         key={t.id}
                         onClick={() => {
                           audioManager.playPop();
-                          setWsTheme(t.id as any);
+                          setWsTheme(t.id);
                         }}
                         className={`px-4 py-2 text-left rounded-xl border-2 border-black font-bold text-xs transition-all flex items-center justify-between ${
-                          wsTheme === t.id
-                            ? 'bg-purple-400 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
-                            : 'bg-white text-gray-700 hover:bg-gray-50'
+                          wsTheme === t.id ? 'bg-purple-400 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'bg-white text-gray-700 hover:bg-gray-50'
                         }`}
                       >
                         <span>{t.name}</span>
@@ -547,14 +525,25 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
               </div>
             </div>
 
-            {/* LIVE PAPER PREVIEW */}
+            {/* LIVE PAPER PREVIEW CONTAINER */}
             <div className="w-full flex justify-center print:w-full print:m-0 print:p-0">
+              <style dangerouslySetInnerHTML={{ __html: `
+                @media print {
+                  .print-avoid-break {
+                    break-inside: avoid !important;
+                    page-break-inside: avoid !important;
+                  }
+                  .print-break-before {
+                    break-before: page !important;
+                    page-break-before: always !important;
+                  }
+                }
+              `}} />
               <div
                 className="bg-white border-4 border-black p-8 sm:p-12 rounded-[44px] shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] w-full max-w-[800px] font-sans relative overflow-hidden print:border-none print:shadow-none print:p-0 print:m-0 print:rounded-none print:max-w-none"
-                style={{ contentVisibility: 'auto' }}
               >
                 {/* 1. Header of the printed worksheet */}
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 border-b-4 border-black pb-6 mb-8 print:flex-row print:justify-between print:pb-3 print:mb-4">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 border-b-4 border-black pb-6 mb-8 print:flex-row print:justify-between print:pb-2 print:mb-3">
                   <div className="flex items-center gap-3">
                     <div className="bg-yellow-300 w-12 h-12 rounded-xl flex items-center justify-center border-3 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex-shrink-0 print:w-10 print:h-10 print:rounded-lg">
                       <span className="text-2xl print:text-xl">🧸</span>
@@ -578,7 +567,7 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
                 </div>
 
                 {/* Sub-Header & Grade block */}
-                <div className="flex justify-between items-center bg-gray-50 border-2 border-dashed border-black/20 p-4 rounded-2xl mb-8 print:bg-white print:border-black/30 print:p-2.5 print:mb-4 print:rounded-xl">
+                <div className="flex justify-between items-center bg-gray-50 border-2 border-dashed border-black/20 p-4 rounded-2xl mb-8 print:bg-white print:border-black/30 print:py-2 print:px-3 print:mb-3 print:rounded-xl">
                   <div className="text-left">
                     <p className="text-xs font-black uppercase tracking-wider text-gray-500">Assignment Topic</p>
                     <p className="text-sm font-black text-black">
@@ -594,11 +583,11 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
                 </div>
 
                 {/* Problems Grid */}
-                <div className={`grid ${wsProblemCount === 12 ? 'grid-cols-2 sm:grid-cols-3 print:grid-cols-3' : 'grid-cols-2 sm:grid-cols-4 print:grid-cols-4'} gap-6 print:gap-4`}>
+                <div className={`grid ${wsProblemCount === 12 ? 'grid-cols-2 sm:grid-cols-3 print:grid-cols-3' : 'grid-cols-2 sm:grid-cols-4 print:grid-cols-4'} gap-6 print:gap-x-4 print:gap-y-3`}>
                   {wsProblems.map((prob, idx) => (
                     <div
                       key={prob.id}
-                      className="flex flex-col items-center justify-center p-4 border-2 border-solid border-gray-200 rounded-2xl relative bg-white min-h-[140px] print:min-h-[105px] print:p-2 print:rounded-xl print:border-black/30"
+                      className="print-avoid-break flex flex-col items-center justify-center p-4 border-2 border-solid border-gray-200 rounded-2xl relative bg-white min-h-[140px] print:min-h-[85px] print:py-2 print:px-1 print:rounded-xl print:border-black/30"
                     >
                       <span className="absolute top-2 left-2 text-[10px] font-black text-gray-400 print:text-black">
                         {idx + 1}.
@@ -610,7 +599,7 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
                         </span>
                       )}
 
-                      <div className="flex flex-col items-end pr-3 text-2xl font-black font-mono mt-4 print:mt-1 print:text-xl print:pr-1">
+                      <div className="flex flex-col items-end pr-3 text-2xl font-black font-mono mt-4 print:mt-0 print:text-xl print:pr-1">
                         <div className="leading-none mb-1">{prob.num1}</div>
                         <div className="flex items-center gap-1 leading-none mb-1.5 print:mb-1">
                           <Minus className="w-4 h-4 stroke-[4] text-black print:w-3.5 print:h-3.5 print:stroke-[3]" />
@@ -619,18 +608,19 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
                         <div className="w-16 h-1 bg-black rounded print:w-12 print:h-[2px]" />
                       </div>
 
-                      <div className="w-16 h-10 border-2 border-dashed border-gray-300 rounded-xl mt-3.5 bg-gray-50/50 print:bg-white print:border-black/20 print:w-12 print:h-8 print:mt-2 print:rounded-lg" />
+                      <div className="w-16 h-10 border-2 border-dashed border-gray-300 rounded-xl mt-3.5 bg-gray-50/50 print:bg-white print:border-black/20 print:w-12 print:h-8 print:mt-1.5 print:rounded-lg" />
                     </div>
                   ))}
                 </div>
 
-                <div className="mt-12 text-center text-xs font-extrabold text-orange-500/80 tracking-wide border-t-2 border-dashed border-black/10 pt-6 print:block print:mt-4 print:pt-3">
+                {/* Optional message for child at the bottom */}
+                <div className="mt-12 text-center text-xs font-extrabold text-orange-500/80 tracking-wide border-t-2 border-dashed border-black/10 pt-6 print:block print:mt-4 print:pt-2">
                   🌟 "Keep counting! You are amazing!" 🌟
                 </div>
 
                 {/* ANSWER KEY PAGE */}
                 {wsShowAnswers && (
-                  <div className="print:break-before-page mt-16 pt-12 border-t-4 border-dashed border-purple-300 relative print:border-none print:mt-0 print:pt-0">
+                  <div className="print-break-before mt-16 pt-12 border-t-4 border-dashed border-purple-300 relative print:border-none print:mt-0 print:pt-0">
                     <div className="absolute -top-3.5 left-1/2 transform -translate-x-1/2 bg-purple-100 border-2 border-black px-4 py-1 rounded-full text-[10px] font-black text-purple-950 uppercase tracking-widest print:hidden">
                       ✂️ ANSWER KEY (PAGE 2)
                     </div>
@@ -640,16 +630,14 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
                         <FileText className="w-5 h-5 text-purple-950" />
                       </div>
                       <h2 className="text-xl font-black uppercase text-purple-950 print:text-black">Teacher Answer Key</h2>
-                      <p className="text-xs font-bold text-gray-500">
-                        Worksheet correction sheet with calculated sums
-                      </p>
+                      <p className="text-xs font-bold text-gray-500 font-sans">Worksheet correction sheet with calculated sums</p>
                     </div>
 
-                    <div className={`grid ${wsProblemCount === 12 ? 'grid-cols-2 sm:grid-cols-3 print:grid-cols-3' : 'grid-cols-2 sm:grid-cols-4 print:grid-cols-4'} gap-6 print:gap-4`}>
+                    <div className={`grid ${wsProblemCount === 12 ? 'grid-cols-2 sm:grid-cols-3 print:grid-cols-3' : 'grid-cols-2 sm:grid-cols-4 print:grid-cols-4'} gap-6 print:gap-x-4 print:gap-y-3`}>
                       {wsProblems.map((prob, idx) => (
                         <div
                           key={`key-${prob.id}`}
-                          className="flex flex-col items-center justify-center p-4 border-2 border-solid border-purple-200 rounded-2xl relative bg-purple-50/30 min-h-[120px] print:min-h-[85px] print:p-2 print:rounded-xl print:border-black/30 print:bg-white"
+                          className="print-avoid-break flex flex-col items-center justify-center p-4 border-2 border-solid border-purple-200 rounded-2xl relative bg-purple-50/30 min-h-[120px] print:min-h-[80px] print:p-2 print:rounded-xl print:border-black/30 print:bg-white"
                         >
                           <span className="absolute top-2 left-2 text-[10px] font-black text-purple-400 print:text-black">
                             {idx + 1}.
@@ -672,6 +660,7 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
                     </div>
                   </div>
                 )}
+
               </div>
             </div>
           </motion.div>
