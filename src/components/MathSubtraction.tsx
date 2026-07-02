@@ -13,7 +13,6 @@ import {
   FileText,
   Check,
   Sparkles,
-  BookOpen
 } from 'lucide-react';
 
 interface SubtractionProblem {
@@ -142,6 +141,7 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
 
   const handleGenerateWorksheet = (diff = wsDifficulty, count = wsProblemCount, theme = wsTheme) => {
     const problemsList: { id: number; num1: number; num2: number; emoji: string }[] = [];
+    
     const fruitEmojis = ['🍎', '🍌', '🍊', '🍇', '🍓', '🍍', '🍉', '🍒', '🥝', '🍑'];
     const animalEmojis = ['🦖', '🦁', '🐯', '🐼', '🐨', '🦊', '🐰', '🐸', '🐙', '🐠'];
     const starEmojis = ['⭐', '🌙', '✨', '🎈', '🎨', '🔮', '🧩', '🧸', '🦄', '🚀'];
@@ -189,6 +189,8 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
 
   return (
     <div className="w-full max-w-4xl mx-auto flex flex-col items-center select-none text-black" id="math-subtraction-game">
+      
+      {/* Neo-brutalist Tab Switcher (Hidden in Print) */}
       <div className="w-full flex flex-col sm:flex-row justify-center items-center gap-4 mb-8 print:hidden">
         <button
           onClick={() => {
@@ -196,7 +198,9 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
             setActiveTab('game');
           }}
           className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-xs sm:text-sm tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
-            activeTab === 'game' ? 'bg-teal-400 text-gray-950' : 'bg-white text-gray-700 hover:bg-gray-100'
+            activeTab === 'game'
+              ? 'bg-teal-400 text-gray-950'
+              : 'bg-white text-gray-700 hover:bg-gray-100'
           }`}
         >
           🎮 PLAY INTERACTIVE GAME
@@ -207,7 +211,9 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
             setActiveTab('worksheet');
           }}
           className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-xs sm:text-sm tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
-            activeTab === 'worksheet' ? 'bg-purple-400 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
+            activeTab === 'worksheet'
+              ? 'bg-purple-400 text-white'
+              : 'bg-white text-gray-700 hover:bg-gray-100'
           }`}
         >
           📝 PRINTABLE WORKSHEETS (PDF)
@@ -225,6 +231,7 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
           >
             <ConfettiEffect active={gameComplete} />
 
+            {/* Progress Bar */}
             <div className="w-full flex flex-col sm:flex-row justify-between items-center gap-4 bg-teal-300 px-6 py-4 rounded-3xl mb-8 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <div className="flex items-center gap-3">
                 <span className="text-xs font-black uppercase tracking-wider">CHALLENGES:</span>
@@ -236,7 +243,11 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
                       <div
                         key={idx}
                         className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 ${
-                          isSolved ? 'bg-emerald-400 text-black' : isCurrent ? 'bg-orange-500 text-white animate-pulse' : 'bg-white text-black'
+                          isSolved
+                            ? 'bg-emerald-400 text-black'
+                            : isCurrent
+                            ? 'bg-orange-500 text-white animate-pulse'
+                            : 'bg-white text-black'
                         }`}
                       >
                         {idx + 1}
@@ -252,6 +263,7 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
               </div>
             </div>
 
+            {/* Main Board */}
             {rounds.length > 0 && activeProblem ? (
               <div className="w-full bg-teal-100 rounded-[36px] border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6 sm:p-8 flex flex-col justify-between min-h-[380px] relative overflow-hidden">
                 <div className="absolute top-2 right-2 text-3xl opacity-20 select-none">🎈</div>
@@ -370,7 +382,9 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
                                 animate={isWrong ? { x: [-10, 10, -10, 10, 0] } : {}}
                                 transition={{ duration: 0.4 }}
                                 className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full border-4 border-black font-black text-xl sm:text-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center cursor-pointer hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all ${
-                                  isWrong ? 'bg-red-400 text-white' : 'bg-white hover:bg-yellow-100 text-black'
+                                  isWrong
+                                    ? 'bg-red-400 text-white'
+                                    : 'bg-white hover:bg-yellow-100 text-black'
                                 }`}
                               >
                                 {opt}
@@ -398,6 +412,7 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
             </div>
           </motion.div>
         ) : (
+          /* PRINTABLE WORKSHEETS GENERATOR */
           <motion.div
             key="worksheet-tab"
             initial={{ opacity: 0, y: 10 }}
@@ -428,7 +443,9 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
                           setWsDifficulty(diff);
                         }}
                         className={`px-4 py-2 text-left rounded-xl border-2 border-black font-bold text-xs uppercase transition-all flex items-center justify-between ${
-                          wsDifficulty === diff ? 'bg-purple-400 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'bg-white text-gray-700 hover:bg-gray-50'
+                          wsDifficulty === diff
+                            ? 'bg-purple-400 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
+                            : 'bg-white text-gray-700 hover:bg-gray-50'
                         }`}
                       >
                         <span>{diff === 'easy' ? 'Easy (Sums to 10)' : diff === 'medium' ? 'Medium (Sums to 20)' : 'Hard (Sums to 100)'}</span>
@@ -449,7 +466,9 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
                           setWsProblemCount(count);
                         }}
                         className={`px-4 py-2 text-left rounded-xl border-2 border-black font-bold text-xs uppercase transition-all flex items-center justify-between ${
-                          wsProblemCount === count ? 'bg-purple-400 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'bg-white text-gray-700 hover:bg-gray-50'
+                          wsProblemCount === count
+                            ? 'bg-purple-400 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
+                            : 'bg-white text-gray-700 hover:bg-gray-50'
                         }`}
                       >
                         <span>{count} Sums</span>
@@ -462,20 +481,22 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
                 <div className="flex flex-col gap-2">
                   <span className="text-xs font-black uppercase tracking-wider text-purple-950">Mascot Theme</span>
                   <div className="flex flex-col gap-1.5">
-                    {([
+                    {[
                       { id: 'fruits', name: '🍎 Fruits' },
                       { id: 'animals', name: '🦖 Animals' },
                       { id: 'stars', name: '⭐ Magical' },
                       { id: 'classic', name: '✏️ Classic math' }
-                    ] as const).map((t) => (
+                    ].map((t) => (
                       <button
                         key={t.id}
                         onClick={() => {
                           audioManager.playPop();
-                          setWsTheme(t.id);
+                          setWsTheme(t.id as any);
                         }}
                         className={`px-4 py-2 text-left rounded-xl border-2 border-black font-bold text-xs transition-all flex items-center justify-between ${
-                          wsTheme === t.id ? 'bg-purple-400 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'bg-white text-gray-700 hover:bg-gray-50'
+                          wsTheme === t.id
+                            ? 'bg-purple-400 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
+                            : 'bg-white text-gray-700 hover:bg-gray-50'
                         }`}
                       >
                         <span>{t.name}</span>
@@ -526,35 +547,38 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
               </div>
             </div>
 
+            {/* LIVE PAPER PREVIEW */}
             <div className="w-full flex justify-center print:w-full print:m-0 print:p-0">
               <div
                 className="bg-white border-4 border-black p-8 sm:p-12 rounded-[44px] shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] w-full max-w-[800px] font-sans relative overflow-hidden print:border-none print:shadow-none print:p-0 print:m-0 print:rounded-none print:max-w-none"
                 style={{ contentVisibility: 'auto' }}
               >
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 border-b-4 border-black pb-6 mb-8 print:flex-row print:justify-between">
+                {/* 1. Header of the printed worksheet */}
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 border-b-4 border-black pb-6 mb-8 print:flex-row print:justify-between print:pb-3 print:mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="bg-yellow-300 w-12 h-12 rounded-xl flex items-center justify-center border-3 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex-shrink-0">
-                      <span className="text-2xl">🧸</span>
+                    <div className="bg-yellow-300 w-12 h-12 rounded-xl flex items-center justify-center border-3 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex-shrink-0 print:w-10 print:h-10 print:rounded-lg">
+                      <span className="text-2xl print:text-xl">🧸</span>
                     </div>
                     <div className="flex flex-col text-left">
                       <span className="text-[10px] font-black uppercase tracking-wider text-orange-500 leading-none">WONDERKIDS EDUCATION</span>
-                      <h1 className="text-2xl font-black tracking-tight uppercase mt-0.5 leading-none">Subtraction Sums</h1>
+                      <h1 className="text-2xl font-black tracking-tight uppercase mt-0.5 leading-none print:text-lg">Subtraction Sums</h1>
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-2 text-xs font-bold font-mono tracking-wide text-gray-700 w-full sm:w-auto print:w-auto">
+                  <div className="flex flex-col gap-2 text-xs font-bold font-mono tracking-wide text-gray-700 w-full sm:w-auto print:w-auto print:gap-1">
                     <div className="flex items-center gap-1.5">
                       <span>NAME:</span>
-                      <div className="flex-grow sm:w-44 border-b-2 border-dotted border-black/30 h-4" />
+                      <div className="flex-grow sm:w-44 border-b-2 border-dotted border-black/30 h-4 print:w-36" />
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span>DATE:</span>
-                      <div className="flex-grow sm:w-44 border-b-2 border-dotted border-black/30 h-4" />
+                      <div className="flex-grow sm:w-44 border-b-2 border-dotted border-black/30 h-4 print:w-36" />
                     </div>
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center bg-gray-50 border-2 border-dashed border-black/20 p-4 rounded-2xl mb-8 print:bg-white print:border-black/30">
+                {/* Sub-Header & Grade block */}
+                <div className="flex justify-between items-center bg-gray-50 border-2 border-dashed border-black/20 p-4 rounded-2xl mb-8 print:bg-white print:border-black/30 print:p-2.5 print:mb-4 print:rounded-xl">
                   <div className="text-left">
                     <p className="text-xs font-black uppercase tracking-wider text-gray-500">Assignment Topic</p>
                     <p className="text-sm font-black text-black">
@@ -569,11 +593,12 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
                   </div>
                 </div>
 
-                <div className={`grid ${wsProblemCount === 12 ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'} gap-6`}>
+                {/* Problems Grid */}
+                <div className={`grid ${wsProblemCount === 12 ? 'grid-cols-2 sm:grid-cols-3 print:grid-cols-3' : 'grid-cols-2 sm:grid-cols-4 print:grid-cols-4'} gap-6 print:gap-4`}>
                   {wsProblems.map((prob, idx) => (
                     <div
                       key={prob.id}
-                      className="flex flex-col items-center justify-center p-4 border-2 border-solid border-gray-200 rounded-2xl relative bg-white min-h-[140px] print:border-black/30"
+                      className="flex flex-col items-center justify-center p-4 border-2 border-solid border-gray-200 rounded-2xl relative bg-white min-h-[140px] print:min-h-[105px] print:p-2 print:rounded-xl print:border-black/30"
                     >
                       <span className="absolute top-2 left-2 text-[10px] font-black text-gray-400 print:text-black">
                         {idx + 1}.
@@ -585,24 +610,25 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
                         </span>
                       )}
 
-                      <div className="flex flex-col items-end pr-3 text-2xl font-black font-mono mt-4">
+                      <div className="flex flex-col items-end pr-3 text-2xl font-black font-mono mt-4 print:mt-1 print:text-xl print:pr-1">
                         <div className="leading-none mb-1">{prob.num1}</div>
-                        <div className="flex items-center gap-1 leading-none mb-1.5">
-                          <Minus className="w-4 h-4 stroke-[4] text-black" />
+                        <div className="flex items-center gap-1 leading-none mb-1.5 print:mb-1">
+                          <Minus className="w-4 h-4 stroke-[4] text-black print:w-3.5 print:h-3.5 print:stroke-[3]" />
                           <span>{prob.num2}</span>
                         </div>
-                        <div className="w-16 h-1 bg-black rounded" />
+                        <div className="w-16 h-1 bg-black rounded print:w-12 print:h-[2px]" />
                       </div>
 
-                      <div className="w-16 h-10 border-2 border-dashed border-gray-300 rounded-xl mt-3.5 bg-gray-50/50 print:bg-white print:border-black/20" />
+                      <div className="w-16 h-10 border-2 border-dashed border-gray-300 rounded-xl mt-3.5 bg-gray-50/50 print:bg-white print:border-black/20 print:w-12 print:h-8 print:mt-2 print:rounded-lg" />
                     </div>
                   ))}
                 </div>
 
-                <div className="mt-12 text-center text-xs font-extrabold text-orange-500/80 tracking-wide border-t-2 border-dashed border-black/10 pt-6 print:block">
+                <div className="mt-12 text-center text-xs font-extrabold text-orange-500/80 tracking-wide border-t-2 border-dashed border-black/10 pt-6 print:block print:mt-4 print:pt-3">
                   🌟 "Keep counting! You are amazing!" 🌟
                 </div>
 
+                {/* ANSWER KEY PAGE */}
                 {wsShowAnswers && (
                   <div className="print:break-before-page mt-16 pt-12 border-t-4 border-dashed border-purple-300 relative print:border-none print:mt-0 print:pt-0">
                     <div className="absolute -top-3.5 left-1/2 transform -translate-x-1/2 bg-purple-100 border-2 border-black px-4 py-1 rounded-full text-[10px] font-black text-purple-950 uppercase tracking-widest print:hidden">
@@ -619,26 +645,26 @@ export default function MathSubtraction({ onGameWin }: { onGameWin: (stars: numb
                       </p>
                     </div>
 
-                    <div className={`grid ${wsProblemCount === 12 ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'} gap-6`}>
+                    <div className={`grid ${wsProblemCount === 12 ? 'grid-cols-2 sm:grid-cols-3 print:grid-cols-3' : 'grid-cols-2 sm:grid-cols-4 print:grid-cols-4'} gap-6 print:gap-4`}>
                       {wsProblems.map((prob, idx) => (
                         <div
                           key={`key-${prob.id}`}
-                          className="flex flex-col items-center justify-center p-4 border-2 border-solid border-purple-200 rounded-2xl relative bg-purple-50/30 min-h-[120px] print:border-black/30 print:bg-white"
+                          className="flex flex-col items-center justify-center p-4 border-2 border-solid border-purple-200 rounded-2xl relative bg-purple-50/30 min-h-[120px] print:min-h-[85px] print:p-2 print:rounded-xl print:border-black/30 print:bg-white"
                         >
                           <span className="absolute top-2 left-2 text-[10px] font-black text-purple-400 print:text-black">
                             {idx + 1}.
                           </span>
 
-                          <div className="flex flex-col items-end pr-2 text-lg font-bold font-mono mt-2 text-gray-600 print:text-black">
+                          <div className="flex flex-col items-end pr-2 text-lg font-bold font-mono mt-2 text-gray-600 print:text-black print:mt-1 print:text-base">
                             <div className="leading-none mb-1">{prob.num1}</div>
-                            <div className="flex items-center gap-0.5 leading-none mb-1">
-                              <Minus className="w-3.5 h-3.5 stroke-[3]" />
+                            <div className="flex items-center gap-0.5 leading-none mb-1 print:mb-0.5">
+                              <Minus className="w-3.5 h-3.5 stroke-[3] print:w-3 print:h-3" />
                               <span>{prob.num2}</span>
                             </div>
-                            <div className="w-12 h-0.5 bg-gray-300" />
+                            <div className="w-12 h-0.5 bg-gray-300 print:w-10 print:h-[1px]" />
                           </div>
 
-                          <div className="text-xl font-black text-blue-500 mt-2 font-mono tracking-wider print:text-blue-600">
+                          <div className="text-xl font-black text-blue-500 mt-2 font-mono tracking-wider print:text-lg print:mt-1 print:text-blue-600">
                             {prob.num1 - prob.num2}
                           </div>
                         </div>
