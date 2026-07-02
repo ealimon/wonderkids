@@ -1,5 +1,5 @@
 {
-  "name": "Storybook Education",
+  "name": "Wonderkids",
   "description": "An interactive, educational playground for kids featuring color sorting, shape matching, pattern completion, a counting garden, phonics spelling, math addition, subtraction, and simple storybook reading exercises with sound synthesis.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
