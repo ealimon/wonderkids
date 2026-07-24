@@ -80,14 +80,8 @@ export default function App() {
 
   const handlePlayAgain = () => {
     audioManager.playPop();
-    const timesCompleted = activeGame ? (scoreState.completedGames[activeGame] || 0) : 0;
-    if (timesCompleted >= 3) {
-      // Auto-progress to next module after 3 plays
-      handleNextModule();
-    } else {
-      setShowStarCelebration(false);
-      setGameResetKey((prev) => prev + 1);
-    }
+    setShowStarCelebration(false);
+    setGameResetKey((prev) => prev + 1);
   };
 
   const handleResetProgress = () => {
@@ -647,7 +641,7 @@ export default function App() {
                     className="flex-1 py-3.5 bg-white hover:bg-gray-100 text-black border-3 border-black font-black text-xs uppercase tracking-wider rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all"
                   >
                     {activeGame && (scoreState.completedGames[activeGame] || 1) >= 3
-                      ? 'NEXT MODULE'
+                      ? 'REPLAY MODULE'
                       : `PLAY AGAIN (${scoreState.completedGames[activeGame] || 1}/3)`}
                   </button>
                   <button
