@@ -212,48 +212,97 @@ export default function ShapeMatcher({
     setDraggedTargetHover(null);
   };
 
-  const getPointerPoint = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    let px = info?.point?.x;
-    let py = info?.point?.y;
+  const getViewportPointer = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    let cx = 0;
+    let cy = 0;
 
-    if (!px || px === 0) {
-      if ('clientX' in event && typeof event.clientX === 'number') {
-        px = event.clientX;
-        py = event.clientY;
-      } else if ('touches' in event && (event as TouchEvent).touches?.length > 0) {
-        px = (event as TouchEvent).touches[0].clientX;
-        py = (event as TouchEvent).touches[0].clientY;
-      } else if ('changedTouches' in event && (event as TouchEvent).changedTouches?.length > 0) {
-        px = (event as TouchEvent).changedTouches[0].clientX;
-        py = (event as TouchEvent).changedTouches[0].clientY;
+    if (event && 'clientX' in event && typeof (event as MouseEvent).clientX === 'number' && (event as MouseEvent).clientX !== 0) {
+      cx = (event as MouseEvent).clientX;
+      cy = (event as MouseEvent).clientY;
+    } else if (event && 'changedTouches' in event && (event as TouchEvent).changedTouches?.length > 0) {
+      cx = (event as TouchEvent).changedTouches[0].clientX;
+      cy = (event as TouchEvent).changedTouches[0].clientY;
+    } else if (event && 'touches' in event && (event as TouchEvent).touches?.length > 0) {
+      cx = (event as TouchEvent).touches[0].clientX;
+      cy = (event as TouchEvent).touches[0].clientY;
+    }
+
+    if (!cx && info?.point) {
+      cx = info.point.x - window.scrollX;
+      cy = info.point.y - window.scrollY;
+    }
+
+    return { x: cx, y: cy };
+  };
+
+  const findTargetForShape = (
+    shapeId: string | number,
+    event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
+    const targetElements = document.querySelectorAll('[data-target-type]');
+    if (!targetElements.length) return null;
+
+    // 1. Get dragged card element center in viewport coordinates
+    let dCenter: { x: number; y: number } | null = null;
+    const draggedEl = document.querySelector(`[data-dragged-shape="${shapeId}"]`) as HTMLElement | null;
+    if (draggedEl) {
+      const dRect = draggedEl.getBoundingClientRect();
+      if (dRect.width > 0 && dRect.height > 0) {
+        dCenter = {
+          x: dRect.left + dRect.width / 2,
+          y: dRect.top + dRect.height / 2,
+        };
       }
     }
-    return { x: px || 0, y: py || 0 };
-  };
 
-  const findHoveredTarget = (x: number, y: number) => {
-    if (!x || !y) return null;
-    const targetElements = document.querySelectorAll('[data-target-type]');
-    let foundType: string | null = null;
+    // 2. Get pointer position in viewport coordinates
+    const pointer = getViewportPointer(event, info);
+
+    let bestTarget: string | null = null;
+    let minDistance = Infinity;
 
     targetElements.forEach((el) => {
-      const rect = el.getBoundingClientRect();
-      const padding = 30; // generous padding around silhouette cards
-      if (
-        x >= rect.left - padding &&
-        x <= rect.right + padding &&
-        y >= rect.top - padding &&
-        y <= rect.bottom + padding
-      ) {
-        foundType = el.getAttribute('data-target-type');
+      const tRect = el.getBoundingClientRect();
+      const padding = 40; // generous padding around target box
+
+      const centerMatch =
+        dCenter &&
+        dCenter.x >= tRect.left - padding &&
+        dCenter.x <= tRect.right + padding &&
+        dCenter.y >= tRect.top - padding &&
+        dCenter.y <= tRect.bottom + padding;
+
+      const pointerMatch =
+        pointer.x > 0 &&
+        pointer.x >= tRect.left - padding &&
+        pointer.x <= tRect.right + padding &&
+        pointer.y >= tRect.top - padding &&
+        pointer.y <= tRect.bottom + padding;
+
+      if (centerMatch || pointerMatch) {
+        const targetCenterX = tRect.left + tRect.width / 2;
+        const targetCenterY = tRect.top + tRect.height / 2;
+        const refX = dCenter ? dCenter.x : pointer.x;
+        const refY = dCenter ? dCenter.y : pointer.y;
+        const dist = Math.hypot(refX - targetCenterX, refY - targetCenterY);
+
+        if (dist < minDistance) {
+          minDistance = dist;
+          bestTarget = el.getAttribute('data-target-type');
+        }
       }
     });
-    return foundType;
+
+    return bestTarget;
   };
 
-  const handleDrag = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    const { x, y } = getPointerPoint(event, info);
-    const hoverType = findHoveredTarget(x, y);
+  const handleDrag = (
+    event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo,
+    shapeId: string | number
+  ) => {
+    const hoverType = findTargetForShape(shapeId, event, info);
     setDraggedTargetHover(hoverType);
   };
 
@@ -262,9 +311,7 @@ export default function ShapeMatcher({
     info: PanInfo,
     shape: ShapeItem
   ) => {
-    const { x, y } = getPointerPoint(event, info);
-    const targetType = findHoveredTarget(x, y) || draggedTargetHover;
-
+    const targetType = findTargetForShape(shape.id, event, info) || draggedTargetHover;
     setDraggedTargetHover(null);
 
     if (targetType) {
@@ -363,11 +410,12 @@ export default function ShapeMatcher({
                       <AnimatePresence key={shape.id}>
                         {!isSolved ? (
                           <motion.div
+                            data-dragged-shape={shape.id}
                             drag
                             dragSnapToOrigin
                             dragElastic={0.15}
                             onDragStart={() => handleDragStart(shape)}
-                            onDrag={(event, info) => handleDrag(event, info)}
+                            onDrag={(event, info) => handleDrag(event, info, shape.id)}
                             onDragEnd={(event, info) => handleDragEnd(event, info, shape)}
                             whileDrag={{ scale: 1.15, zIndex: 100 }}
                             initial={{ opacity: 0, scale: 0.5 }}
