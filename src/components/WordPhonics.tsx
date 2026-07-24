@@ -117,6 +117,7 @@ export default function WordPhonics({ onGameWin }: { onGameWin: (stars: number) 
       // Correct letter!
       audioManager.playPop();
       audioManager.playSparkle(1.0 + currentLetterIdx * 0.15); // ascending sparkle pitch!
+      audioManager.speakText(letter);
       
       const newSpelled = [...spelledLetters];
       newSpelled[currentLetterIdx] = letter;
@@ -135,6 +136,7 @@ export default function WordPhonics({ onGameWin }: { onGameWin: (stars: number) 
         setRoundComplete(true);
         setScore((prev) => prev + 1);
         setPhonicsSubtitle(`Super job! ${activeRound.word} spells ${activeRound.word.toLowerCase()}! ${activeRound.emoji}`);
+        audioManager.speakText(`${activeRound.word}! Spells ${activeRound.word.toLowerCase()}!`);
 
         // If this is the final round
         if (currentRoundIdx === rounds.length - 1) {
@@ -303,11 +305,13 @@ export default function WordPhonics({ onGameWin }: { onGameWin: (stars: number) 
                 <motion.div
                   animate={roundComplete ? { scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] } : {}}
                   transition={{ duration: 0.6 }}
-                  className="w-32 h-32 bg-white border-4 border-black rounded-[28px] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center justify-center relative flex-shrink-0"
+                  onClick={() => audioManager.speakText(activeRound.word)}
+                  className="w-32 h-32 bg-white border-4 border-black rounded-[28px] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center justify-center relative flex-shrink-0 cursor-pointer hover:scale-105 transition-transform group"
+                  title="Click to hear word pronounced!"
                 >
                   <span className="text-6xl mb-1 filter drop-shadow-md select-none">{activeRound.emoji}</span>
-                  <span className="text-[10px] font-black uppercase tracking-wide text-gray-500 bg-gray-100 border border-gray-300 px-2.5 py-0.5 rounded-full">
-                    {activeRound.startingSound} SOUND
+                  <span className="text-[10px] font-black uppercase tracking-wide text-gray-600 bg-yellow-200 border border-black px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+                    🔊 LISTEN
                   </span>
                 </motion.div>
 

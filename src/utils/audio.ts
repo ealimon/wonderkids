@@ -190,5 +190,21 @@ export const audioManager = {
   // Helper to force-resume context upon first gesture
   ensureAudioUnlocked() {
     getAudioContext();
+  },
+
+  // Speech synthesis pronunciation helper for words, phonics, and sight word reading
+  speakText(text: string) {
+    if (isMuted) return;
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel(); // Stop prior speech
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.88; // Slightly relaxed pace for kids
+        utterance.pitch = 1.15; // Pleasant child-friendly pitch
+        window.speechSynthesis.speak(utterance);
+      } catch (e) {
+        console.warn('Speech synthesis unavailable', e);
+      }
+    }
   }
 };

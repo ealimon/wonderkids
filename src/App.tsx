@@ -10,6 +10,7 @@ import WordPhonics from './components/WordPhonics';
 import MathAddition from './components/MathAddition';
 import MathSubtraction from './components/MathSubtraction';
 import SimpleReading from './components/SimpleReading';
+import CertificateModal from './components/CertificateModal';
 import {
   Volume2,
   VolumeX,
@@ -29,6 +30,7 @@ export default function App() {
     completedGames: {},
   });
   const [showStarCelebration, setShowStarCelebration] = useState(false);
+  const [showCertificateModal, setShowCertificateModal] = useState(false);
 
   // Load score state from local storage on mount
   useEffect(() => {
@@ -278,7 +280,19 @@ export default function App() {
               {muted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
             </button>
 
-
+            {/* Certificate & Trophies Button */}
+            <button
+              onClick={() => {
+                audioManager.playPop();
+                setShowCertificateModal(true);
+              }}
+              className="flex items-center gap-2 bg-emerald-400 hover:bg-emerald-500 text-black border-4 border-black px-3.5 py-2 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer font-black text-xs uppercase tracking-wider"
+              title="Open Certificate & Badges"
+              id="certificate-btn"
+            >
+              <Trophy className="w-5 h-5 text-black fill-yellow-300" />
+              <span className="hidden sm:inline">CERTIFICATE</span>
+            </button>
           </div>
         </div>
 
@@ -324,15 +338,21 @@ export default function App() {
 
                 {/* Stars status card */}
                 {scoreState.stars > 0 && (
-                  <div className="absolute right-8 bottom-8 hidden sm:flex items-center gap-2.5 bg-yellow-300 text-black border-4 border-black px-5 py-3 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                  <button
+                    onClick={() => {
+                      audioManager.playPop();
+                      setShowCertificateModal(true);
+                    }}
+                    className="absolute right-8 bottom-8 hidden sm:flex items-center gap-2.5 bg-yellow-300 text-black border-4 border-black px-5 py-3 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:scale-105 transition-transform cursor-pointer"
+                  >
                     <Trophy className="w-6 h-6 text-black fill-black/20" />
-                    <div className="flex flex-col">
+                    <div className="flex flex-col text-left">
                       <span className="text-[10px] font-black uppercase tracking-wider">Trophy Case</span>
                       <span className="text-sm font-black font-sans">
                         {Object.keys(scoreState.completedGames).length} Games Beaten!
                       </span>
                     </div>
-                  </div>
+                  </button>
                 )}
               </div>
 
@@ -500,8 +520,15 @@ export default function App() {
 
       {/* Footer credits block */}
       <footer className="w-full text-center py-6 text-[10px] sm:text-xs font-bold text-amber-800/40 font-sans mt-auto print:hidden">
-        <span>© 2026 Storybook Education. Built for active play & early learning.</span>
+        <span>© 2026 Wonderkids Early Learning. Built for active play & early learning.</span>
       </footer>
+
+      {/* Trophy & Certificate Modal */}
+      <CertificateModal
+        isOpen={showCertificateModal}
+        onClose={() => setShowCertificateModal(false)}
+        scoreState={scoreState}
+      />
     </div>
   );
 }
