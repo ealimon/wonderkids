@@ -211,20 +211,34 @@ export default function ShapeMatcher({
   };
 
   const handleDragEnd = (
-    _event: MouseEvent | TouchEvent | PointerEvent,
+    event: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo,
     shape: ShapeItem
   ) => {
-    const x = info.point.x;
-    const y = info.point.y;
-    if (x !== undefined && y !== undefined) {
-      const droppedEl = document.elementFromPoint(x, y);
-      const targetEl = droppedEl?.closest('[data-target-type]');
-      if (targetEl) {
-        const targetType = targetEl.getAttribute('data-target-type');
-        if (targetType) {
-          attemptMatch(shape, targetType);
+    // Get pointer coordinates
+    const pointX = info.point.x ?? (event as MouseEvent).clientX;
+    const pointY = info.point.y ?? (event as MouseEvent).clientY;
+
+    if (pointX !== undefined && pointY !== undefined && pointX !== 0 && pointY !== 0) {
+      const targetElements = document.querySelectorAll('[data-target-type]');
+      let matchedType: string | null = null;
+
+      targetElements.forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        // Generous padding around the target silhouette for smooth touch/mouse matching
+        const padding = 25;
+        if (
+          pointX >= rect.left - padding &&
+          pointX <= rect.right + padding &&
+          pointY >= rect.top - padding &&
+          pointY <= rect.bottom + padding
+        ) {
+          matchedType = el.getAttribute('data-target-type');
         }
+      });
+
+      if (matchedType) {
+        attemptMatch(shape, matchedType);
       }
     }
   };
@@ -323,11 +337,9 @@ export default function ShapeMatcher({
                             layout
                             drag
                             dragSnapToOrigin
-                            dragElastic={0.1}
-                            dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
                             onDragStart={() => handleDragStart(shape)}
                             onDragEnd={(event, info) => handleDragEnd(event, info, shape)}
-                            whileDrag={{ scale: 1.15, zIndex: 50 }}
+                            whileDrag={{ scale: 1.15, zIndex: 100 }}
                             initial={{ opacity: 0, scale: 0.5 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.2 }}
