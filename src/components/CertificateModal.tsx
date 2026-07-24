@@ -19,6 +19,7 @@ interface CertificateModalProps {
   isOpen: boolean;
   onClose: () => void;
   scoreState: ScoreState;
+  onResetProgress?: () => void;
 }
 
 const BADGES: { id: GameType; title: string; emoji: string; skill: string; bg: string }[] = [
@@ -42,7 +43,7 @@ const BUDDIES = [
   { id: 'artist', emoji: '🎨', name: 'Picasso' },
 ];
 
-export default function CertificateModal({ isOpen, onClose, scoreState }: CertificateModalProps) {
+export default function CertificateModal({ isOpen, onClose, scoreState, onResetProgress }: CertificateModalProps) {
   const [activeTab, setActiveTab] = useState<'trophies' | 'certificate'>('certificate');
   const [childName, setChildName] = useState('Wonderkid Scholar');
   const [selectedBuddy, setSelectedBuddy] = useState('🧸');
@@ -327,15 +328,26 @@ export default function CertificateModal({ isOpen, onClose, scoreState }: Certif
               <span className="text-lg uppercase tracking-tight">WONDERKIDS TROPHY & CERTIFICATE CENTER</span>
             </div>
 
-            <button
-              onClick={() => {
-                audioManager.playPop();
-                onClose();
-              }}
-              className="w-10 h-10 rounded-xl bg-white border-2 border-black flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-gray-100 cursor-pointer"
-            >
-              <X className="w-6 h-6 stroke-[3]" />
-            </button>
+            <div className="flex items-center gap-2">
+              {onResetProgress && (
+                <button
+                  onClick={onResetProgress}
+                  className="px-3 py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-800 border-2 border-black rounded-xl font-extrabold text-xs shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] cursor-pointer transition-all"
+                  title="Reset all progress and stars"
+                >
+                  Reset Progress
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  audioManager.playPop();
+                  onClose();
+                }}
+                className="w-10 h-10 rounded-xl bg-white border-2 border-black flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-gray-100 cursor-pointer"
+              >
+                <X className="w-6 h-6 stroke-[3]" />
+              </button>
+            </div>
           </div>
 
           {/* Modal Header Tabs (Hidden in Print) */}

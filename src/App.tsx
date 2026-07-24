@@ -66,6 +66,15 @@ export default function App() {
     setShowStarCelebration(true);
   };
 
+  const handleResetProgress = () => {
+    if (window.confirm('Are you sure you want to reset all earned stars and completed activities?')) {
+      const freshState: ScoreState = { stars: 0, completedGames: {} };
+      setScoreState(freshState);
+      localStorage.removeItem('storybook_education_score');
+      audioManager.playPop();
+    }
+  };
+
   const toggleMute = () => {
     const nextMuted = !muted;
     setMuted(nextMuted);
@@ -352,24 +361,28 @@ export default function App() {
                   </p>
                 </div>
 
-                {/* Stars status card */}
-                {scoreState.stars > 0 && (
-                  <button
-                    onClick={() => {
-                      audioManager.playPop();
-                      setShowCertificateModal(true);
-                    }}
-                    className="absolute right-8 bottom-8 hidden sm:flex items-center gap-2.5 bg-yellow-300 text-black border-4 border-black px-5 py-3 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:scale-105 transition-transform cursor-pointer"
-                  >
-                    <Trophy className="w-6 h-6 text-black fill-black/20" />
-                    <div className="flex flex-col text-left">
-                      <span className="text-[10px] font-black uppercase tracking-wider">Trophy Case</span>
-                      <span className="text-sm font-black font-sans">
-                        {Object.keys(scoreState.completedGames).length} Games Beaten!
-                      </span>
-                    </div>
-                  </button>
-                )}
+                {/* Trophy Case status card */}
+                <button
+                  onClick={() => {
+                    audioManager.playPop();
+                    setShowCertificateModal(true);
+                  }}
+                  className="absolute right-8 bottom-8 hidden sm:flex items-center gap-2.5 bg-yellow-300 text-black border-4 border-black px-5 py-3 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:scale-105 transition-transform cursor-pointer"
+                >
+                  <Trophy className="w-6 h-6 text-black fill-black/20" />
+                  <div className="flex flex-col text-left">
+                    <span className="text-[10px] font-black uppercase tracking-wider">Trophy Case</span>
+                    <span className="text-sm font-black font-sans">
+                      {Object.keys(scoreState.completedGames).length === 0
+                        ? '0 Activities Completed'
+                        : `${Object.keys(scoreState.completedGames).length} ${
+                            Object.keys(scoreState.completedGames).length === 1
+                              ? 'Activity Completed!'
+                              : 'Activities Completed!'
+                          }`}
+                    </span>
+                  </div>
+                </button>
               </div>
 
               {/* Game Cards Grid */}
@@ -535,8 +548,14 @@ export default function App() {
       <div className="absolute bottom-12 left-12 text-5xl opacity-10 select-none pointer-events-none hover:rotate-12 transition-transform print:hidden">🌸</div>
 
       {/* Footer credits block */}
-      <footer className="w-full text-center py-6 text-[10px] sm:text-xs font-bold text-amber-800/40 font-sans mt-auto print:hidden">
+      <footer className="w-full text-center py-6 text-[10px] sm:text-xs font-bold text-amber-800/50 font-sans mt-auto print:hidden flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
         <span>© 2026 Wonderkids Early Learning. Built for active play & early learning.</span>
+        <button
+          onClick={handleResetProgress}
+          className="text-amber-800/70 hover:text-amber-900 underline cursor-pointer font-extrabold"
+        >
+          Reset Stars & Progress
+        </button>
       </footer>
 
       {/* Trophy & Certificate Modal */}
@@ -544,6 +563,7 @@ export default function App() {
         isOpen={showCertificateModal}
         onClose={() => setShowCertificateModal(false)}
         scoreState={scoreState}
+        onResetProgress={handleResetProgress}
       />
 
       {/* Module Completion Celebration Modal */}
