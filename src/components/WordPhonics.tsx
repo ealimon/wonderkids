@@ -43,7 +43,13 @@ const PHONICS_WORDS_POOL: PhonicsWord[] = [
   { word: 'FROG', emoji: '🐸', hint: 'A green jumping animal that says ribbit!', startingSound: '/f/' },
 ];
 
-export default function WordPhonics({ onGameWin }: { onGameWin: (stars: number) => void }) {
+export default function WordPhonics({
+  onGameWin,
+  onNextGame,
+}: {
+  onGameWin: (stars: number) => void;
+  onNextGame?: () => void;
+}) {
   // Navigation tabs
   const [activeTab, setActiveTab] = useState<'game' | 'worksheet'>('game');
 
@@ -410,14 +416,23 @@ export default function WordPhonics({ onGameWin }: { onGameWin: (stars: number) 
             </div>
 
             {/* Control Buttons Footer */}
-            <div className="mt-10">
+            <div className="mt-10 flex flex-wrap gap-4">
               <button
                 onClick={restartGame}
                 className="flex items-center gap-2 px-6 py-4 bg-yellow-300 text-black border-4 border-black font-black uppercase rounded-2xl text-xs font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
               >
                 <RotateCcw className="w-4 h-4 stroke-[3]" />
-                RESTART PHONICS
+                PLAY AGAIN
               </button>
+              {onNextGame && (
+                <button
+                  onClick={onNextGame}
+                  className="flex items-center gap-2 px-6 py-4 bg-sky-400 hover:bg-sky-500 text-black border-4 border-black font-black uppercase rounded-2xl text-xs font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+                >
+                  NEXT MODULE
+                  <ArrowRight className="w-4 h-4 stroke-[3]" />
+                </button>
+              )}
             </div>
           </motion.div>
         ) : (

@@ -52,7 +52,13 @@ const PROBLEMS_POOL: MathProblem[] = [
   { id: 25, num1: 1, num2: 6, emoji: '🧸', itemName: 'teddy bears' },
 ];
 
-export default function MathAddition({ onGameWin }: { onGameWin: (stars: number) => void }) {
+export default function MathAddition({
+  onGameWin,
+  onNextGame,
+}: {
+  onGameWin: (stars: number) => void;
+  onNextGame?: () => void;
+}) {
   // Navigation / Tabs state
   const [activeTab, setActiveTab] = useState<'game' | 'worksheet'>('game');
 
@@ -427,14 +433,23 @@ export default function MathAddition({ onGameWin }: { onGameWin: (stars: number)
             )}
 
             {/* Control Buttons Footer */}
-            <div className="mt-8">
+            <div className="mt-8 flex flex-wrap gap-4">
               <button
                 onClick={restartGame}
                 className="flex items-center gap-2 px-6 py-3.5 bg-yellow-300 text-black border-4 border-black font-black uppercase rounded-2xl text-xs font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
               >
                 <RotateCcw className="w-4 h-4 stroke-[3]" />
-                RESTART MATH
+                PLAY AGAIN
               </button>
+              {onNextGame && (
+                <button
+                  onClick={onNextGame}
+                  className="flex items-center gap-2 px-6 py-3.5 bg-sky-400 hover:bg-sky-500 text-black border-4 border-black font-black uppercase rounded-2xl text-xs font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+                >
+                  NEXT MODULE
+                  <ArrowRight className="w-4 h-4 stroke-[3]" />
+                </button>
+              )}
             </div>
           </motion.div>
         ) : (

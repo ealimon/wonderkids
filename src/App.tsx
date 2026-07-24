@@ -16,6 +16,7 @@ import {
   VolumeX,
   Star,
   ArrowLeft,
+  ArrowRight,
   Trophy,
   Sparkles,
   Award,
@@ -64,6 +65,15 @@ export default function App() {
     audioManager.playGameComplete();
     // Trigger module completion celebration overlay
     setShowStarCelebration(true);
+  };
+
+  const handleNextModule = () => {
+    audioManager.playPop();
+    const gameOrder: GameType[] = ['sorter', 'matcher', 'pattern', 'garden', 'phonics', 'math', 'subtraction', 'reading'];
+    const currentIdx = activeGame ? gameOrder.indexOf(activeGame) : -1;
+    const nextIdx = (currentIdx + 1) % gameOrder.length;
+    setActiveGame(gameOrder[nextIdx]);
+    setShowStarCelebration(false);
   };
 
   const handleResetProgress = () => {
@@ -513,28 +523,28 @@ export default function App() {
                 className="w-full bg-white rounded-[44px] p-8 border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] print:border-none print:shadow-none print:p-0 print:bg-white"
               >
                 {activeGame === 'sorter' && (
-                  <ColorSorter onGameWin={handleGameWin} />
+                  <ColorSorter onGameWin={handleGameWin} onNextGame={handleNextModule} />
                 )}
                 {activeGame === 'matcher' && (
-                  <ShapeMatcher onGameWin={handleGameWin} />
+                  <ShapeMatcher onGameWin={handleGameWin} onNextGame={handleNextModule} />
                 )}
                 {activeGame === 'pattern' && (
-                  <PatternCompleter onGameWin={handleGameWin} />
+                  <PatternCompleter onGameWin={handleGameWin} onNextGame={handleNextModule} />
                 )}
                 {activeGame === 'garden' && (
-                  <CountingGarden onGameWin={handleGameWin} />
+                  <CountingGarden onGameWin={handleGameWin} onNextGame={handleNextModule} />
                 )}
                 {activeGame === 'phonics' && (
-                  <WordPhonics onGameWin={handleGameWin} />
+                  <WordPhonics onGameWin={handleGameWin} onNextGame={handleNextModule} />
                 )}
                 {activeGame === 'math' && (
-                  <MathAddition onGameWin={handleGameWin} />
+                  <MathAddition onGameWin={handleGameWin} onNextGame={handleNextModule} />
                 )}
                 {activeGame === 'subtraction' && (
-                  <MathSubtraction onGameWin={handleGameWin} />
+                  <MathSubtraction onGameWin={handleGameWin} onNextGame={handleNextModule} />
                 )}
                 {activeGame === 'reading' && (
-                  <SimpleReading onGameWin={handleGameWin} />
+                  <SimpleReading onGameWin={handleGameWin} onNextGame={handleNextModule} />
                 )}
               </motion.div>
             </motion.div>
@@ -607,15 +617,24 @@ export default function App() {
                   VIEW & PRINT CERTIFICATE
                 </button>
 
-                <button
-                  onClick={() => {
-                    audioManager.playPop();
-                    setShowStarCelebration(false);
-                  }}
-                  className="w-full py-3.5 bg-white hover:bg-gray-100 text-black border-3 border-black font-black text-xs uppercase tracking-wider rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer"
-                >
-                  KEEP PLAYING
-                </button>
+                <div className="flex gap-3 w-full">
+                  <button
+                    onClick={() => {
+                      audioManager.playPop();
+                      setShowStarCelebration(false);
+                    }}
+                    className="flex-1 py-3.5 bg-white hover:bg-gray-100 text-black border-3 border-black font-black text-xs uppercase tracking-wider rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all"
+                  >
+                    PLAY AGAIN
+                  </button>
+                  <button
+                    onClick={handleNextModule}
+                    className="flex-1 py-3.5 bg-sky-400 hover:bg-sky-500 text-black border-3 border-black font-black text-xs uppercase tracking-wider rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-1.5 cursor-pointer transition-all hover:translate-x-[-2px] hover:translate-y-[-2px]"
+                  >
+                    NEXT MODULE
+                    <ArrowRight className="w-4 h-4 stroke-[3]" />
+                  </button>
+                </div>
               </div>
             </div>
           </motion.div>
