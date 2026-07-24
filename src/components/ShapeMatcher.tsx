@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, PanInfo } from 'motion/react';
 import { ShapeItem } from '../types';
 import { audioManager } from '../utils/audio';
 import ConfettiEffect from './ConfettiEffect';
@@ -170,18 +170,12 @@ export default function ShapeMatcher({
     }
   };
 
-  const handleSelectShape = (shape: ShapeItem) => {
+  const attemptMatch = (shape: ShapeItem, targetType: string) => {
     if (solved[shape.id] || roundComplete) return;
-    audioManager.playPop();
-    setSelectedShape(shape);
-  };
 
-  const handleMatchTarget = (targetType: string) => {
-    if (!selectedShape || roundComplete) return;
-
-    if (selectedShape.type === targetType) {
+    if (shape.type === targetType) {
       audioManager.playCorrect();
-      const nextSolved = { ...solved, [selectedShape.id]: true };
+      const nextSolved = { ...solved, [shape.id]: true };
       setSolved(nextSolved);
       setScore((prev) => prev + 1);
       setSelectedShape(null);
@@ -196,6 +190,42 @@ export default function ShapeMatcher({
       audioManager.playIncorrect();
       setWrongTarget(targetType);
       setTimeout(() => setWrongTarget(null), 800);
+    }
+  };
+
+  const handleSelectShape = (shape: ShapeItem) => {
+    if (solved[shape.id] || roundComplete) return;
+    audioManager.playPop();
+    setSelectedShape(shape);
+  };
+
+  const handleMatchTarget = (targetType: string) => {
+    if (!selectedShape || roundComplete) return;
+    attemptMatch(selectedShape, targetType);
+  };
+
+  const handleDragStart = (shape: ShapeItem) => {
+    if (solved[shape.id] || roundComplete) return;
+    audioManager.playPop();
+    setSelectedShape(shape);
+  };
+
+  const handleDragEnd = (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo,
+    shape: ShapeItem
+  ) => {
+    const x = info.point.x;
+    const y = info.point.y;
+    if (x !== undefined && y !== undefined) {
+      const droppedEl = document.elementFromPoint(x, y);
+      const targetEl = droppedEl?.closest('[data-target-type]');
+      if (targetEl) {
+        const targetType = targetEl.getAttribute('data-target-type');
+        if (targetType) {
+          attemptMatch(shape, targetType);
+        }
+      }
     }
   };
 
@@ -278,7 +308,7 @@ export default function ShapeMatcher({
               {/* Left Card: Colorful Toy Pieces */}
               <div className="bg-orange-100 border-4 border-black rounded-3xl p-8 flex flex-col items-center justify-center relative shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] min-h-[350px]">
                 <h3 className="text-sm font-black uppercase tracking-wider text-black font-sans mb-6">
-                  1. TAP A SHAPE BLOCK!
+                  1. TAP OR DRAG A SHAPE BLOCK!
                 </h3>
 
                 <div className="flex flex-wrap gap-6 justify-center items-center">
@@ -291,23 +321,30 @@ export default function ShapeMatcher({
                         {!isSolved ? (
                           <motion.div
                             layout
+                            drag
+                            dragSnapToOrigin
+                            dragElastic={0.1}
+                            dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                            onDragStart={() => handleDragStart(shape)}
+                            onDragEnd={(event, info) => handleDragEnd(event, info, shape)}
+                            whileDrag={{ scale: 1.15, zIndex: 50 }}
                             initial={{ opacity: 0, scale: 0.5 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.2 }}
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => handleSelectShape(shape)}
-                            className={`w-24 h-24 rounded-2xl flex flex-col items-center justify-center bg-white border-4 border-black cursor-pointer shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all relative ${
+                            className={`w-24 h-24 rounded-2xl flex flex-col items-center justify-center bg-white border-4 border-black cursor-grab active:cursor-grabbing shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all relative touch-none select-none ${
                               isSelected ? 'ring-4 ring-orange-500 animate-bounce' : ''
                             }`}
                           >
-                            <svg viewBox="0 0 100 100" className="w-16 h-16">
+                            <svg viewBox="0 0 100 100" className="w-16 h-16 pointer-events-none">
                               <path
                                 d={shape.svgPath}
                                 className={`${SHAPE_DESIGNS[shape.type].color} stroke-black stroke-4`}
                               />
                             </svg>
-                            <span className="text-[10px] font-black tracking-wider text-black mt-1 uppercase font-mono">
+                            <span className="text-[10px] font-black tracking-wider text-black mt-1 uppercase font-mono pointer-events-none">
                               {SHAPE_DESIGNS[shape.type].label}
                             </span>
                           </motion.div>
@@ -339,7 +376,7 @@ export default function ShapeMatcher({
               {/* Right Card: Grey Silhouette Board */}
               <div className="bg-sky-100 border-4 border-black rounded-3xl p-8 flex flex-col items-center justify-center shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
                 <h3 className="text-sm font-black uppercase tracking-wider text-black font-sans mb-6">
-                  2. MATCH TO SILHOUETTE!
+                  2. MATCH OR DROP TO SILHOUETTE!
                 </h3>
 
                 <div className="grid grid-cols-2 xs:grid-cols-3 gap-6 justify-center items-center w-full max-w-[340px]">
@@ -351,6 +388,7 @@ export default function ShapeMatcher({
                     return (
                       <motion.div
                         key={target.type}
+                        data-target-type={target.type}
                         onClick={() => handleMatchTarget(target.type)}
                         whileHover={!isMatched && selectedShape ? { scale: 1.08 } : {}}
                         whileTap={!isMatched && selectedShape ? { scale: 0.95 } : {}}
