@@ -80,8 +80,14 @@ export default function App() {
 
   const handlePlayAgain = () => {
     audioManager.playPop();
-    setShowStarCelebration(false);
-    setGameResetKey((prev) => prev + 1);
+    const timesCompleted = activeGame ? (scoreState.completedGames[activeGame] || 0) : 0;
+    if (timesCompleted >= 3) {
+      // Auto-progress to next module after 3 plays
+      handleNextModule();
+    } else {
+      setShowStarCelebration(false);
+      setGameResetKey((prev) => prev + 1);
+    }
   };
 
   const handleResetProgress = () => {
@@ -604,7 +610,15 @@ export default function App() {
                 Super job! You earned 3 Stars & completed this learning adventure!
               </p>
 
-              <div className="bg-white border-3 border-black p-4 rounded-2xl my-4 w-full flex items-center justify-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              {activeGame && (
+                <div className="bg-white/90 border-2 border-black rounded-xl py-1.5 px-3 my-2 text-xs font-black text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                  {(scoreState.completedGames[activeGame] || 1) >= 3
+                    ? '🏆 3/3 Plays Mastered! Ready for the Next Module!'
+                    : `Completed ${scoreState.completedGames[activeGame] || 1} of 3 plays in this module`}
+                </div>
+              )}
+
+              <div className="bg-white border-3 border-black p-4 rounded-2xl my-2 w-full flex items-center justify-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                 <Award className="w-8 h-8 text-orange-500 flex-shrink-0" />
                 <div className="text-left font-sans">
                   <div className="text-[10px] font-black uppercase text-gray-500">Certificate Status</div>
@@ -632,7 +646,9 @@ export default function App() {
                     onClick={handlePlayAgain}
                     className="flex-1 py-3.5 bg-white hover:bg-gray-100 text-black border-3 border-black font-black text-xs uppercase tracking-wider rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all"
                   >
-                    PLAY AGAIN
+                    {activeGame && (scoreState.completedGames[activeGame] || 1) >= 3
+                      ? 'NEXT MODULE'
+                      : `PLAY AGAIN (${scoreState.completedGames[activeGame] || 1}/3)`}
                   </button>
                   <button
                     onClick={handleNextModule}
