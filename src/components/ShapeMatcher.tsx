@@ -97,6 +97,7 @@ export default function ShapeMatcher({
     setTargets(shuffledTargets);
     setSolved({});
     setSelectedShape(null);
+    setDraggedTargetHover(null);
     setWrongTarget(null);
     setRoundComplete(false);
     setScore(0);

@@ -26,6 +26,7 @@ import {
 export default function App() {
   const [activeGame, setActiveGame] = useState<GameType | null>(null);
   const [muted, setMuted] = useState(false);
+  const [gameResetKey, setGameResetKey] = useState(0);
   const [scoreState, setScoreState] = useState<ScoreState>({
     stars: 0,
     completedGames: {},
@@ -73,7 +74,14 @@ export default function App() {
     const currentIdx = activeGame ? gameOrder.indexOf(activeGame) : -1;
     const nextIdx = (currentIdx + 1) % gameOrder.length;
     setActiveGame(gameOrder[nextIdx]);
+    setGameResetKey((prev) => prev + 1);
     setShowStarCelebration(false);
+  };
+
+  const handlePlayAgain = () => {
+    audioManager.playPop();
+    setShowStarCelebration(false);
+    setGameResetKey((prev) => prev + 1);
   };
 
   const handleResetProgress = () => {
@@ -98,6 +106,7 @@ export default function App() {
     audioManager.ensureAudioUnlocked();
     audioManager.playPop();
     setActiveGame(game);
+    setGameResetKey((prev) => prev + 1);
   };
 
   const goBack = () => {
@@ -517,6 +526,7 @@ export default function App() {
 
               {/* Mounted Active Game Module */}
               <motion.div
+                key={`active-game-${activeGame}-${gameResetKey}`}
                 initial={{ scale: 0.98, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: 'spring', damping: 15 }}
@@ -619,10 +629,7 @@ export default function App() {
 
                 <div className="flex gap-3 w-full">
                   <button
-                    onClick={() => {
-                      audioManager.playPop();
-                      setShowStarCelebration(false);
-                    }}
+                    onClick={handlePlayAgain}
                     className="flex-1 py-3.5 bg-white hover:bg-gray-100 text-black border-3 border-black font-black text-xs uppercase tracking-wider rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all"
                   >
                     PLAY AGAIN
