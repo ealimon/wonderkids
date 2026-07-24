@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, PanInfo } from 'motion/react';
 import { PatternItem, PatternQuestion } from '../types';
 import { audioManager } from '../utils/audio';
 import ConfettiEffect from './ConfettiEffect';
@@ -120,6 +120,7 @@ export default function PatternCompleter({
   const [selectedOptionIdx, setSelectedOptionIdx] = useState<number | null>(null);
   const [answeredCorrectly, setAnsweredCorrectly] = useState<boolean | null>(null);
   const [wrongOptionIdx, setWrongOptionIdx] = useState<number | null>(null);
+  const [draggedOptionHover, setDraggedOptionHover] = useState<number | null>(null);
   const [gameComplete, setGameComplete] = useState(false);
   const [score, setScore] = useState(0);
 
@@ -146,8 +147,88 @@ export default function PatternCompleter({
     setSelectedOptionIdx(null);
     setAnsweredCorrectly(null);
     setWrongOptionIdx(null);
+    setDraggedOptionHover(null);
     setGameComplete(false);
     setScore(0);
+  };
+
+  const checkIsOverTarget = (
+    optionIdx: number,
+    event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
+    const targetEl = document.getElementById('pattern-mystery-target');
+    if (!targetEl) return false;
+
+    const tRect = targetEl.getBoundingClientRect();
+    const padding = 45;
+
+    let dCenter: { x: number; y: number } | null = null;
+    const draggedEl = document.querySelector(`[data-dragged-option="${optionIdx}"]`);
+    if (draggedEl) {
+      const dRect = draggedEl.getBoundingClientRect();
+      if (dRect.width > 0 && dRect.height > 0) {
+        dCenter = {
+          x: dRect.left + dRect.width / 2,
+          y: dRect.top + dRect.height / 2,
+        };
+      }
+    }
+
+    let cx = 0;
+    let cy = 0;
+    if (event && 'clientX' in event && typeof (event as MouseEvent).clientX === 'number' && (event as MouseEvent).clientX !== 0) {
+      cx = (event as MouseEvent).clientX;
+      cy = (event as MouseEvent).clientY;
+    } else if (event && 'changedTouches' in event && (event as TouchEvent).changedTouches?.length > 0) {
+      cx = (event as TouchEvent).changedTouches[0].clientX;
+      cy = (event as TouchEvent).changedTouches[0].clientY;
+    } else if (event && 'touches' in event && (event as TouchEvent).touches?.length > 0) {
+      cx = (event as TouchEvent).touches[0].clientX;
+      cy = (event as TouchEvent).touches[0].clientY;
+    }
+
+    if (!cx && info?.point) {
+      cx = info.point.x - window.scrollX;
+      cy = info.point.y - window.scrollY;
+    }
+
+    const centerMatch =
+      dCenter &&
+      dCenter.x >= tRect.left - padding &&
+      dCenter.x <= tRect.right + padding &&
+      dCenter.y >= tRect.top - padding &&
+      dCenter.y <= tRect.bottom + padding;
+
+    const pointerMatch =
+      cx > 0 &&
+      cx >= tRect.left - padding &&
+      cx <= tRect.right + padding &&
+      cy >= tRect.top - padding &&
+      cy <= tRect.bottom + padding;
+
+    return Boolean(centerMatch || pointerMatch);
+  };
+
+  const handleDrag = (
+    event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo,
+    optionIdx: number
+  ) => {
+    const isOver = checkIsOverTarget(optionIdx, event, info);
+    setDraggedOptionHover(isOver ? optionIdx : null);
+  };
+
+  const handleDragEnd = (
+    event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo,
+    optionIdx: number
+  ) => {
+    const isOver = checkIsOverTarget(optionIdx, event, info) || draggedOptionHover === optionIdx;
+    setDraggedOptionHover(null);
+    if (isOver) {
+      handleSelectOption(optionIdx);
+    }
   };
 
   const handleSelectOption = (optionIdx: number) => {
@@ -312,7 +393,7 @@ export default function PatternCompleter({
                 <div className="inline-block bg-yellow-300 border-3 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] p-3.5 rounded-2xl mb-3 text-2xl">🧩</div>
                 <h2 className="text-2xl font-black uppercase tracking-tight" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>WHAT COMES NEXT?</h2>
                 <p className="text-xs font-bold text-gray-700 mt-2">
-                  Look closely at the pattern, then tap the bubble below that fits into the question mark!
+                  Look closely at the pattern, then drag or tap the bubble below that fits into the question mark!
                 </p>
               </div>
 
@@ -352,9 +433,14 @@ export default function PatternCompleter({
                     ) : (
                       <motion.div
                         key="mystery"
-                        animate={{ scale: [1, 1.05, 1] }}
-                        transition={{ repeat: Infinity, duration: 1.5 }}
-                        className="w-20 h-20 rounded-2xl border-4 border-dashed border-black bg-yellow-300 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center flex-shrink-0 cursor-pointer"
+                        id="pattern-mystery-target"
+                        animate={{ scale: draggedOptionHover !== null ? 1.25 : [1, 1.05, 1] }}
+                        transition={{ repeat: draggedOptionHover !== null ? 0 : Infinity, duration: 1.5 }}
+                        className={`w-20 h-20 rounded-2xl border-4 border-dashed border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center flex-shrink-0 cursor-pointer transition-all ${
+                          draggedOptionHover !== null
+                            ? 'bg-yellow-300 ring-4 ring-emerald-400 scale-110 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'
+                            : 'bg-yellow-300'
+                        }`}
                       >
                         <span className="text-3xl font-black text-black font-sans">❓</span>
                       </motion.div>
@@ -396,28 +482,35 @@ export default function PatternCompleter({
                   ) : activeRound ? (
                     <div className="flex flex-col items-center w-full" key="options-panel">
                       <span className="text-xs font-black uppercase tracking-wider text-purple-950 mb-4 font-sans">
-                        TAP THE MATCHING BUBBLE:
+                        DRAG OR TAP THE MATCHING BUBBLE:
                       </span>
                       <div className="flex gap-4 justify-center">
                         {activeRound.options.map((option, idx) => {
                           const isWrong = wrongOptionIdx === idx;
                           return (
-                            <motion.button
+                            <motion.div
                               key={idx}
+                              data-dragged-option={idx}
+                              drag
+                              dragSnapToOrigin
+                              dragElastic={0.15}
+                              onDrag={(event, info) => handleDrag(event, info, idx)}
+                              onDragEnd={(event, info) => handleDragEnd(event, info, idx)}
                               onClick={() => handleSelectOption(idx)}
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.9 }}
+                              whileDrag={{ scale: 1.25, zIndex: 100 }}
                               animate={isWrong ? { x: [-10, 10, -10, 10, 0] } : {}}
                               transition={{ duration: 0.4 }}
-                              className={`w-20 h-20 rounded-3xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center cursor-pointer hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all ${
+                              className={`w-20 h-20 rounded-3xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none ${
                                 isWrong
                                   ? 'bg-red-400 text-white'
                                   : 'bg-white hover:bg-yellow-100'
                               }`}
                               id={`pattern-option-${idx}`}
                             >
-                              <span className="text-5xl select-none">{option.emoji}</span>
-                            </motion.button>
+                              <span className="text-5xl select-none pointer-events-none">{option.emoji}</span>
+                            </motion.div>
                           );
                         })}
                       </div>

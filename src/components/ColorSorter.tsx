@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, PanInfo } from 'motion/react';
 import { SorterItem, SorterBucket } from '../types';
 import { audioManager } from '../utils/audio';
 import ConfettiEffect from './ConfettiEffect';
@@ -89,6 +89,7 @@ export default function ColorSorter({
   const [solvedItems, setSolvedItems] = useState<{ [key: string]: string }>({}); // itemId -> bucketColor
   const [selectedItem, setSelectedItem] = useState<SorterItem | null>(null);
   const [wrongTarget, setWrongTarget] = useState<string | null>(null);
+  const [draggedBucketHover, setDraggedBucketHover] = useState<string | null>(null);
   const [roundComplete, setRoundComplete] = useState(false);
   const [score, setScore] = useState(0);
 
@@ -117,8 +118,93 @@ export default function ColorSorter({
     setSolvedItems({});
     setSelectedItem(null);
     setWrongTarget(null);
+    setDraggedBucketHover(null);
     setRoundComplete(false);
     setScore(0);
+  };
+
+  const checkIsOverBucket = (
+    event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ): string | null => {
+    const buckets = COLOR_BUCKETS.map((b) => ({
+      color: b.color,
+      el: document.getElementById(`sorter-bucket-${b.color}`),
+    }));
+
+    let cx = 0;
+    let cy = 0;
+    if (event && 'clientX' in event && typeof (event as MouseEvent).clientX === 'number' && (event as MouseEvent).clientX !== 0) {
+      cx = (event as MouseEvent).clientX;
+      cy = (event as MouseEvent).clientY;
+    } else if (event && 'changedTouches' in event && (event as TouchEvent).changedTouches?.length > 0) {
+      cx = (event as TouchEvent).changedTouches[0].clientX;
+      cy = (event as TouchEvent).changedTouches[0].clientY;
+    } else if (event && 'touches' in event && (event as TouchEvent).touches?.length > 0) {
+      cx = (event as TouchEvent).touches[0].clientX;
+      cy = (event as TouchEvent).touches[0].clientY;
+    }
+
+    if (!cx && info?.point) {
+      cx = info.point.x - window.scrollX;
+      cy = info.point.y - window.scrollY;
+    }
+
+    const draggedEl = document.getElementById(`sorter-item-${currentItem?.id}`);
+    let dCenter: { x: number; y: number } | null = null;
+    if (draggedEl) {
+      const dRect = draggedEl.getBoundingClientRect();
+      if (dRect.width > 0 && dRect.height > 0) {
+        dCenter = {
+          x: dRect.left + dRect.width / 2,
+          y: dRect.top + dRect.height / 2,
+        };
+      }
+    }
+
+    for (const b of buckets) {
+      if (!b.el) continue;
+      const bRect = b.el.getBoundingClientRect();
+      const padding = 25;
+
+      const centerMatch =
+        dCenter &&
+        dCenter.x >= bRect.left - padding &&
+        dCenter.x <= bRect.right + padding &&
+        dCenter.y >= bRect.top - padding &&
+        dCenter.y <= bRect.bottom + padding;
+
+      const pointerMatch =
+        cx > 0 &&
+        cx >= bRect.left - padding &&
+        cx <= bRect.right + padding &&
+        cy >= bRect.top - padding &&
+        cy <= bRect.bottom + padding;
+
+      if (centerMatch || pointerMatch) {
+        return b.color;
+      }
+    }
+    return null;
+  };
+
+  const handleDragItem = (
+    event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
+    const bucket = checkIsOverBucket(event, info);
+    setDraggedBucketHover(bucket);
+  };
+
+  const handleDragEndItem = (
+    event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
+    const bucket = checkIsOverBucket(event, info) || draggedBucketHover;
+    setDraggedBucketHover(null);
+    if (bucket) {
+      handleSelectBucket(bucket);
+    }
   };
 
   const handleGeneratePrintWorksheet = () => {
@@ -312,7 +398,7 @@ export default function ColorSorter({
                 <p className="text-xs font-bold text-gray-700 mt-3 leading-relaxed">
                   {roundComplete
                     ? 'Awesome job! All colorful items are safe and happy in their colored baskets!'
-                    : 'Tap the active toy, animal, or fruit inside the dotted zone. Then, tap its matching colored basket!'}
+                    : 'Drag or tap the active toy, animal, or fruit inside the dotted zone into its matching colored basket!'}
                 </p>
               </div>
 
@@ -326,16 +412,22 @@ export default function ColorSorter({
                       animate={{ scale: 1, rotate: 0, opacity: 1 }}
                       exit={{ scale: 0.2, rotate: 15, opacity: 0 }}
                       transition={{ type: 'spring', damping: 15, stiffness: 180 }}
+                      drag
+                      dragSnapToOrigin
+                      dragElastic={0.15}
+                      onDrag={handleDragItem}
+                      onDragEnd={handleDragEndItem}
                       onClick={() => handleSelectItem(currentItem)}
-                      className={`w-40 h-40 rounded-3xl flex flex-col items-center justify-center bg-white border-4 border-black cursor-pointer shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all ${
-                        selectedItem?.id === currentItem.id ? 'ring-4 ring-orange-500 animate-bounce' : ''
-                      }`}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
+                      whileDrag={{ scale: 1.2, zIndex: 100 }}
+                      className={`w-40 h-40 rounded-3xl flex flex-col items-center justify-center bg-white border-4 border-black cursor-grab active:cursor-grabbing shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] touch-none select-none ${
+                        selectedItem?.id === currentItem.id ? 'ring-4 ring-orange-500 animate-bounce' : ''
+                      }`}
                       id={`sorter-item-${currentItem.id}`}
                     >
-                      <span className="text-7xl mb-1 filter drop-shadow-md select-none">{currentItem.emoji}</span>
-                      <span className="text-xs font-black uppercase tracking-wide text-black font-sans">{currentItem.name}</span>
+                      <span className="text-7xl mb-1 filter drop-shadow-md select-none pointer-events-none">{currentItem.emoji}</span>
+                      <span className="text-xs font-black uppercase tracking-wide text-black font-sans pointer-events-none">{currentItem.name}</span>
                     </motion.div>
                   ) : roundComplete ? (
                     <motion.div
@@ -386,6 +478,7 @@ export default function ColorSorter({
             <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-6 mt-10">
               {COLOR_BUCKETS.map((bucket) => {
                 const isWrong = wrongTarget === bucket.color;
+                const isHovered = draggedBucketHover === bucket.color;
                 return (
                   <motion.div
                     key={bucket.color}
@@ -394,6 +487,8 @@ export default function ColorSorter({
                       bucket.bgColor
                     } ${bucket.textColor} ${
                       isWrong ? 'bg-red-500 text-white animate-shake' : ''
+                    } ${
+                      isHovered ? 'ring-4 ring-yellow-300 scale-105 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)]' : ''
                     }`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -401,8 +496,8 @@ export default function ColorSorter({
                     transition={{ duration: 0.4 }}
                     id={`sorter-bucket-${bucket.color}`}
                   >
-                    <span className="text-6xl mb-2 filter drop-shadow-sm select-none">{bucket.emoji}</span>
-                    <span className="font-black text-lg uppercase tracking-wide font-sans">{bucket.color}</span>
+                    <span className="text-6xl mb-2 filter drop-shadow-sm select-none pointer-events-none">{bucket.emoji}</span>
+                    <span className="font-black text-lg uppercase tracking-wide font-sans pointer-events-none">{bucket.color}</span>
                   </motion.div>
                 );
               })}
