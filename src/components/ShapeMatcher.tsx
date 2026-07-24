@@ -68,6 +68,7 @@ export default function ShapeMatcher({
   const [targets, setTargets] = useState<ShapeItem[]>([]);
   const [solved, setSolved] = useState<{ [key: string]: boolean }>({}); // shapeId -> solved
   const [selectedShape, setSelectedShape] = useState<ShapeItem | null>(null);
+  const [draggedTargetHover, setDraggedTargetHover] = useState<string | null>(null);
   const [wrongTarget, setWrongTarget] = useState<string | null>(null);
   const [roundComplete, setRoundComplete] = useState(false);
   const [score, setScore] = useState(0);
@@ -208,6 +209,52 @@ export default function ShapeMatcher({
     if (solved[shape.id] || roundComplete) return;
     audioManager.playPop();
     setSelectedShape(shape);
+    setDraggedTargetHover(null);
+  };
+
+  const getPointerPoint = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    let px = info?.point?.x;
+    let py = info?.point?.y;
+
+    if (!px || px === 0) {
+      if ('clientX' in event && typeof event.clientX === 'number') {
+        px = event.clientX;
+        py = event.clientY;
+      } else if ('touches' in event && (event as TouchEvent).touches?.length > 0) {
+        px = (event as TouchEvent).touches[0].clientX;
+        py = (event as TouchEvent).touches[0].clientY;
+      } else if ('changedTouches' in event && (event as TouchEvent).changedTouches?.length > 0) {
+        px = (event as TouchEvent).changedTouches[0].clientX;
+        py = (event as TouchEvent).changedTouches[0].clientY;
+      }
+    }
+    return { x: px || 0, y: py || 0 };
+  };
+
+  const findHoveredTarget = (x: number, y: number) => {
+    if (!x || !y) return null;
+    const targetElements = document.querySelectorAll('[data-target-type]');
+    let foundType: string | null = null;
+
+    targetElements.forEach((el) => {
+      const rect = el.getBoundingClientRect();
+      const padding = 30; // generous padding around silhouette cards
+      if (
+        x >= rect.left - padding &&
+        x <= rect.right + padding &&
+        y >= rect.top - padding &&
+        y <= rect.bottom + padding
+      ) {
+        foundType = el.getAttribute('data-target-type');
+      }
+    });
+    return foundType;
+  };
+
+  const handleDrag = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    const { x, y } = getPointerPoint(event, info);
+    const hoverType = findHoveredTarget(x, y);
+    setDraggedTargetHover(hoverType);
   };
 
   const handleDragEnd = (
@@ -215,31 +262,13 @@ export default function ShapeMatcher({
     info: PanInfo,
     shape: ShapeItem
   ) => {
-    // Get pointer coordinates
-    const pointX = info.point.x ?? (event as MouseEvent).clientX;
-    const pointY = info.point.y ?? (event as MouseEvent).clientY;
+    const { x, y } = getPointerPoint(event, info);
+    const targetType = findHoveredTarget(x, y) || draggedTargetHover;
 
-    if (pointX !== undefined && pointY !== undefined && pointX !== 0 && pointY !== 0) {
-      const targetElements = document.querySelectorAll('[data-target-type]');
-      let matchedType: string | null = null;
+    setDraggedTargetHover(null);
 
-      targetElements.forEach((el) => {
-        const rect = el.getBoundingClientRect();
-        // Generous padding around the target silhouette for smooth touch/mouse matching
-        const padding = 25;
-        if (
-          pointX >= rect.left - padding &&
-          pointX <= rect.right + padding &&
-          pointY >= rect.top - padding &&
-          pointY <= rect.bottom + padding
-        ) {
-          matchedType = el.getAttribute('data-target-type');
-        }
-      });
-
-      if (matchedType) {
-        attemptMatch(shape, matchedType);
-      }
+    if (targetType) {
+      attemptMatch(shape, targetType);
     }
   };
 
@@ -334,20 +363,21 @@ export default function ShapeMatcher({
                       <AnimatePresence key={shape.id}>
                         {!isSolved ? (
                           <motion.div
-                            layout
                             drag
                             dragSnapToOrigin
+                            dragElastic={0.15}
                             onDragStart={() => handleDragStart(shape)}
+                            onDrag={(event, info) => handleDrag(event, info)}
                             onDragEnd={(event, info) => handleDragEnd(event, info, shape)}
                             whileDrag={{ scale: 1.15, zIndex: 100 }}
                             initial={{ opacity: 0, scale: 0.5 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.2 }}
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
+                            whileHover={{ scale: 1.08 }}
+                            whileTap={{ scale: 0.95 }}
                             onClick={() => handleSelectShape(shape)}
-                            className={`w-24 h-24 rounded-2xl flex flex-col items-center justify-center bg-white border-4 border-black cursor-grab active:cursor-grabbing shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all relative touch-none select-none ${
-                              isSelected ? 'ring-4 ring-orange-500 animate-bounce' : ''
+                            className={`w-24 h-24 rounded-2xl flex flex-col items-center justify-center bg-white border-4 border-black cursor-grab active:cursor-grabbing shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative touch-none select-none ${
+                              isSelected ? 'ring-4 ring-orange-500 bg-orange-50 scale-105' : ''
                             }`}
                           >
                             <svg viewBox="0 0 100 100" className="w-16 h-16 pointer-events-none">
@@ -396,6 +426,7 @@ export default function ShapeMatcher({
                     const originalShape = SHAPES_LIST.find((s) => s.type === target.type);
                     const isMatched = originalShape ? solved[originalShape.id] : false;
                     const isWrong = wrongTarget === target.type;
+                    const isHovered = draggedTargetHover === target.type;
 
                     return (
                       <motion.div
@@ -411,6 +442,8 @@ export default function ShapeMatcher({
                             ? 'border-emerald-500 bg-emerald-400 text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'
                             : isWrong
                             ? 'border-red-500 bg-red-400 text-white animate-shake shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'
+                            : isHovered
+                            ? 'border-orange-500 bg-amber-300 scale-105 ring-4 ring-amber-400 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'
                             : selectedShape
                             ? 'border-black bg-yellow-300 cursor-pointer animate-pulse shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'
                             : 'border-black bg-white text-black/55 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'
