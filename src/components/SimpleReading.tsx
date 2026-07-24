@@ -83,16 +83,6 @@ export default function SimpleReading({
     setWsProblems(shuffled);
   };
 
-  const speakText = (text: string) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.85; // Kind, clear speed
-      utterance.pitch = 1.2;
-      window.speechSynthesis.speak(utterance);
-    }
-  };
-
   const handleWordSelect = (item: WorksheetItem, word: string) => {
     if (gameComplete || solvedAnswers[item.id]) return;
 
@@ -102,24 +92,17 @@ export default function SimpleReading({
       
       const updated = { ...solvedAnswers, [item.id]: word };
       setSolvedAnswers(updated);
-      
-      // Kid friendly word pronunciation
-      speakText(`${word}! Excellent!`);
 
       // Check if all 12 are solved
       if (Object.keys(updated).length === gridItems.length) {
         setGameComplete(true);
         audioManager.playCorrect();
         onGameWin(3);
-        setTimeout(() => {
-          speakText(`Amazing job, ${userName}! You completed your worksheet! A plus grade!`);
-        }, 600);
       }
     } else {
       audioManager.playIncorrect();
       const wrongKey = `${item.id}-${word}`;
       setWrongAnswers(prev => ({ ...prev, [wrongKey]: true }));
-      speakText(`That is ${word}. Try again!`);
       setTimeout(() => {
         setWrongAnswers(prev => {
           const copy = { ...prev };
@@ -128,10 +111,6 @@ export default function SimpleReading({
         });
       }, 600);
     }
-  };
-
-  const handleSpeakItemHint = (item: WorksheetItem) => {
-    speakText(`Can you find the word that matches the picture of the ${item.itemName}? The choices are: ${item.choices[0]}, or ${item.choices[1]}.`);
   };
 
   const handlePrint = () => {
@@ -284,22 +263,12 @@ export default function SimpleReading({
                         Q{index + 1}
                       </span>
 
-                      {/* Speech Synthesis / Tip Button */}
-                      <button
-                        onClick={() => handleSpeakItemHint(item)}
-                        className="absolute top-2 right-2 bg-purple-100 hover:bg-purple-200 border border-black/20 p-1.5 rounded-lg cursor-pointer transition-all active:scale-95"
-                        title="Hear clue"
-                      >
-                        <Volume2 className="w-3.5 h-3.5 text-purple-700" />
-                      </button>
-
                       {/* Big bouncing Emoji/Picture */}
                       <div className="mt-4 flex items-center justify-center h-20">
                         <motion.span 
                           animate={isSolved ? { scale: [1, 1.25, 1], rotate: [0, 15, -15, 0] } : {}}
                           transition={{ type: 'spring', stiffness: 200 }}
-                          className="text-6xl drop-shadow-md select-none cursor-pointer"
-                          onClick={() => handleSpeakItemHint(item)}
+                          className="text-6xl drop-shadow-md select-none"
                         >
                           {item.emoji}
                         </motion.span>
