@@ -61,9 +61,9 @@ export default function App() {
       return nextState;
     });
 
-    // Trigger star flash celebration
+    audioManager.playGameComplete();
+    // Trigger module completion celebration overlay
     setShowStarCelebration(true);
-    setTimeout(() => setShowStarCelebration(false), 3000);
   };
 
   const toggleMute = () => {
@@ -286,12 +286,28 @@ export default function App() {
                 audioManager.playPop();
                 setShowCertificateModal(true);
               }}
-              className="flex items-center gap-2 bg-emerald-400 hover:bg-emerald-500 text-black border-4 border-black px-3.5 py-2 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer font-black text-xs uppercase tracking-wider"
-              title="Open Certificate & Badges"
+              className={`flex items-center gap-2 border-4 border-black px-3.5 py-2 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer font-black text-xs uppercase tracking-wider ${
+                Object.keys(scoreState.completedGames).length > 0
+                  ? 'bg-emerald-400 hover:bg-emerald-500 text-black'
+                  : 'bg-yellow-100 hover:bg-yellow-200 text-gray-800'
+              }`}
+              title={
+                Object.keys(scoreState.completedGames).length > 0
+                  ? 'Open Official Certificate & Badges'
+                  : 'Complete 1 module to unlock Certificate!'
+              }
               id="certificate-btn"
             >
-              <Trophy className="w-5 h-5 text-black fill-yellow-300" />
-              <span className="hidden sm:inline">CERTIFICATE</span>
+              {Object.keys(scoreState.completedGames).length > 0 ? (
+                <Trophy className="w-5 h-5 text-black fill-yellow-300" />
+              ) : (
+                <span className="text-sm">🔒</span>
+              )}
+              <span className="hidden sm:inline">
+                {Object.keys(scoreState.completedGames).length > 0
+                  ? 'CERTIFICATE'
+                  : 'CERTIFICATE (LOCKED)'}
+              </span>
             </button>
           </div>
         </div>
@@ -529,6 +545,62 @@ export default function App() {
         onClose={() => setShowCertificateModal(false)}
         scoreState={scoreState}
       />
+
+      {/* Module Completion Celebration Modal */}
+      <AnimatePresence>
+        {showStarCelebration && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm print:hidden"
+          >
+            <div className="bg-yellow-300 border-4 border-black rounded-[40px] p-8 max-w-md w-full text-center flex flex-col items-center shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] relative">
+              <div className="text-6xl animate-bounce my-2">🎉 🌟 🏆</div>
+              <h2 className="text-3xl font-black uppercase text-black tracking-tight font-sans">
+                MODULE COMPLETED!
+              </h2>
+              <p className="text-xs sm:text-sm font-extrabold text-black/80 font-sans mt-1">
+                Super job! You earned 3 Stars & completed this learning adventure!
+              </p>
+
+              <div className="bg-white border-3 border-black p-4 rounded-2xl my-4 w-full flex items-center justify-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                <Award className="w-8 h-8 text-orange-500 flex-shrink-0" />
+                <div className="text-left font-sans">
+                  <div className="text-[10px] font-black uppercase text-gray-500">Certificate Status</div>
+                  <div className="text-sm font-black text-black">
+                    📜 Certificate of Excellence Unlocked!
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 w-full mt-2">
+                <button
+                  onClick={() => {
+                    audioManager.playPop();
+                    setShowStarCelebration(false);
+                    setShowCertificateModal(true);
+                  }}
+                  className="w-full py-3.5 bg-emerald-400 hover:bg-emerald-500 text-black border-3 border-black font-black text-xs uppercase tracking-wider rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-105"
+                >
+                  <Trophy className="w-4 h-4 text-black fill-yellow-300" />
+                  VIEW & PRINT CERTIFICATE
+                </button>
+
+                <button
+                  onClick={() => {
+                    audioManager.playPop();
+                    setShowStarCelebration(false);
+                  }}
+                  className="w-full py-3.5 bg-white hover:bg-gray-100 text-black border-3 border-black font-black text-xs uppercase tracking-wider rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer"
+                >
+                  KEEP PLAYING
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -51,7 +51,262 @@ export default function CertificateModal({ isOpen, onClose, scoreState }: Certif
 
   const handlePrint = () => {
     audioManager.playPop();
-    window.print();
+
+    const displayName = childName.trim() || 'Wonderkid Scholar';
+    const formattedDate = new Date().toLocaleDateString();
+
+    const printIframe = document.createElement('iframe');
+    printIframe.style.position = 'fixed';
+    printIframe.style.right = '0';
+    printIframe.style.bottom = '0';
+    printIframe.style.width = '0px';
+    printIframe.style.height = '0px';
+    printIframe.style.border = 'none';
+    document.body.appendChild(printIframe);
+
+    const doc = printIframe.contentWindow?.document;
+    if (!doc) return;
+
+    doc.open();
+    doc.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Certificate of Excellence - ${displayName}</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700;800&display=swap" rel="stylesheet">
+        <style>
+          @page {
+            size: landscape;
+            margin: 8mm;
+          }
+          * { box-sizing: border-box; }
+          body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Fredoka', 'Helvetica Neue', Arial, sans-serif;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 98vh;
+            color: #1f2937;
+          }
+          .cert-container {
+            width: 100%;
+            max-width: 900px;
+            background-color: #FFFDF9;
+            border: 10px double #ea580c;
+            border-radius: 28px;
+            padding: 32px 40px;
+            text-align: center;
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(217, 119, 6, 0.1);
+          }
+          .corner { position: absolute; font-size: 28px; }
+          .top-left { top: 12px; left: 16px; }
+          .top-right { top: 12px; right: 16px; }
+          .bottom-left { bottom: 12px; left: 16px; }
+          .bottom-right { bottom: 12px; right: 16px; }
+          .badge-wrapper {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 72px;
+            height: 72px;
+            background-color: #fde047;
+            border: 4px solid #000000;
+            border-radius: 50%;
+            font-size: 40px;
+            margin-bottom: 8px;
+            box-shadow: 3px 3px 0px #000000;
+          }
+          .academy-title {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.25em;
+            color: #ea580c;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+          }
+          .main-title {
+            font-size: 32px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #111827;
+            margin: 4px 0 12px 0;
+            font-style: italic;
+          }
+          .subtitle {
+            font-size: 14px;
+            font-weight: 700;
+            color: #4b5563;
+            margin-bottom: 12px;
+          }
+          .name-box {
+            display: inline-block;
+            border-bottom: 4px dashed #f59e0b;
+            padding: 4px 32px;
+            margin: 4px 0 16px 0;
+          }
+          .recipient-name {
+            font-size: 36px;
+            font-weight: 800;
+            color: #ea580c;
+            font-style: italic;
+          }
+          .description {
+            font-size: 13px;
+            font-weight: 700;
+            color: #374151;
+            max-width: 600px;
+            margin: 0 auto 20px auto;
+            line-height: 1.5;
+          }
+          .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            max-width: 450px;
+            margin: 0 auto 24px auto;
+            background: rgba(254, 243, 199, 0.7);
+            border: 2px solid #fcd34d;
+            border-radius: 16px;
+            padding: 12px 20px;
+            text-align: left;
+          }
+          .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+          }
+          .stat-icon { font-size: 24px; }
+          .stat-label {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #6b7280;
+          }
+          .stat-value {
+            font-size: 15px;
+            font-weight: 800;
+            color: #000000;
+          }
+          .footer-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 2px solid #fde68a;
+          }
+          .sig-block { text-align: left; }
+          .sig-title {
+            font-size: 14px;
+            font-weight: 800;
+            font-style: italic;
+            color: #1f2937;
+          }
+          .sig-sub {
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #9ca3af;
+            border-top: 1px solid #9ca3af;
+            padding-top: 2px;
+            margin-top: 2px;
+          }
+          .date-block { text-align: right; }
+          .date-val {
+            font-size: 13px;
+            font-weight: 700;
+            color: #374151;
+          }
+          .star-emblem {
+            width: 56px;
+            height: 56px;
+            background: #facc15;
+            border: 3px solid #000000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 2px 2px 0px #000000;
+            transform: rotate(12deg);
+          }
+        </style>
+      </head>
+      <body>
+        <div class="cert-container">
+          <div class="corner top-left">👑</div>
+          <div class="corner top-right">✨</div>
+          <div class="corner bottom-left">🌟</div>
+          <div class="corner bottom-right">🏆</div>
+
+          <div class="badge-wrapper">${selectedBuddy}</div>
+          <div class="academy-title">WONDERKIDS EARLY LEARNING ACADEMY</div>
+          <h1 class="main-title">CERTIFICATE OF EXCELLENCE</h1>
+          <div class="subtitle">This official award is proudly presented to:</div>
+
+          <div class="name-box">
+            <span class="recipient-name">${displayName}</span>
+          </div>
+
+          <p class="description">
+            for outstanding enthusiasm, curiosity, and completing educational adventures in logic, colors, counting, phonics, math, and reading!
+          </p>
+
+          <div class="stats-grid">
+            <div class="stat-item">
+              <span class="stat-icon">⭐</span>
+              <div>
+                <div class="stat-label">Total Stars</div>
+                <div class="stat-value">${scoreState.stars} Stars Earned</div>
+              </div>
+            </div>
+            <div class="stat-item">
+              <span class="stat-icon">🏆</span>
+              <div>
+                <div class="stat-label">Activities</div>
+                <div class="stat-value">${completedCount} Games Completed</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="footer-row">
+            <div class="sig-block">
+              <div class="sig-title">Teddy & Friends</div>
+              <div class="sig-sub">Wonderkids Mascot</div>
+            </div>
+
+            <div class="star-emblem">🌟</div>
+
+            <div class="date-block">
+              <div class="date-val">${formattedDate}</div>
+              <div class="sig-sub">Date Issued</div>
+            </div>
+          </div>
+        </div>
+
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+            }, 300);
+          };
+        </script>
+      </body>
+      </html>
+    `);
+    doc.close();
+
+    setTimeout(() => {
+      if (document.body.contains(printIframe)) {
+        document.body.removeChild(printIframe);
+      }
+    }, 2500);
   };
 
   const completedCount = Object.keys(scoreState.completedGames).length;
@@ -116,7 +371,35 @@ export default function CertificateModal({ isOpen, onClose, scoreState }: Certif
           {/* Modal Body */}
           <div className="p-6 overflow-y-auto flex-grow print:p-0 print:overflow-visible">
             {activeTab === 'certificate' ? (
-              <div className="flex flex-col gap-6">
+              completedCount === 0 ? (
+                /* LOCKED CERTIFICATE STATE */
+                <div className="bg-amber-50 border-4 border-black rounded-[32px] p-8 sm:p-12 text-center flex flex-col items-center justify-center gap-4 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] my-2">
+                  <div className="w-20 h-20 bg-yellow-300 border-4 border-black rounded-full flex items-center justify-center text-4xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    🔒
+                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-black uppercase text-gray-900 tracking-tight">
+                    CERTIFICATE IS LOCKED!
+                  </h3>
+                  <p className="text-xs sm:text-sm font-bold text-gray-600 max-w-md leading-relaxed font-sans">
+                    Complete at least <strong>1 learning module</strong> (such as Color Sorter, Phonics Safari, Math Addition, or Simple Reading) to earn and print your Official Certificate of Excellence!
+                  </p>
+                  <div className="flex items-center gap-2 bg-white border-2 border-black px-4 py-2 rounded-2xl font-black text-xs shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] my-1">
+                    <Award className="w-4 h-4 text-orange-500" />
+                    <span>Progress: 0 / 1 Module Completed</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      audioManager.playPop();
+                      onClose();
+                    }}
+                    className="mt-2 px-6 py-3.5 bg-emerald-400 hover:bg-emerald-500 text-black border-3 border-black font-black text-xs uppercase tracking-wider rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2 cursor-pointer transition-all hover:scale-105"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    PLAY A MODULE TO UNLOCK CERTIFICATE!
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-6">
                 {/* Certificate Customizer Options (Hidden in Print) */}
                 <div className="bg-orange-50 border-3 border-black p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 print:hidden shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                   <div className="flex-1 w-full">
@@ -251,6 +534,7 @@ export default function CertificateModal({ isOpen, onClose, scoreState }: Certif
                   </div>
                 </div>
               </div>
+            )
             ) : (
               // TROPHIES & BADGES GALLERY TAB
               <div className="flex flex-col gap-6">
