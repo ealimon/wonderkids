@@ -140,6 +140,37 @@ export default function MathSubtraction({
     }
   };
 
+  const handleDragEnd = (event: any, info: any, optionVal: number) => {
+    if (roundComplete || gameComplete) return;
+
+    const targetEl = document.getElementById('subtraction-answer-target');
+    let hit = false;
+
+    if (targetEl) {
+      const rect = targetEl.getBoundingClientRect();
+      const padding = 35;
+      if (
+        info.point.x >= rect.left - padding &&
+        info.point.x <= rect.right + padding &&
+        info.point.y >= rect.top - padding &&
+        info.point.y <= rect.bottom + padding
+      ) {
+        hit = true;
+      }
+    }
+
+    if (!hit) {
+      const el = document.elementFromPoint(info.point.x, info.point.y);
+      if (el && el.closest('#subtraction-answer-target')) {
+        hit = true;
+      }
+    }
+
+    if (hit) {
+      handleSelectAnswer(optionVal);
+    }
+  };
+
   const handleNextRound = () => {
     if (currentRoundIdx < rounds.length - 1) {
       const nextIdx = currentRoundIdx + 1;
@@ -331,7 +362,10 @@ export default function MathSubtraction({
                   <div className="text-3xl font-black px-2">=</div>
 
                   {/* Answer Slot */}
-                  <div className="w-28 h-28 sm:w-32 sm:h-32 bg-teal-300 border-4 border-black rounded-[32px] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center relative">
+                  <div
+                    id="subtraction-answer-target"
+                    className="w-28 h-28 sm:w-32 sm:h-32 bg-teal-300 border-4 border-black rounded-[32px] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center relative"
+                  >
                     <AnimatePresence mode="wait">
                       {roundComplete ? (
                         <motion.div
@@ -394,28 +428,33 @@ export default function MathSubtraction({
                       </motion.div>
                     ) : (
                       <div className="flex flex-col items-center w-full" key="options-picker">
-                        <span className="text-xs font-black uppercase tracking-wider text-teal-950 mb-4 font-sans">
-                          TAP THE CORRECT ANSWER BUBBLE:
+                        <span className="text-xs font-black uppercase tracking-wider text-teal-950 mb-4 font-sans flex items-center gap-1.5">
+                          <span>✋</span> DRAG OR TAP THE CORRECT ANSWER BUBBLE:
                         </span>
                         <div className="flex gap-3 sm:gap-4 justify-center">
                           {options.map((opt) => {
                             const isWrong = wrongAnswer === opt;
                             return (
-                              <motion.button
+                              <motion.div
                                 key={opt}
+                                drag
+                                dragSnapToOrigin
+                                dragElastic={0.15}
+                                onDragEnd={(event, info) => handleDragEnd(event, info, opt)}
                                 onClick={() => handleSelectAnswer(opt)}
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.9 }}
+                                whileDrag={{ scale: 1.25, zIndex: 100 }}
                                 animate={isWrong ? { x: [-10, 10, -10, 10, 0] } : {}}
                                 transition={{ duration: 0.4 }}
-                                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full border-4 border-black font-black text-xl sm:text-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center cursor-pointer hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all ${
+                                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full border-4 border-black font-black text-xl sm:text-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none hover:translate-x-[-2px] hover:translate-y-[-2px] transition-colors ${
                                   isWrong
                                     ? 'bg-red-400 text-white'
                                     : 'bg-white hover:bg-yellow-100 text-black'
                                 }`}
                               >
                                 {opt}
-                              </motion.button>
+                              </motion.div>
                             );
                           })}
                         </div>

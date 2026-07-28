@@ -157,6 +157,38 @@ export default function WordPhonics({
     }
   };
 
+  const handleLetterDragEnd = (event: any, info: any, letter: string) => {
+    if (roundComplete || gameComplete) return;
+
+    // Check if letter was dropped near the phonics drop zone
+    const dropZone = document.getElementById('phonics-drop-zone');
+    let hit = false;
+
+    if (dropZone) {
+      const rect = dropZone.getBoundingClientRect();
+      const padding = 35; // generous touch drop padding
+      if (
+        info.point.x >= rect.left - padding &&
+        info.point.x <= rect.right + padding &&
+        info.point.y >= rect.top - padding &&
+        info.point.y <= rect.bottom + padding
+      ) {
+        hit = true;
+      }
+    }
+
+    if (!hit) {
+      const el = document.elementFromPoint(info.point.x, info.point.y);
+      if (el && el.closest('#phonics-drop-zone')) {
+        hit = true;
+      }
+    }
+
+    if (hit) {
+      handleSelectLetter(letter);
+    }
+  };
+
   const handleNextRound = () => {
     if (currentRoundIdx < rounds.length - 1) {
       const nextIdx = currentRoundIdx + 1;
@@ -321,7 +353,7 @@ export default function WordPhonics({
                   </p>
 
                   {/* Empty and filled letter slots */}
-                  <div className="flex gap-3">
+                  <div className="flex gap-3" id="phonics-drop-zone">
                     {spelledLetters.map((char, idx) => {
                       const isActiveSlot = idx === currentLetterIdx && !roundComplete;
                       return (
@@ -377,28 +409,33 @@ export default function WordPhonics({
                     </motion.div>
                   ) : (
                     <div className="flex flex-col items-center w-full" key="bubbles-panel">
-                      <span className="text-xs font-black uppercase tracking-wider text-pink-950 mb-4 font-sans">
-                        TAP THE CORRECT BUBBLE TO BUILD THE WORD:
+                      <span className="text-xs font-black uppercase tracking-wider text-pink-950 mb-4 font-sans flex items-center gap-1.5">
+                        <span>✋</span> DRAG OR TAP A LETTER BUBBLE TO SPELL THE WORD:
                       </span>
                       <div className="flex flex-wrap gap-4 justify-center">
-                        {letterOptions.map((letter) => {
+                        {letterOptions.map((letter, idx) => {
                           const isWrong = wrongOption === letter;
                           return (
-                            <motion.button
-                              key={letter}
+                            <motion.div
+                              key={`${letter}-${idx}`}
+                              drag
+                              dragSnapToOrigin
+                              dragElastic={0.15}
+                              onDragEnd={(event, info) => handleLetterDragEnd(event, info, letter)}
                               onClick={() => handleSelectLetter(letter)}
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.9 }}
+                              whileDrag={{ scale: 1.25, zIndex: 100 }}
                               animate={isWrong ? { x: [-10, 10, -10, 10, 0] } : {}}
                               transition={{ duration: 0.4 }}
-                              className={`w-16 h-16 rounded-full border-4 border-black font-black text-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center cursor-pointer hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all ${
+                              className={`w-16 h-16 rounded-full border-4 border-black font-black text-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none hover:translate-x-[-2px] hover:translate-y-[-2px] transition-colors ${
                                 isWrong
                                   ? 'bg-red-400 text-white'
                                   : 'bg-white hover:bg-yellow-100 text-black'
                               }`}
                             >
                               {letter}
-                            </motion.button>
+                            </motion.div>
                           );
                         })}
                       </div>
