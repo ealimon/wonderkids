@@ -262,7 +262,11 @@ export default function MathSubtraction({
         <button
           onClick={() => {
             audioManager.playPop();
-            setActiveTab('worksheet');
+            if (activeTab === 'worksheet') {
+              window.print();
+            } else {
+              setActiveTab('worksheet');
+            }
           }}
           className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-xs sm:text-sm tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
             activeTab === 'worksheet'
