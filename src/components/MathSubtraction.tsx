@@ -55,12 +55,20 @@ const SUBTRACTION_POOL: SubtractionProblem[] = [
 export default function MathSubtraction({
   onGameWin,
   onNextGame,
+  initialTab = 'game',
 }: {
   onGameWin: (stars: number) => void;
   onNextGame?: () => void;
+  initialTab?: 'game' | 'worksheet';
 }) {
   // Navigation / Tabs state
-  const [activeTab, setActiveTab] = useState<'game' | 'worksheet'>('game');
+  const [activeTab, setActiveTab] = useState<'game' | 'worksheet'>(initialTab);
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   // Interactive Game State
   const [rounds, setRounds] = useState<SubtractionProblem[]>([]);

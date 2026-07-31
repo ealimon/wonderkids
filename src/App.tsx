@@ -21,6 +21,7 @@ import {
   Sparkles,
   Award,
   ChevronRight,
+  Printer,
 } from 'lucide-react';
 
 export default function App() {
@@ -33,6 +34,7 @@ export default function App() {
   });
   const [showStarCelebration, setShowStarCelebration] = useState(false);
   const [showCertificateModal, setShowCertificateModal] = useState(false);
+  const [activeModuleTab, setActiveModuleTab] = useState<'game' | 'worksheet'>('game');
 
   // Load score state from local storage on mount
   useEffect(() => {
@@ -74,6 +76,7 @@ export default function App() {
     const currentIdx = activeGame ? gameOrder.indexOf(activeGame) : -1;
     const nextIdx = (currentIdx + 1) % gameOrder.length;
     setActiveGame(gameOrder[nextIdx]);
+    setActiveModuleTab('game');
     setGameResetKey((prev) => prev + 1);
     setShowStarCelebration(false);
   };
@@ -81,6 +84,7 @@ export default function App() {
   const handlePlayAgain = () => {
     audioManager.playPop();
     setShowStarCelebration(false);
+    setActiveModuleTab('game');
     setGameResetKey((prev) => prev + 1);
   };
 
@@ -106,6 +110,7 @@ export default function App() {
     audioManager.ensureAudioUnlocked();
     audioManager.playPop();
     setActiveGame(game);
+    setActiveModuleTab('game');
     setGameResetKey((prev) => prev + 1);
   };
 
@@ -113,7 +118,40 @@ export default function App() {
     if (activeGame !== null) {
       audioManager.playPop();
       setActiveGame(null);
+      setActiveModuleTab('game');
     }
+  };
+
+  const getWorksheetButtonLabel = (game: GameType) => {
+    switch (game) {
+      case 'sorter':
+        return 'PRINT COLOR WORKSHEET';
+      case 'matcher':
+        return 'PRINT SHAPE WORKSHEET';
+      case 'pattern':
+        return 'PRINT PATTERN WORKSHEET';
+      case 'garden':
+        return 'PRINT COUNTING WORKSHEET';
+      case 'phonics':
+        return 'PRINT PHONICS WORKSHEET';
+      case 'math':
+        return 'PRINT ADDITION WORKSHEET';
+      case 'subtraction':
+        return 'PRINT SUBTRACTION WORKSHEET';
+      case 'reading':
+        return 'PRINT READING WORKSHEET';
+      default:
+        return 'PRINT WORKSHEET';
+    }
+  };
+
+  const handlePrintModuleWorksheet = () => {
+    audioManager.playPop();
+    setShowStarCelebration(false);
+    setActiveModuleTab('worksheet');
+    setTimeout(() => {
+      window.print();
+    }, 300);
   };
 
   const resetAllStars = () => {
@@ -533,28 +571,28 @@ export default function App() {
                 className="w-full bg-white rounded-[44px] p-8 border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] print:border-none print:shadow-none print:p-0 print:bg-white"
               >
                 {activeGame === 'sorter' && (
-                  <ColorSorter onGameWin={handleGameWin} onNextGame={handleNextModule} />
+                  <ColorSorter onGameWin={handleGameWin} onNextGame={handleNextModule} initialTab={activeModuleTab} />
                 )}
                 {activeGame === 'matcher' && (
-                  <ShapeMatcher onGameWin={handleGameWin} onNextGame={handleNextModule} />
+                  <ShapeMatcher onGameWin={handleGameWin} onNextGame={handleNextModule} initialTab={activeModuleTab} />
                 )}
                 {activeGame === 'pattern' && (
-                  <PatternCompleter onGameWin={handleGameWin} onNextGame={handleNextModule} />
+                  <PatternCompleter onGameWin={handleGameWin} onNextGame={handleNextModule} initialTab={activeModuleTab} />
                 )}
                 {activeGame === 'garden' && (
-                  <CountingGarden onGameWin={handleGameWin} onNextGame={handleNextModule} />
+                  <CountingGarden onGameWin={handleGameWin} onNextGame={handleNextModule} initialTab={activeModuleTab} />
                 )}
                 {activeGame === 'phonics' && (
-                  <WordPhonics onGameWin={handleGameWin} onNextGame={handleNextModule} />
+                  <WordPhonics onGameWin={handleGameWin} onNextGame={handleNextModule} initialTab={activeModuleTab} />
                 )}
                 {activeGame === 'math' && (
-                  <MathAddition onGameWin={handleGameWin} onNextGame={handleNextModule} />
+                  <MathAddition onGameWin={handleGameWin} onNextGame={handleNextModule} initialTab={activeModuleTab} />
                 )}
                 {activeGame === 'subtraction' && (
-                  <MathSubtraction onGameWin={handleGameWin} onNextGame={handleNextModule} />
+                  <MathSubtraction onGameWin={handleGameWin} onNextGame={handleNextModule} initialTab={activeModuleTab} />
                 )}
                 {activeGame === 'reading' && (
-                  <SimpleReading onGameWin={handleGameWin} onNextGame={handleNextModule} />
+                  <SimpleReading onGameWin={handleGameWin} onNextGame={handleNextModule} initialTab={activeModuleTab} />
                 )}
               </motion.div>
             </motion.div>
@@ -605,11 +643,13 @@ export default function App() {
               </p>
 
               {activeGame && (
-                <div className="bg-white/90 border-2 border-black rounded-xl py-1.5 px-3 my-2 text-xs font-black text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                  {(scoreState.completedGames[activeGame] || 1) >= 3
-                    ? '🏆 3/3 Plays Mastered! Ready for the Next Module!'
-                    : `Completed ${scoreState.completedGames[activeGame] || 1} of 3 plays in this module`}
-                </div>
+                <button
+                  onClick={handlePrintModuleWorksheet}
+                  className="w-full py-3 my-2 bg-purple-500 hover:bg-purple-600 text-white border-3 border-black font-black text-xs uppercase tracking-wider rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.02] active:scale-95"
+                >
+                  <Printer className="w-4 h-4 stroke-[3]" />
+                  {getWorksheetButtonLabel(activeGame)}
+                </button>
               )}
 
               <div className="bg-white border-3 border-black p-4 rounded-2xl my-2 w-full flex items-center justify-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">

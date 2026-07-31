@@ -40,12 +40,20 @@ const ALL_WORKSHEET_ITEMS: WorksheetItem[] = [
 export default function SimpleReading({
   onGameWin,
   onNextGame,
+  initialTab = 'game',
 }: {
   onGameWin: (stars: number) => void;
   onNextGame?: () => void;
+  initialTab?: 'game' | 'worksheet';
 }) {
   // Navigation tabs
-  const [activeTab, setActiveTab] = useState<'game' | 'worksheet'>('game');
+  const [activeTab, setActiveTab] = useState<'game' | 'worksheet'>(initialTab);
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   // Interactive Game States
   const [userName, setUserName] = useState('Little Scholar');

@@ -86,11 +86,19 @@ const WORKSHEET_ITEMS: Omit<GardenProblem, 'id' | 'targetCount' | 'totalCount'>[
 export default function CountingGarden({
   onGameWin,
   onNextGame,
+  initialTab = 'game',
 }: {
   onGameWin: (stars: number) => void;
   onNextGame?: () => void;
+  initialTab?: 'game' | 'worksheet';
 }) {
-  const [activeTab, setActiveTab] = useState<'game' | 'worksheet'>('game');
+  const [activeTab, setActiveTab] = useState<'game' | 'worksheet'>(initialTab);
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   // Interactive Game States
   const [theme, setTheme] = useState<GardenTheme>(GARDEN_THEMES[0]);

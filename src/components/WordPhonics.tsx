@@ -46,12 +46,20 @@ const PHONICS_WORDS_POOL: PhonicsWord[] = [
 export default function WordPhonics({
   onGameWin,
   onNextGame,
+  initialTab = 'game',
 }: {
   onGameWin: (stars: number) => void;
   onNextGame?: () => void;
+  initialTab?: 'game' | 'worksheet';
 }) {
   // Navigation tabs
-  const [activeTab, setActiveTab] = useState<'game' | 'worksheet'>('game');
+  const [activeTab, setActiveTab] = useState<'game' | 'worksheet'>(initialTab);
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   // Interactive Game States
   const [rounds, setRounds] = useState<PhonicsWord[]>([]);
