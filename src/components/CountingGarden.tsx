@@ -295,16 +295,8 @@ export default function CountingGarden({
         </button>
       </div>
 
-      <AnimatePresence mode="wait">
-        {activeTab === 'game' ? (
-          // INTERACTIVE COUNTING GARDEN GAME
-          <motion.div
-            key="game-tab"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="w-full flex flex-col items-center print:hidden"
-          >
+      {/* INTERACTIVE COUNTING GARDEN GAME */}
+      <div className={`w-full flex-col items-center print:hidden ${activeTab === 'game' ? 'flex' : 'hidden'}`}>
             <ConfettiEffect active={roundComplete} />
 
             {/* Progress & Category Switcher */}
@@ -487,16 +479,10 @@ export default function CountingGarden({
                 </button>
               )}
             </div>
-          </motion.div>
-        ) : (
-          // WORK SHEET GENERATOR LAB (PRINTABLE)
-          <motion.div
-            key="worksheet-tab"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="w-full flex flex-col items-center"
-          >
+      </div>
+
+      {/* WORK SHEET GENERATOR LAB (PRINTABLE) */}
+      <div className={`w-full flex-col items-center ${activeTab === 'worksheet' ? 'flex' : 'hidden print:flex'}`}>
             {/* Control Panel (Hidden in print) */}
             <div className="w-full bg-purple-100 border-4 border-black p-6 sm:p-8 rounded-[36px] mb-8 flex flex-col gap-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] print:hidden">
               <div className="flex items-center gap-2.5">
@@ -865,9 +851,7 @@ export default function CountingGarden({
 
               </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      </div>
     </div>
   );
 }

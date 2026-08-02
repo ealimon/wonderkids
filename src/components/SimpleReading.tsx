@@ -177,16 +177,8 @@ export default function SimpleReading({
         </button>
       </div>
 
-      <AnimatePresence mode="wait">
-        {activeTab === 'game' ? (
-          // INTERACTIVE GAME TAB
-          <motion.div
-            key="game-tab"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="w-full flex flex-col items-center print:hidden"
-          >
+      {/* INTERACTIVE GAME TAB */}
+      <div className={`w-full flex-col items-center print:hidden ${activeTab === 'game' ? 'flex' : 'hidden'}`}>
             <ConfettiEffect active={gameComplete} />
 
             {/* Outer Worksheet Layout Wrapper */}
@@ -394,16 +386,10 @@ export default function SimpleReading({
                 </button>
               )}
             </div>
-          </motion.div>
-        ) : (
-          // PRINTABLE WORKSHEETS GENERATOR
-          <motion.div
-            key="worksheet-tab"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="w-full flex flex-col gap-8 text-black"
-          >
+      </div>
+
+      {/* PRINTABLE WORKSHEETS GENERATOR */}
+      <div className={`w-full flex-col gap-8 text-black ${activeTab === 'worksheet' ? 'flex' : 'hidden print:flex'}`}>
             {/* Options Dashboard (Hidden in Print) */}
             <div className="w-full bg-purple-100 rounded-[32px] border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-6 sm:p-8 flex flex-col gap-6 print:hidden">
               <div className="flex items-center gap-3">
@@ -645,9 +631,7 @@ export default function SimpleReading({
                 </div>
               </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      </div>
     </div>
   );
 }
