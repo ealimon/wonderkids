@@ -607,7 +607,7 @@ export default function App() {
 
       {/* Footer credits block */}
       <footer className="w-full text-center py-6 text-[10px] sm:text-xs font-bold text-amber-800/50 font-sans mt-auto print:hidden flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
-        <span>© 2026 Wonderkids Early Learning. Built for active play & early learning.</span>
+        <span>© 2026 Storybook Education. Built for active play & early learning.</span>
         <button
           onClick={handleResetProgress}
           className="text-amber-800/70 hover:text-amber-900 underline cursor-pointer font-extrabold"

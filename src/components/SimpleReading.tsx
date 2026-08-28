@@ -129,7 +129,7 @@ export default function SimpleReading({
   const getMascotDetails = () => {
     switch (wsMascotTheme) {
       case 'wonderkids':
-        return { emoji: '🧸', label: 'WONDERKIDS EDUCATION', title: 'CVC Reading practice', bg: 'bg-yellow-300' };
+        return { emoji: '🧸', label: 'STORYBOOK EDUCATION', title: 'CVC Reading practice', bg: 'bg-yellow-300' };
       case 'little-scholars':
         return { emoji: '🌟', label: 'LITTLE SCHOLARS', title: 'SUPER READING STARS', bg: 'bg-pink-400 text-white' };
       case 'reading-club':
@@ -435,7 +435,7 @@ export default function SimpleReading({
                   <div className="flex flex-col gap-1.5">
                     {([
                       { id: 'reading-club', name: '📖 Reading Club' },
-                      { id: 'wonderkids', name: '🧸 Wonderkids' },
+                      { id: 'wonderkids', name: '🧸 Storybook' },
                       { id: 'little-scholars', name: '🌟 Little Scholars' }
                     ] as const).map((t) => (
                       <button

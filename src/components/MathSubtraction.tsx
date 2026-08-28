@@ -655,7 +655,7 @@ export default function MathSubtraction({
                       <span className="text-2xl print:text-xl">🧸</span>
                     </div>
                     <div className="flex flex-col text-left">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-orange-500 leading-none">WONDERKIDS EDUCATION</span>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-orange-500 leading-none">STORYBOOK EDUCATION</span>
                       <h1 className="text-2xl font-black tracking-tight uppercase mt-0.5 leading-none print:text-lg">Subtraction Sums</h1>
                     </div>
                   </div>

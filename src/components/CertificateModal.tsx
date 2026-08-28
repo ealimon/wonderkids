@@ -45,7 +45,7 @@ const BUDDIES = [
 
 export default function CertificateModal({ isOpen, onClose, scoreState, onResetProgress }: CertificateModalProps) {
   const [activeTab, setActiveTab] = useState<'trophies' | 'certificate'>('certificate');
-  const [childName, setChildName] = useState('Wonderkid Scholar');
+  const [childName, setChildName] = useState('Storybook Scholar');
   const [selectedBuddy, setSelectedBuddy] = useState('🧸');
 
   if (!isOpen) return null;
@@ -53,7 +53,7 @@ export default function CertificateModal({ isOpen, onClose, scoreState, onResetP
   const handlePrint = () => {
     audioManager.playPop();
 
-    const displayName = childName.trim() || 'Wonderkid Scholar';
+    const displayName = childName.trim() || 'Storybook Scholar';
     const formattedDate = new Date().toLocaleDateString();
 
     const printIframe = document.createElement('iframe');
@@ -247,7 +247,7 @@ export default function CertificateModal({ isOpen, onClose, scoreState, onResetP
           <div class="corner bottom-right">🏆</div>
 
           <div class="badge-wrapper">${selectedBuddy}</div>
-          <div class="academy-title">WONDERKIDS EARLY LEARNING ACADEMY</div>
+          <div class="academy-title">STORYBOOK EDUCATION ACADEMY</div>
           <h1 class="main-title">CERTIFICATE OF EXCELLENCE</h1>
           <div class="subtitle">This official award is proudly presented to:</div>
 
@@ -279,7 +279,7 @@ export default function CertificateModal({ isOpen, onClose, scoreState, onResetP
           <div class="footer-row">
             <div class="sig-block">
               <div class="sig-title">Teddy & Friends</div>
-              <div class="sig-sub">Wonderkids Mascot</div>
+              <div class="sig-sub">Storybook Mascot</div>
             </div>
 
             <div class="star-emblem">🌟</div>
@@ -325,7 +325,7 @@ export default function CertificateModal({ isOpen, onClose, scoreState, onResetP
           <div className="flex items-center justify-between px-6 py-4 bg-orange-400 border-b-4 border-black print:hidden">
             <div className="flex items-center gap-2 text-white font-black">
               <Trophy className="w-6 h-6 text-yellow-300 fill-yellow-300" />
-              <span className="text-lg uppercase tracking-tight">WONDERKIDS TROPHY & CERTIFICATE CENTER</span>
+              <span className="text-lg uppercase tracking-tight">STORYBOOK EDUCATION TROPHY & CERTIFICATE CENTER</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -478,7 +478,7 @@ export default function CertificateModal({ isOpen, onClose, scoreState, onResetP
                   </div>
 
                   <span className="text-xs font-black uppercase tracking-[0.25em] text-orange-600">
-                    WONDERKIDS EARLY LEARNING ACADEMY
+                    STORYBOOK EDUCATION ACADEMY
                   </span>
 
                   <h2
@@ -494,7 +494,7 @@ export default function CertificateModal({ isOpen, onClose, scoreState, onResetP
 
                   <div className="my-4 border-b-4 border-dashed border-amber-500 px-8 py-2 min-w-[260px]">
                     <span className="text-3xl sm:text-4xl font-black text-orange-600 font-sans italic tracking-wide">
-                      {childName || 'Wonderkid Scholar'}
+                      {childName || 'Storybook Scholar'}
                     </span>
                   </div>
 
@@ -526,7 +526,7 @@ export default function CertificateModal({ isOpen, onClose, scoreState, onResetP
                     <div className="flex flex-col">
                       <span className="font-extrabold text-sm italic text-gray-800">Teddy & Friends</span>
                       <span className="text-[10px] font-black uppercase text-gray-400 border-t border-gray-400 pt-0.5 mt-1">
-                        Wonderkids Mascot
+                        Storybook Mascot
                       </span>
                     </div>
 
