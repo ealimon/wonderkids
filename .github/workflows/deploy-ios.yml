@@ -28,14 +28,14 @@ jobs:
           npm install -g @capacitor/cli
           npm install --save @capacitor/core @capacitor/ios
           
-          # Initialize iOS platform
+          # Initialize iOS platform (ignoring initial pod install failure)
           npx cap add ios || true
           
-          # Write robust Podfile with iOS 14.0+ target
+          # Write robust Podfile with iOS 15.0+ target (required by modern Capacitor)
           cat << 'EOF' > ios/App/Podfile
           require_relative '../../node_modules/@capacitor/ios/scripts/pods_helpers'
 
-          platform :ios, '14.0'
+          platform :ios, '15.0'
           use_frameworks!
 
           # workaround to avoid Xcode caching of Pods that requires
@@ -57,7 +57,7 @@ jobs:
             assertDeploymentTarget(installer)
             installer.pods_project.targets.each do |target|
               target.build_configurations.each do |config|
-                config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+                config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
               end
             end
           end
@@ -66,10 +66,9 @@ jobs:
           # Copy web build assets to iOS app
           npx cap copy ios
           
-          # Install CocoaPods dependencies with iOS 14 target
+          # Install CocoaPods dependencies with iOS 15.0 target
           cd ios/App
-          pod repo update || true
-          pod install
+          pod install --repo-update
           cd ../..
 
       - name: Setup Fastlane / App Store Connect API Key

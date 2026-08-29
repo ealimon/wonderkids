@@ -4,6 +4,7 @@
   "webDir": "dist",
   "bundledWebRuntime": false,
   "ios": {
+    "minVersion": "15.0",
     "contentInset": "always",
     "allowsLinkPreview": false,
     "handleApplicationURL": false
