@@ -25,13 +25,19 @@ jobs:
 
       - name: Initialize and Configure iOS Project
         run: |
-          # Add iOS platform without running initial pod install if possible, then ensure iOS 14.0 deployment target
+          npm install -g @capacitor/cli
+          npm install --save @capacitor/core @capacitor/ios
           npx cap add ios || true
+          
+          # Set deployment target to iOS 14.0 in Podfile if needed
           if [ -f ios/App/Podfile ]; then
-            sed -i '' "s/platform :ios, '13.0'/platform :ios, '14.0'/g" ios/App/Podfile || true
-            sed -i '' "s/platform :ios, '12.0'/platform :ios, '14.0'/g" ios/App/Podfile || true
-            cd ios/App && pod install --repo-update && cd ../..
+            sed -i '' "s/platform :ios, '[0-9.]*'/platform :ios, '14.0'/g" ios/App/Podfile || true
+            cd ios/App
+            pod repo update || true
+            pod install || true
+            cd ../..
           fi
+          
           npx cap sync ios
 
       - name: Setup Fastlane / App Store Connect API Key
