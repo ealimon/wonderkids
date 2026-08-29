@@ -23,11 +23,15 @@ jobs:
       - name: Build Web Production Assets
         run: npm run build
 
-      - name: Install Capacitor CLI & iOS Dependencies
+      - name: Initialize and Configure iOS Project
         run: |
-          npm install --save-dev @capacitor/core @capacitor/cli @capacitor/ios
-          npx cap init "Storybook Education" "com.limon.storybookeducation" --web-dir "dist" || true
+          # Add iOS platform without running initial pod install if possible, then ensure iOS 14.0 deployment target
           npx cap add ios || true
+          if [ -f ios/App/Podfile ]; then
+            sed -i '' "s/platform :ios, '13.0'/platform :ios, '14.0'/g" ios/App/Podfile || true
+            sed -i '' "s/platform :ios, '12.0'/platform :ios, '14.0'/g" ios/App/Podfile || true
+            cd ios/App && pod install --repo-update && cd ../..
+          fi
           npx cap sync ios
 
       - name: Setup Fastlane / App Store Connect API Key
