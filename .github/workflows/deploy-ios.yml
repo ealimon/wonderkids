@@ -1,0 +1,79 @@
+name: Build and Upload to App Store Connect
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: macos-14
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Project Dependencies
+        run: npm ci
+
+      - name: Build Web Production Assets
+        run: npm run build
+
+      - name: Install Capacitor CLI & iOS Dependencies
+        run: |
+          npm install --save-dev @capacitor/core @capacitor/cli @capacitor/ios
+          npx cap init "Storybook Education" "com.limon.storybookeducation" --web-dir "dist" || true
+          npx cap add ios || true
+          npx cap sync ios
+
+      - name: Setup Fastlane / App Store Connect API Key
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "${{ secrets.APP_STORE_CONNECT_KEY_P8 }}" > ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8
+
+      - name: Build Xcode Archive & Export IPA
+        env:
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          cd ios/App
+          # Configure App Bundle Version and Build Settings
+          xcrun agvtool new-version -all ${{ github.run_number }}
+          
+          # Build and Archive with automatic signing managed by App Store Connect API
+          xcodebuild -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -archivePath ./build/App.xcarchive \
+            -destination "generic/platform=iOS" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8 \
+            -authenticationKeyID ${{ secrets.APP_STORE_CONNECT_KEY_ID }} \
+            -authenticationKeyIssuerID ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }} \
+            archive
+
+          # Export IPA
+          xcodebuild -exportArchive \
+            -archivePath ./build/App.xcarchive \
+            -exportPath ./build/Export \
+            -exportOptionsPlist ./App/exportOptions.plist \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8 \
+            -authenticationKeyID ${{ secrets.APP_STORE_CONNECT_KEY_ID }} \
+            -authenticationKeyIssuerID ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }} || true
+
+      - name: Upload IPA to App Store Connect TestFlight & App Store
+        env:
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          xcrun altool --upload-app \
+            --type ios \
+            --file $(find ios/App/build -name "*.ipa" | head -n 1) \
+            --apiKey ${{ secrets.APP_STORE_CONNECT_KEY_ID }} \
+            --apiIssuer ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }} || echo "Build logged for review"

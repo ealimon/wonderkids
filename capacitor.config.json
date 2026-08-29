@@ -1,0 +1,22 @@
+{
+  "appId": "com.limon.storybookeducation",
+  "appName": "Storybook Education",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "ios": {
+    "contentInset": "always",
+    "allowsLinkPreview": false,
+    "handleApplicationURL": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#EEF2F6",
+      "showSpinner": false
+    },
+    "Keyboard": {
+      "resize": "body",
+      "style": "light"
+    }
+  }
+}
