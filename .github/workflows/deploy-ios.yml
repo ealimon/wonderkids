@@ -27,18 +27,50 @@ jobs:
         run: |
           npm install -g @capacitor/cli
           npm install --save @capacitor/core @capacitor/ios
+          
+          # Initialize iOS platform
           npx cap add ios || true
           
-          # Set deployment target to iOS 14.0 in Podfile if needed
-          if [ -f ios/App/Podfile ]; then
-            sed -i '' "s/platform :ios, '[0-9.]*'/platform :ios, '14.0'/g" ios/App/Podfile || true
-            cd ios/App
-            pod repo update || true
-            pod install || true
-            cd ../..
-          fi
+          # Write robust Podfile with iOS 14.0+ target
+          cat << 'EOF' > ios/App/Podfile
+          require_relative '../../node_modules/@capacitor/ios/scripts/pods_helpers'
+
+          platform :ios, '14.0'
+          use_frameworks!
+
+          # workaround to avoid Xcode caching of Pods that requires
+          # Product -> Clean Build Folder after new Cordova plugins installed
+          # Requires CocoaPods 1.6 or newer
+          install! 'cocoapods', :disable_input_output_paths => true
+
+          def capacitor_pods
+            pod 'Capacitor', :path => '../../node_modules/@capacitor/ios'
+            pod 'CapacitorCordova', :path => '../../node_modules/@capacitor/ios'
+          end
+
+          target 'App' do
+            capacitor_pods
+            # Add your Pods here
+          end
+
+          post_install do |installer|
+            assertDeploymentTarget(installer)
+            installer.pods_project.targets.each do |target|
+              target.build_configurations.each do |config|
+                config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+              end
+            end
+          end
+          EOF
+
+          # Copy web build assets to iOS app
+          npx cap copy ios
           
-          npx cap sync ios
+          # Install CocoaPods dependencies with iOS 14 target
+          cd ios/App
+          pod repo update || true
+          pod install
+          cd ../..
 
       - name: Setup Fastlane / App Store Connect API Key
         run: |
@@ -52,8 +84,30 @@ jobs:
         run: |
           cd ios/App
           # Configure App Bundle Version and Build Settings
-          xcrun agvtool new-version -all ${{ github.run_number }}
+          xcrun agvtool new-version -all ${{ github.run_number }} || true
           
+          # Create ExportOptions.plist for app-store distribution
+          cat << 'EOF' > exportOptions.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>destination</key>
+            <string>upload</string>
+            <key>signingStyle</key>
+            <string>automatic</string>
+            <key>stripSwiftSymbols</key>
+            <true/>
+            <key>uploadBitcode</key>
+            <false/>
+            <key>uploadSymbols</key>
+            <true/>
+          </dict>
+          </plist>
+          EOF
+
           # Build and Archive with automatic signing managed by App Store Connect API
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
@@ -70,7 +124,7 @@ jobs:
           xcodebuild -exportArchive \
             -archivePath ./build/App.xcarchive \
             -exportPath ./build/Export \
-            -exportOptionsPlist ./App/exportOptions.plist \
+            -exportOptionsPlist exportOptions.plist \
             -allowProvisioningUpdates \
             -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8 \
             -authenticationKeyID ${{ secrets.APP_STORE_CONNECT_KEY_ID }} \
