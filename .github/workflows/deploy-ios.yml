@@ -71,10 +71,59 @@ jobs:
           pod install --repo-update
           cd ../..
 
-      - name: Setup Fastlane / App Store Connect API Key
+      - name: Setup App Store Connect API Key
+        env:
+          KEY_P8: ${{ secrets.APP_STORE_CONNECT_KEY_P8 }}
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
           mkdir -p ~/.appstoreconnect/private_keys
-          echo "${{ secrets.APP_STORE_CONNECT_KEY_P8 }}" > ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8
+          mkdir -p ~/.private_keys
+
+          # Format and write the .p8 file cleanly
+          node -e '
+            const fs = require("fs");
+            let raw = (process.env.KEY_P8 || "").trim();
+            const keyId = (process.env.KEY_ID || "").trim();
+
+            if (!raw) {
+              console.error("APP_STORE_CONNECT_KEY_P8 secret is empty!");
+              process.exit(1);
+            }
+
+            // Remove any potential quotes or escaped newlines
+            raw = raw.replace(/^["\x27]|["\x27]$/g, "").replace(/\\n/g, "\n").trim();
+
+            // Extract only the base64 content
+            let b64 = raw
+              .replace(/-----BEGIN [^-]+-----/g, "")
+              .replace(/-----END [^-]+-----/g, "")
+              .replace(/\s+/g, "");
+
+            // If user pasted a base64 encoded string of the whole PEM
+            if (b64.length > 500) {
+              try {
+                const decoded = Buffer.from(b64, "base64").toString("utf-8");
+                if (decoded.includes("BEGIN")) {
+                  b64 = decoded
+                    .replace(/-----BEGIN [^-]+-----/g, "")
+                    .replace(/-----END [^-]+-----/g, "")
+                    .replace(/\s+/g, "");
+                }
+              } catch(e) {}
+            }
+
+            // Chunk in strict 64-char lines
+            const chunks = b64.match(/.{1,64}/g) || [];
+            const standardPem = `-----BEGIN PRIVATE KEY-----\n${chunks.join("\n")}\n-----END PRIVATE KEY-----\n`;
+
+            const path1 = `${process.env.HOME}/.appstoreconnect/private_keys/AuthKey_${keyId}.p8`;
+            const path2 = `${process.env.HOME}/.private_keys/AuthKey_${keyId}.p8`;
+
+            fs.writeFileSync(path1, standardPem, { mode: 0o600 });
+            fs.writeFileSync(path2, standardPem, { mode: 0o600 });
+            console.log(`Saved AuthKey_${keyId}.p8 successfully (${chunks.length} PEM chunks).`);
+          '
 
       - name: Build Xcode Archive & Export IPA
         env:
@@ -82,10 +131,25 @@ jobs:
           ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
           cd ios/App
-          # Configure App Bundle Version and Build Settings
+          # Bump version
           xcrun agvtool new-version -all ${{ github.run_number }} || true
-          
-          # Create ExportOptions.plist for app-store distribution
+
+          CLEAN_KEY_ID=$(echo "$KEY_ID" | tr -d '[:space:]')
+          CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
+
+          # 1. Archive the project
+          xcodebuild -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -archivePath build/App.xcarchive \
+            -destination "generic/platform=iOS" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8 \
+            -authenticationKeyID "$CLEAN_KEY_ID" \
+            -authenticationKeyIssuerID "$CLEAN_ISSUER_ID" \
+            archive
+
+          # 2. Export Archive to IPA
           cat << 'EOF' > exportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -94,7 +158,7 @@ jobs:
             <key>method</key>
             <string>app-store</string>
             <key>destination</key>
-            <string>upload</string>
+            <string>export</string>
             <key>signingStyle</key>
             <string>automatic</string>
             <key>stripSwiftSymbols</key>
@@ -107,35 +171,24 @@ jobs:
           </plist>
           EOF
 
-          # Build and Archive with automatic signing managed by App Store Connect API
-          xcodebuild -workspace App.xcworkspace \
-            -scheme App \
-            -configuration Release \
-            -archivePath ./build/App.xcarchive \
-            -destination "generic/platform=iOS" \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8 \
-            -authenticationKeyID ${{ secrets.APP_STORE_CONNECT_KEY_ID }} \
-            -authenticationKeyIssuerID ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }} \
-            archive
-
-          # Export IPA
           xcodebuild -exportArchive \
-            -archivePath ./build/App.xcarchive \
-            -exportPath ./build/Export \
+            -archivePath build/App.xcarchive \
+            -exportPath build/Export \
             -exportOptionsPlist exportOptions.plist \
             -allowProvisioningUpdates \
-            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8 \
-            -authenticationKeyID ${{ secrets.APP_STORE_CONNECT_KEY_ID }} \
-            -authenticationKeyIssuerID ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }} || true
+            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8 \
+            -authenticationKeyID "$CLEAN_KEY_ID" \
+            -authenticationKeyIssuerID "$CLEAN_ISSUER_ID"
 
-      - name: Upload IPA to App Store Connect TestFlight & App Store
-        env:
-          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
-          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-        run: |
-          xcrun altool --upload-app \
-            --type ios \
-            --file $(find ios/App/build -name "*.ipa" | head -n 1) \
-            --apiKey ${{ secrets.APP_STORE_CONNECT_KEY_ID }} \
-            --apiIssuer ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }} || echo "Build logged for review"
+          # 3. Upload to TestFlight / App Store
+          IPA_FILE=$(find build/Export -name "*.ipa" | head -n 1)
+          echo "Found IPA: $IPA_FILE"
+          
+          if [ -n "$IPA_FILE" ]; then
+            xcrun altool --upload-app \
+              --type ios \
+              --file "$IPA_FILE" \
+              --apiKey "$CLEAN_KEY_ID" \
+              --apiIssuer "$CLEAN_ISSUER_ID" \
+              --keyPath ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8
+          fi
