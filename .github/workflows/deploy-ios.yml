@@ -11,7 +11,6 @@ jobs:
     steps:
       - name: Select Stable Xcode 16 SDK
         run: |
-          # Select official stable release Xcode 16.2 / 16.1 / 16.0
           if [ -d "/Applications/Xcode_16.2.app" ]; then
             sudo xcode-select -s "/Applications/Xcode_16.2.app/Contents/Developer"
           elif [ -d "/Applications/Xcode_16.1.app" ]; then
@@ -40,25 +39,13 @@ jobs:
           npm install -g @capacitor/cli
           npm install --save @capacitor/core @capacitor/ios
           
-          # Initialize iOS platform
+          # Initialize iOS platform without auto-pod install
           npx cap add ios || true
           
-          # Sync web build assets
-          npx cap sync ios
+          # Copy web build assets
+          npx cap copy ios
 
-          # Set iOS deployment target to 15.0 in project.pbxproj
-          node -e '
-            const fs = require("fs");
-            const pbxPath = "ios/App/App.xcodeproj/project.pbxproj";
-            if (fs.existsSync(pbxPath)) {
-              let pbx = fs.readFileSync(pbxPath, "utf8");
-              pbx = pbx.replace(/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]+;/g, "IPHONEOS_DEPLOYMENT_TARGET = 15.0;");
-              fs.writeFileSync(pbxPath, pbx);
-              console.log("✅ Set IPHONEOS_DEPLOYMENT_TARGET to 15.0 in project.pbxproj");
-            }
-          '
-
-          # Write clean Podfile with iOS 15.0 platform
+          # Write clean Podfile with iOS 15.0 platform BEFORE pod install
           cat << 'EOF' > ios/App/Podfile
           require_relative '../../node_modules/@capacitor/ios/scripts/pods_helpers'
 
@@ -86,7 +73,19 @@ jobs:
           end
           EOF
 
-          # Install CocoaPods dependencies
+          # Set iOS deployment target to 15.0 in project.pbxproj
+          node -e '
+            const fs = require("fs");
+            const pbxPath = "ios/App/App.xcodeproj/project.pbxproj";
+            if (fs.existsSync(pbxPath)) {
+              let pbx = fs.readFileSync(pbxPath, "utf8");
+              pbx = pbx.replace(/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]+;/g, "IPHONEOS_DEPLOYMENT_TARGET = 15.0;");
+              fs.writeFileSync(pbxPath, pbx);
+              console.log("✅ Set IPHONEOS_DEPLOYMENT_TARGET to 15.0 in project.pbxproj");
+            }
+          '
+
+          # Install CocoaPods dependencies with iOS 15.0
           cd ios/App
           pod install --repo-update || pod install
 
@@ -109,7 +108,7 @@ jobs:
           chmod 600 ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8
           cp ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8 ~/.private_keys/
 
-          # Configure project.pbxproj with Team ID and Manual Signing for build step
+          # Configure project.pbxproj for cloud build
           node -e "
             const fs = require('fs');
             const pbxPath = 'ios/App/App.xcodeproj/project.pbxproj';
@@ -137,7 +136,7 @@ jobs:
           CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
           CLEAN_TEAM_ID=$(echo "$APPLE_TEAM_ID" | tr -d '[:space:]')
 
-          # 1. Archive the project unencumbered by device profiles
+          # 1. Archive the project
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
@@ -148,7 +147,7 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             archive
 
-          # 2. Export and Upload directly to App Store Connect
+          # 2. Export & Direct Upload to App Store Connect
           cat << EOF > exportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
