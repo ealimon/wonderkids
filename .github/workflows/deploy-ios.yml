@@ -125,37 +125,34 @@ jobs:
               let pbx = fs.readFileSync(pbxPath, 'utf8');
               const teamId = '$CLEAN_TEAM_ID';
               
-              pbx = pbx.replace(/CODE_SIGN_STYLE = Manual;/g, 'CODE_SIGN_STYLE = Automatic;');
               pbx = pbx.replace(/IPHONEOS_DEPLOYMENT_TARGET\s*=\s*[0-9.]+;/g, 'IPHONEOS_DEPLOYMENT_TARGET = 15.0;');
-              
               if (teamId) {
-                pbx = pbx.replace(/buildSettings = \{/g, 'buildSettings = {\n\t\t\t\tDEVELOPMENT_TEAM = ' + teamId + ';\n\t\t\t\tCODE_SIGN_STYLE = Automatic;\n\t\t\t\tIPHONEOS_DEPLOYMENT_TARGET = 15.0;');
+                pbx = pbx.replace(/buildSettings = \{/g, 'buildSettings = {\n\t\t\t\tDEVELOPMENT_TEAM = ' + teamId + ';\n\t\t\t\tIPHONEOS_DEPLOYMENT_TARGET = 15.0;');
               }
               fs.writeFileSync(pbxPath, pbx);
-              console.log('✅ Configured project.pbxproj with DEVELOPMENT_TEAM: ' + teamId);
+              console.log('✅ Configured project.pbxproj.');
             }
           "
 
-          # 1. Archive specifically for generic iOS platform for App Store
+          # 1. Archive unencumbered by local device profiles
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath build/App.xcarchive \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8 \
-            -authenticationKeyID "$CLEAN_KEY_ID" \
-            -authenticationKeyIssuerID "$CLEAN_ISSUER_ID" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
             archive
 
-          # 2. Export IPA
+          # 2. Export & Sign IPA for App Store Connect distribution
           cat << EOF > exportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
             <key>method</key>
-            <string>app-store-connect</string>
+            <string>app-store</string>
             <key>destination</key>
             <string>export</string>
             <key>signingStyle</key>
