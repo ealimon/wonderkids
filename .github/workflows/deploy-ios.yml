@@ -9,22 +9,13 @@ jobs:
   build-and-deploy:
     runs-on: macos-14
     steps:
-      - name: Select Xcode 16.0 GA
-        run: |
-          echo "Available Xcode installations:"
-          ls -d /Applications/Xcode* || true
-          
-          # Select Xcode 16.0 GA with full iOS 18 Platform SDK pre-installed
-          if [ -d "/Applications/Xcode_16.0.app" ]; then
-            echo "Selecting /Applications/Xcode_16.0.app"
-            sudo xcode-select -s "/Applications/Xcode_16.0.app/Contents/Developer"
-            echo "DEVELOPER_DIR=/Applications/Xcode_16.0.app/Contents/Developer" >> $GITHUB_ENV
-          elif [ -d "/Applications/Xcode_16.1.app" ]; then
-            echo "Selecting /Applications/Xcode_16.1.app"
-            sudo xcode-select -s "/Applications/Xcode_16.1.app/Contents/Developer"
-            echo "DEVELOPER_DIR=/Applications/Xcode_16.1.app/Contents/Developer" >> $GITHUB_ENV
-          fi
-          xcodebuild -version
+      - name: Setup Official Xcode 16.0 GA
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.0'
+
+      - name: Verify Xcode Version
+        run: xcodebuild -version
 
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -48,7 +39,7 @@ jobs:
           # Initialize iOS platform
           npx cap add ios || true
           
-          # Write clean Podfile
+          # Write clean Podfile targeting iOS 15.0
           cat << 'EOF' > ios/App/Podfile
           require_relative '../../node_modules/@capacitor/ios/scripts/pods_helpers'
 
@@ -226,7 +217,7 @@ jobs:
           CLEAN_KEY_ID=$(echo "$KEY_ID" | tr -d '[:space:]')
           CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
 
-          # 1. Archive workspace cleanly with Xcode 16.0 GA (iOS 18.0 SDK)
+          # 1. Archive workspace cleanly with Official Xcode 16.0 GA (iOS 18.0 SDK)
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
@@ -240,7 +231,7 @@ jobs:
             PROVISIONING_PROFILE_SPECIFIER="" \
             archive
 
-          # 2. Export & Upload directly to App Store Connect
+          # 2. Export & Direct Upload to App Store Connect
           cat << EOF > exportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -263,7 +254,7 @@ jobs:
           </plist>
           EOF
 
-          echo "🚀 Exporting and uploading directly to App Store Connect with Xcode 16.0 iOS 18 SDK..."
+          echo "🚀 Exporting and uploading directly to App Store Connect with Xcode 16.0 GA..."
           xcodebuild -exportArchive \
             -archivePath build/App.xcarchive \
             -exportOptionsPlist exportOptions.plist \
