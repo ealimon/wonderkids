@@ -83,120 +83,120 @@ jobs:
 
           # Format and write the .p8 file cleanly & discover Team ID
           node -e '
-            const fs = require("fs");
-            const crypto = require("crypto");
-            const https = require("https");
+            (async () => {
+              const fs = require("fs");
+              const crypto = require("crypto");
+              const https = require("https");
 
-            let raw = (process.env.KEY_P8 || "").trim();
-            const keyId = (process.env.KEY_ID || "").trim();
-            const issuerId = (process.env.ISSUER_ID || "").trim();
-            let teamId = (process.env.EXPLICIT_TEAM_ID || "").trim();
+              let raw = (process.env.KEY_P8 || "").trim();
+              const keyId = (process.env.KEY_ID || "").trim();
+              const issuerId = (process.env.ISSUER_ID || "").trim();
+              let teamId = (process.env.EXPLICIT_TEAM_ID || "").trim();
 
-            if (!raw) {
-              console.error("APP_STORE_CONNECT_KEY_P8 secret is empty!");
-              process.exit(1);
-            }
-
-            // Remove any potential quotes or escaped newlines
-            raw = raw.replace(/^["\x27]|["\x27]$/g, "").replace(/\\n/g, "\n").trim();
-
-            // Extract only the base64 content
-            let b64 = raw
-              .replace(/-----BEGIN [^-]+-----/g, "")
-              .replace(/-----END [^-]+-----/g, "")
-              .replace(/\s+/g, "");
-
-            // If user pasted a base64 encoded string of the whole PEM
-            if (b64.length > 500) {
-              try {
-                const decoded = Buffer.from(b64, "base64").toString("utf-8");
-                if (decoded.includes("BEGIN")) {
-                  b64 = decoded
-                    .replace(/-----BEGIN [^-]+-----/g, "")
-                    .replace(/-----END [^-]+-----/g, "")
-                    .replace(/\s+/g, "");
-                }
-              } catch(e) {}
-            }
-
-            // Chunk in strict 64-char lines
-            const chunks = b64.match(/.{1,64}/g) || [];
-            const standardPem = `-----BEGIN PRIVATE KEY-----\n${chunks.join("\n")}\n-----END PRIVATE KEY-----\n`;
-
-            const path1 = `${process.env.HOME}/.appstoreconnect/private_keys/AuthKey_${keyId}.p8`;
-            const path2 = `${process.env.HOME}/.private_keys/AuthKey_${keyId}.p8`;
-
-            fs.writeFileSync(path1, standardPem, { mode: 0o600 });
-            fs.writeFileSync(path2, standardPem, { mode: 0o600 });
-            console.log(`✅ Saved AuthKey_${keyId}.p8 successfully.`);
-
-            // Create ES256 JWT Token for App Store Connect API
-            function base64Url(obj) {
-              return Buffer.from(JSON.stringify(obj)).toString("base64")
-                .replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
-            }
-
-            async function resolveTeamId() {
-              if (teamId) {
-                console.log(`Using configured Apple Team ID: ${teamId}`);
-                return teamId;
+              if (!raw) {
+                console.error("APP_STORE_CONNECT_KEY_P8 secret is empty!");
+                process.exit(1);
               }
 
-              try {
-                const header = { alg: "ES256", kid: keyId, typ: "JWT" };
-                const payload = {
-                  iss: issuerId,
-                  exp: Math.floor(Date.now() / 1000) + 600,
-                  aud: "appstoreconnect-v1"
-                };
+              // Remove any potential quotes or escaped newlines
+              raw = raw.replace(/^["\x27]|["\x27]$/g, "").replace(/\\n/g, "\n").trim();
 
-                const signData = `${base64Url(header)}.${base64Url(payload)}`;
-                const sign = crypto.createSign("SHA256");
-                sign.update(signData);
-                const signature = sign.sign({ key: standardPem, dsaEncoding: "ieee-p1363" }, "base64")
+              // Extract only the base64 content
+              let b64 = raw
+                .replace(/-----BEGIN [^-]+-----/g, "")
+                .replace(/-----END [^-]+-----/g, "")
+                .replace(/\s+/g, "");
+
+              // If user pasted a base64 encoded string of the whole PEM
+              if (b64.length > 500) {
+                try {
+                  const decoded = Buffer.from(b64, "base64").toString("utf-8");
+                  if (decoded.includes("BEGIN")) {
+                    b64 = decoded
+                      .replace(/-----BEGIN [^-]+-----/g, "")
+                      .replace(/-----END [^-]+-----/g, "")
+                      .replace(/\s+/g, "");
+                  }
+                } catch(e) {}
+              }
+
+              // Chunk in strict 64-char lines
+              const chunks = b64.match(/.{1,64}/g) || [];
+              const standardPem = `-----BEGIN PRIVATE KEY-----\n${chunks.join("\n")}\n-----END PRIVATE KEY-----\n`;
+
+              const path1 = `${process.env.HOME}/.appstoreconnect/private_keys/AuthKey_${keyId}.p8`;
+              const path2 = `${process.env.HOME}/.private_keys/AuthKey_${keyId}.p8`;
+
+              fs.writeFileSync(path1, standardPem, { mode: 0o600 });
+              fs.writeFileSync(path2, standardPem, { mode: 0o600 });
+              console.log(`✅ Saved AuthKey_${keyId}.p8 successfully.`);
+
+              // Create ES256 JWT Token for App Store Connect API
+              function base64Url(obj) {
+                return Buffer.from(JSON.stringify(obj)).toString("base64")
                   .replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
-                const token = `${signData}.${signature}`;
+              }
 
-                const res = await new Promise((resolve, reject) => {
-                  const req = https.get("https://api.appstoreconnect.apple.com/v1/bundleIds", {
-                    headers: { "Authorization": `Bearer ${token}` }
-                  }, (response) => {
-                    let data = "";
-                    response.on("data", chunk => data += chunk);
-                    response.on("end", () => resolve(JSON.parse(data)));
+              if (!teamId) {
+                try {
+                  const header = { alg: "ES256", kid: keyId, typ: "JWT" };
+                  const payload = {
+                    iss: issuerId,
+                    exp: Math.floor(Date.now() / 1000) + 600,
+                    aud: "appstoreconnect-v1"
+                  };
+
+                  const signData = `${base64Url(header)}.${base64Url(payload)}`;
+                  const sign = crypto.createSign("SHA256");
+                  sign.update(signData);
+                  const signature = sign.sign({ key: standardPem, dsaEncoding: "ieee-p1363" }, "base64")
+                    .replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+                  const token = `${signData}.${signature}`;
+
+                  const res = await new Promise((resolve, reject) => {
+                    const req = https.get("https://api.appstoreconnect.apple.com/v1/bundleIds", {
+                      headers: { "Authorization": `Bearer ${token}` }
+                    }, (response) => {
+                      let data = "";
+                      response.on("data", chunk => data += chunk);
+                      response.on("end", () => {
+                        try { resolve(JSON.parse(data)); } catch(e) { resolve({}); }
+                      });
+                    });
+                    req.on("error", reject);
                   });
-                  req.on("error", reject);
-                });
 
-                if (res.data && res.data.length > 0) {
-                  for (const item of res.data) {
-                    if (item.attributes && item.attributes.seedId) {
-                      teamId = item.attributes.seedId;
-                      console.log(`✅ Found Apple Team ID from Bundle ID registration: ${teamId}`);
-                      break;
+                  if (res.data && res.data.length > 0) {
+                    for (const item of res.data) {
+                      if (item.attributes && item.attributes.seedId) {
+                        teamId = item.attributes.seedId;
+                        console.log(`✅ Found Apple Team ID from App Store Connect: ${teamId}`);
+                        break;
+                      }
                     }
                   }
+                } catch (e) {
+                  console.warn("Could not query App Store Connect API for Team ID:", e.message);
                 }
-              } catch (e) {
-                console.warn("Could not query App Store Connect API for Team ID:", e.message);
               }
-              return teamId;
-            }
 
-            resolveTeamId().then(tid => {
-              if (tid) {
-                fs.appendFileSync(process.env.GITHUB_ENV, `\nAPPLE_TEAM_ID=${tid}\n`);
-                
-                // Inject DEVELOPMENT_TEAM into project.pbxproj
-                const pbxPath = "ios/App/App.xcodeproj/project.pbxproj";
-                if (fs.existsSync(pbxPath)) {
-                  let pbx = fs.readFileSync(pbxPath, "utf-8");
-                  pbx = pbx.replace(/buildSettings = \{/g, `buildSettings = {\n\t\t\t\tDEVELOPMENT_TEAM = ${tid};\n\t\t\t\tCODE_SIGN_STYLE = Automatic;`);
-                  fs.writeFileSync(pbxPath, pbx);
-                  console.log(`✅ Injected DEVELOPMENT_TEAM (${tid}) into Xcode project settings.`);
-                }
+              if (teamId) {
+                fs.appendFileSync(process.env.GITHUB_ENV, `\nAPPLE_TEAM_ID=${teamId}\n`);
               }
-            });
+
+              // Update Xcode project settings to allow clean archiving without dev keychain
+              const pbxPath = "ios/App/App.xcodeproj/project.pbxproj";
+              if (fs.existsSync(pbxPath)) {
+                let pbx = fs.readFileSync(pbxPath, "utf-8");
+                pbx = pbx.replace(/ProvisioningStyle = Automatic;/g, "ProvisioningStyle = Manual;");
+                pbx = pbx.replace(/CODE_SIGN_STYLE = Automatic;/g, "CODE_SIGN_STYLE = Manual;");
+                if (teamId) {
+                  pbx = pbx.replace(/buildSettings = \{/g, `buildSettings = {\n\t\t\t\tDEVELOPMENT_TEAM = ${teamId};\n\t\t\t\tCODE_SIGN_STYLE = Manual;\n\t\t\t\tCODE_SIGN_IDENTITY = "";\n\t\t\t\tCODE_SIGNING_ALLOWED = NO;\n\t\t\t\tCODE_SIGNING_REQUIRED = NO;`);
+                }
+                fs.writeFileSync(pbxPath, pbx);
+                console.log(`✅ Configured project.pbxproj for cloud distribution build (Team: ${teamId || "Auto"}).`);
+              }
+            })();
           '
 
       - name: Build Xcode Archive & Export IPA
@@ -211,25 +211,20 @@ jobs:
           CLEAN_KEY_ID=$(echo "$KEY_ID" | tr -d '[:space:]')
           CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
 
-          # 1. Archive the project
-          EXTRA_SIGN_ARGS=""
-          if [ -n "$APPLE_TEAM_ID" ]; then
-            EXTRA_SIGN_ARGS="DEVELOPMENT_TEAM=$APPLE_TEAM_ID CODE_SIGN_STYLE=Automatic"
-          fi
-
+          # 1. Archive the project (without device-bound development signing)
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
             -archivePath build/App.xcarchive \
             -destination "generic/platform=iOS" \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8 \
-            -authenticationKeyID "$CLEAN_KEY_ID" \
-            -authenticationKeyIssuerID "$CLEAN_ISSUER_ID" \
-            $EXTRA_SIGN_ARGS \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
             archive
 
-          # 2. Export Archive to IPA
+          # 2. Export Archive to IPA with App Store provisioning updates
           cat << EOF > exportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
