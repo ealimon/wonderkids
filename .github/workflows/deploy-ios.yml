@@ -7,29 +7,22 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: macos-15
+    runs-on: macos-14
     steps:
-      - name: Select Official Xcode 16.2 Release SDK
+      - name: Select Xcode 16.0 GA
         run: |
           echo "Available Xcode installations:"
           ls -d /Applications/Xcode* || true
           
-          # Explicitly select official stable release Xcode 16.2 / 16.1 / 16.0 (never beta/preview 16.4)
-          STABLE_XCODE=""
-          if [ -d "/Applications/Xcode_16.2.app" ]; then
-            STABLE_XCODE="/Applications/Xcode_16.2.app"
+          # Select Xcode 16.0 GA with full iOS 18 Platform SDK pre-installed
+          if [ -d "/Applications/Xcode_16.0.app" ]; then
+            echo "Selecting /Applications/Xcode_16.0.app"
+            sudo xcode-select -s "/Applications/Xcode_16.0.app/Contents/Developer"
+            echo "DEVELOPER_DIR=/Applications/Xcode_16.0.app/Contents/Developer" >> $GITHUB_ENV
           elif [ -d "/Applications/Xcode_16.1.app" ]; then
-            STABLE_XCODE="/Applications/Xcode_16.1.app"
-          elif [ -d "/Applications/Xcode_16.0.app" ]; then
-            STABLE_XCODE="/Applications/Xcode_16.0.app"
-          elif [ -d "/Applications/Xcode.app" ]; then
-            STABLE_XCODE="/Applications/Xcode.app"
-          fi
-
-          if [ -n "$STABLE_XCODE" ]; then
-            echo "Selecting stable release Xcode: $STABLE_XCODE"
-            sudo xcode-select -s "$STABLE_XCODE/Contents/Developer"
-            echo "DEVELOPER_DIR=$STABLE_XCODE/Contents/Developer" >> $GITHUB_ENV
+            echo "Selecting /Applications/Xcode_16.1.app"
+            sudo xcode-select -s "/Applications/Xcode_16.1.app/Contents/Developer"
+            echo "DEVELOPER_DIR=/Applications/Xcode_16.1.app/Contents/Developer" >> $GITHUB_ENV
           fi
           xcodebuild -version
 
@@ -55,7 +48,7 @@ jobs:
           # Initialize iOS platform
           npx cap add ios || true
           
-          # Write robust Podfile with iOS 15.0+ target
+          # Write clean Podfile
           cat << 'EOF' > ios/App/Podfile
           require_relative '../../node_modules/@capacitor/ios/scripts/pods_helpers'
 
@@ -78,7 +71,6 @@ jobs:
             installer.pods_project.targets.each do |target|
               target.build_configurations.each do |config|
                 config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
-                config.build_settings['ENABLE_BITCODE'] = 'NO'
               end
             end
           end
@@ -86,39 +78,20 @@ jobs:
 
           # Copy web build assets to iOS app
           npx cap copy ios
-          
-          # Force iOS 15.0 across all Xcode configuration files
+
+          # Update deployment target in project.pbxproj
           node -e '
             const fs = require("fs");
-            const path = require("path");
-
-            function updateFile(filePath) {
-              if (!fs.existsSync(filePath)) return;
-              let content = fs.readFileSync(filePath, "utf-8");
-              let updated = content.replace(/IPHONEOS_DEPLOYMENT_TARGET\s*=\s*[0-9.]+;/g, "IPHONEOS_DEPLOYMENT_TARGET = 15.0;");
-              updated = updated.replace(/IPHONEOS_DEPLOYMENT_TARGET\s*=\s*[0-9.]+/g, "IPHONEOS_DEPLOYMENT_TARGET = 15.0");
-              if (content !== updated) {
-                fs.writeFileSync(filePath, updated);
-                console.log("✅ Updated deployment target to 15.0 in:", filePath);
-              }
+            const pbxPath = "ios/App/App.xcodeproj/project.pbxproj";
+            if (fs.existsSync(pbxPath)) {
+              let content = fs.readFileSync(pbxPath, "utf-8");
+              content = content.replace(/IPHONEOS_DEPLOYMENT_TARGET\s*=\s*[0-9.]+;/g, "IPHONEOS_DEPLOYMENT_TARGET = 15.0;");
+              fs.writeFileSync(pbxPath, content);
+              console.log("✅ Updated deployment target to 15.0 in project.pbxproj");
             }
-
-            function walkDir(dir) {
-              if (!fs.existsSync(dir)) return;
-              for (const file of fs.readdirSync(dir)) {
-                const full = path.join(dir, file);
-                if (fs.statSync(full).isDirectory()) {
-                  walkDir(full);
-                } else if (file.endsWith(".pbxproj") || file.endsWith(".xcconfig")) {
-                  updateFile(full);
-                }
-              }
-            }
-
-            walkDir("ios");
           '
 
-          # Install CocoaPods dependencies with iOS 15.0 target
+          # Install CocoaPods
           cd ios/App
           pod install --repo-update || pod install
 
@@ -149,7 +122,6 @@ jobs:
                 process.exit(1);
               }
 
-              // Clean formatting
               raw = raw.replace(/^["\x27]|["\x27]$/g, "").replace(/\\n/g, "\n").trim();
               let b64 = raw
                 .replace(/-----BEGIN [^-]+-----/g, "")
@@ -178,7 +150,6 @@ jobs:
               fs.writeFileSync(path2, standardPem, { mode: 0o600 });
               console.log(`✅ Saved AuthKey_${keyId}.p8 successfully.`);
 
-              // Find Team ID if not provided
               function base64Url(obj) {
                 return Buffer.from(JSON.stringify(obj)).toString("base64")
                   .replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
@@ -231,13 +202,11 @@ jobs:
                 fs.appendFileSync(process.env.GITHUB_ENV, `\nAPPLE_TEAM_ID=${teamId}\n`);
               }
 
-              // Update Xcode project settings
               const pbxPath = "ios/App/App.xcodeproj/project.pbxproj";
               if (fs.existsSync(pbxPath)) {
                 let pbx = fs.readFileSync(pbxPath, "utf-8");
                 pbx = pbx.replace(/ProvisioningStyle = Automatic;/g, "ProvisioningStyle = Manual;");
                 pbx = pbx.replace(/CODE_SIGN_STYLE = Automatic;/g, "CODE_SIGN_STYLE = Manual;");
-                pbx = pbx.replace(/IPHONEOS_DEPLOYMENT_TARGET\s*=\s*[0-9.]+;/g, "IPHONEOS_DEPLOYMENT_TARGET = 15.0;");
                 if (teamId) {
                   pbx = pbx.replace(/buildSettings = \{/g, `buildSettings = {\n\t\t\t\tDEVELOPMENT_TEAM = ${teamId};\n\t\t\t\tCODE_SIGN_STYLE = Manual;\n\t\t\t\tCODE_SIGN_IDENTITY = "";\n\t\t\t\tCODE_SIGNING_ALLOWED = NO;\n\t\t\t\tCODE_SIGNING_REQUIRED = NO;\n\t\t\t\tIPHONEOS_DEPLOYMENT_TARGET = 15.0;`);
                 }
@@ -247,7 +216,7 @@ jobs:
             })();
           '
 
-      - name: Build Xcode Archive & Upload to App Store Connect
+      - name: Build Xcode Archive & Export IPA
         env:
           KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -257,7 +226,7 @@ jobs:
           CLEAN_KEY_ID=$(echo "$KEY_ID" | tr -d '[:space:]')
           CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
 
-          # 1. Archive the project cleanly using Official Release Xcode 16.2
+          # 1. Archive workspace cleanly with Xcode 16.0 GA (iOS 18.0 SDK)
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
@@ -294,7 +263,7 @@ jobs:
           </plist>
           EOF
 
-          echo "🚀 Exporting and uploading directly to App Store Connect with Xcode 16.2 release SDK..."
+          echo "🚀 Exporting and uploading directly to App Store Connect with Xcode 16.0 iOS 18 SDK..."
           xcodebuild -exportArchive \
             -archivePath build/App.xcarchive \
             -exportOptionsPlist exportOptions.plist \
