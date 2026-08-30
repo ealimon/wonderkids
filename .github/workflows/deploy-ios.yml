@@ -9,10 +9,10 @@ jobs:
   build-and-deploy:
     runs-on: macos-14
     steps:
-      - name: Setup Official Xcode 16.1 GM
+      - name: Setup Official Xcode 16.2 GM
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '16.1'
+          xcode-version: '16.2'
 
       - name: Verify Xcode Version
         run: xcodebuild -version
@@ -217,7 +217,7 @@ jobs:
           CLEAN_KEY_ID=$(echo "$KEY_ID" | tr -d '[:space:]')
           CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
 
-          # 1. Archive workspace cleanly with Official Xcode 16.1 GM
+          # 1. Archive workspace cleanly with Official Xcode 16.2 GM (iOS 18.2 SDK)
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
@@ -254,7 +254,7 @@ jobs:
           </plist>
           EOF
 
-          echo "🚀 Exporting and uploading directly to App Store Connect with Xcode 16.1 GM..."
+          echo "🚀 Exporting and uploading directly to App Store Connect with Xcode 16.2 GM (iOS 18.2 SDK)..."
           xcodebuild -exportArchive \
             -archivePath build/App.xcarchive \
             -exportOptionsPlist exportOptions.plist \
