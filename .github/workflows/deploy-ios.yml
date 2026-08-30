@@ -9,17 +9,6 @@ jobs:
   build-and-deploy:
     runs-on: macos-15
     steps:
-      - name: Select Stable Xcode 16 SDK
-        run: |
-          if [ -d "/Applications/Xcode_16.2.app" ]; then
-            sudo xcode-select -s "/Applications/Xcode_16.2.app/Contents/Developer"
-          elif [ -d "/Applications/Xcode_16.1.app" ]; then
-            sudo xcode-select -s "/Applications/Xcode_16.1.app/Contents/Developer"
-          elif [ -d "/Applications/Xcode_16.0.app" ]; then
-            sudo xcode-select -s "/Applications/Xcode_16.0.app/Contents/Developer"
-          fi
-          xcodebuild -version
-
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -39,13 +28,10 @@ jobs:
           npm install -g @capacitor/cli
           npm install --save @capacitor/core @capacitor/ios
           
-          # Initialize iOS platform without auto-pod install
+          # Initialize iOS platform
           npx cap add ios || true
           
-          # Copy web build assets
-          npx cap copy ios
-
-          # Write clean Podfile with iOS 15.0 platform BEFORE pod install
+          # Configure Podfile with iOS 15.0+ target
           cat << 'EOF' > ios/App/Podfile
           require_relative '../../node_modules/@capacitor/ios/scripts/pods_helpers'
 
@@ -68,24 +54,16 @@ jobs:
             installer.pods_project.targets.each do |target|
               target.build_configurations.each do |config|
                 config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+                config.build_settings['ENABLE_BITCODE'] = 'NO'
               end
             end
           end
           EOF
 
-          # Set iOS deployment target to 15.0 in project.pbxproj
-          node -e '
-            const fs = require("fs");
-            const pbxPath = "ios/App/App.xcodeproj/project.pbxproj";
-            if (fs.existsSync(pbxPath)) {
-              let pbx = fs.readFileSync(pbxPath, "utf8");
-              pbx = pbx.replace(/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]+;/g, "IPHONEOS_DEPLOYMENT_TARGET = 15.0;");
-              fs.writeFileSync(pbxPath, pbx);
-              console.log("✅ Set IPHONEOS_DEPLOYMENT_TARGET to 15.0 in project.pbxproj");
-            }
-          '
+          # Sync web assets and capacitor plugins
+          npx cap sync ios
 
-          # Install CocoaPods dependencies with iOS 15.0
+          # Install CocoaPods
           cd ios/App
           pod install --repo-update || pod install
 
@@ -94,33 +72,34 @@ jobs:
           KEY_P8: ${{ secrets.APP_STORE_CONNECT_KEY_P8 }}
           KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          EXPLICIT_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           mkdir -p ~/.appstoreconnect/private_keys
           mkdir -p ~/.private_keys
 
           CLEAN_KEY_ID=$(echo "$KEY_ID" | tr -d '[:space:]')
           CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
-          CLEAN_TEAM_ID=$(echo "$EXPLICIT_TEAM_ID" | tr -d '[:space:]')
+          CLEAN_TEAM_ID=$(echo "$APPLE_TEAM_ID" | tr -d '[:space:]')
 
-          # Save formatted private key
+          # Save API key file
           echo "$KEY_P8" > ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8
           chmod 600 ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8
           cp ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8 ~/.private_keys/
 
-          # Configure project.pbxproj for cloud build
+          # Update project target settings cleanly
           node -e "
             const fs = require('fs');
             const pbxPath = 'ios/App/App.xcodeproj/project.pbxproj';
             if (fs.existsSync(pbxPath)) {
               let pbx = fs.readFileSync(pbxPath, 'utf8');
               const teamId = '$CLEAN_TEAM_ID';
-              pbx = pbx.replace(/CODE_SIGN_STYLE = Automatic;/g, 'CODE_SIGN_STYLE = Manual;');
+              pbx = pbx.replace(/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]+;/g, 'IPHONEOS_DEPLOYMENT_TARGET = 15.0;');
+              pbx = pbx.replace(/CODE_SIGN_STYLE = Manual;/g, 'CODE_SIGN_STYLE = Automatic;');
               if (teamId) {
-                pbx = pbx.replace(/buildSettings = \{/g, 'buildSettings = {\n\t\t\t\tDEVELOPMENT_TEAM = ' + teamId + ';\n\t\t\t\tCODE_SIGN_STYLE = Manual;\n\t\t\t\tCODE_SIGN_IDENTITY = \"\";\n\t\t\t\tCODE_SIGNING_ALLOWED = NO;\n\t\t\t\tCODE_SIGNING_REQUIRED = NO;');
+                pbx = pbx.replace(/buildSettings = \{/g, 'buildSettings = {\n\t\t\t\tDEVELOPMENT_TEAM = ' + teamId + ';\n\t\t\t\tCODE_SIGN_STYLE = Automatic;\n\t\t\t\tIPHONEOS_DEPLOYMENT_TARGET = 15.0;');
               }
               fs.writeFileSync(pbxPath, pbx);
-              console.log('✅ Configured project.pbxproj for cloud build.');
+              console.log('✅ Updated project.pbxproj with team ' + teamId);
             }
           "
 
@@ -136,18 +115,19 @@ jobs:
           CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
           CLEAN_TEAM_ID=$(echo "$APPLE_TEAM_ID" | tr -d '[:space:]')
 
-          # 1. Archive the project
+          # 1. Archive with App Store Connect credentials for cloud provisioning
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath build/App.xcarchive \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8 \
+            -authenticationKeyID "$CLEAN_KEY_ID" \
+            -authenticationKeyIssuerID "$CLEAN_ISSUER_ID" \
             archive
 
-          # 2. Export & Direct Upload to App Store Connect
+          # 2. Export & Upload directly to App Store Connect
           cat << EOF > exportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
