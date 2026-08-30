@@ -9,17 +9,6 @@ jobs:
   build-and-deploy:
     runs-on: macos-15
     steps:
-      - name: Select Official Xcode 16.2 Release SDK
-        run: |
-          if [ -d "/Applications/Xcode_16.2.app" ]; then
-            sudo xcode-select -s "/Applications/Xcode_16.2.app/Contents/Developer"
-            echo "DEVELOPER_DIR=/Applications/Xcode_16.2.app/Contents/Developer" >> $GITHUB_ENV
-          elif [ -d "/Applications/Xcode_16.1.app" ]; then
-            sudo xcode-select -s "/Applications/Xcode_16.1.app/Contents/Developer"
-            echo "DEVELOPER_DIR=/Applications/Xcode_16.1.app/Contents/Developer" >> $GITHUB_ENV
-          fi
-          xcodebuild -version
-
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -42,7 +31,7 @@ jobs:
           # Initialize iOS platform
           npx cap add ios || true
           
-          # Write Podfile with iOS 15.0+ target
+          # Configure Podfile with iOS 15.0+ target
           cat << 'EOF' > ios/App/Podfile
           require_relative '../../node_modules/@capacitor/ios/scripts/pods_helpers'
 
@@ -72,68 +61,47 @@ jobs:
           end
           EOF
 
-          # Reinstall CocoaPods
-          cd ios/App
-          pod repo update || true
-          pod install --repo-update || pod install
-
-      - name: Sync Capacitor iOS
-        run: |
+          # Sync web build assets
           npx cap sync ios
+
+          # Install CocoaPods
+          cd ios/App
+          pod install --repo-update || pod install
 
       - name: Setup App Store Connect API Key
         env:
-          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
-          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          APP_STORE_CONNECT_KEY_P8: ${{ secrets.APP_STORE_CONNECT_KEY_P8 }}
+          KEY_P8: ${{ secrets.APP_STORE_CONNECT_KEY_P8 }}
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          CLEAN_KEY_ID=$(echo "$APP_STORE_CONNECT_KEY_ID" | tr -d ' \n\r\t')
-          CLEAN_ISSUER_ID=$(echo "$APP_STORE_CONNECT_ISSUER_ID" | tr -d ' \n\r\t')
-
-          if [ -z "$CLEAN_KEY_ID" ] || [ -z "$CLEAN_ISSUER_ID" ] || [ -z "$APP_STORE_CONNECT_KEY_P8" ]; then
-            echo "::error::Missing App Store Connect API credentials in GitHub Secrets!"
-            exit 1
-          fi
-
           mkdir -p ~/.appstoreconnect/private_keys
-          echo "$APP_STORE_CONNECT_KEY_P8" > ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8
-          chmod 600 ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8
-
           mkdir -p ~/.private_keys
+
+          CLEAN_KEY_ID=$(echo "$KEY_ID" | tr -d '[:space:]')
+          CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
+          CLEAN_TEAM_ID=$(echo "$APPLE_TEAM_ID" | tr -d '[:space:]')
+
+          # Save API key file
+          echo "$KEY_P8" > ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8
+          chmod 600 ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8
           cp ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8 ~/.private_keys/
 
-          echo "✅ App Store Connect API key installed."
+          echo "✅ Configured App Store Connect API Key"
 
       - name: Build Xcode Archive & Upload to App Store Connect
         env:
-          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
-          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           cd ios/App
 
-          CLEAN_KEY_ID=$(echo "$APP_STORE_CONNECT_KEY_ID" | tr -d ' \n\r\t')
-          CLEAN_ISSUER_ID=$(echo "$APP_STORE_CONNECT_ISSUER_ID" | tr -d ' \n\r\t')
-          CLEAN_TEAM_ID=$(echo "$APPLE_TEAM_ID" | tr -d ' \n\r\t')
+          CLEAN_KEY_ID=$(echo "$KEY_ID" | tr -d '[:space:]')
+          CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
+          CLEAN_TEAM_ID=$(echo "$APPLE_TEAM_ID" | tr -d '[:space:]')
 
-          # 1. Configure project.pbxproj with deployment target and team ID
-          node -e "
-            const fs = require('fs');
-            const pbxPath = 'App.xcodeproj/project.pbxproj';
-            if (fs.existsSync(pbxPath)) {
-              let pbx = fs.readFileSync(pbxPath, 'utf8');
-              const teamId = '$CLEAN_TEAM_ID';
-              
-              pbx = pbx.replace(/IPHONEOS_DEPLOYMENT_TARGET\s*=\s*[0-9.]+;/g, 'IPHONEOS_DEPLOYMENT_TARGET = 15.0;');
-              if (teamId) {
-                pbx = pbx.replace(/buildSettings = \{/g, 'buildSettings = {\n\t\t\t\tDEVELOPMENT_TEAM = ' + teamId + ';\n\t\t\t\tIPHONEOS_DEPLOYMENT_TARGET = 15.0;');
-              }
-              fs.writeFileSync(pbxPath, pbx);
-              console.log('✅ Configured project.pbxproj.');
-            }
-          "
-
-          # 2. Archive using official release Xcode 16.2 (ignores test device restrictions)
+          # 1. Archive workspace (Same recipe as successful run #38)
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
@@ -144,7 +112,7 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             archive
 
-          # 3. Export & Upload directly to App Store Connect
+          # 2. Export & Upload directly to App Store Connect
           cat << EOF > exportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
