@@ -92,174 +92,94 @@ jobs:
           KEY_P8: ${{ secrets.APP_STORE_CONNECT_KEY_P8 }}
           KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          EXPLICIT_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           mkdir -p ~/.appstoreconnect/private_keys
           mkdir -p ~/.private_keys
 
           node -e '
-            (async () => {
-              const fs = require("fs");
-              const crypto = require("crypto");
-              const https = require("https");
+            const fs = require("fs");
+            let raw = (process.env.KEY_P8 || "").trim();
+            const keyId = (process.env.KEY_ID || "").trim();
 
-              let raw = (process.env.KEY_P8 || "").trim();
-              const keyId = (process.env.KEY_ID || "").trim();
-              const issuerId = (process.env.ISSUER_ID || "").trim();
-              let teamId = (process.env.EXPLICIT_TEAM_ID || "").trim();
+            if (!raw) {
+              console.error("APP_STORE_CONNECT_KEY_P8 secret is empty!");
+              process.exit(1);
+            }
 
-              if (!raw) {
-                console.error("APP_STORE_CONNECT_KEY_P8 secret is empty!");
-                process.exit(1);
-              }
+            raw = raw.replace(/^["\x27]|["\x27]$/g, "").replace(/\\n/g, "\n").trim();
+            let b64 = raw
+              .replace(/-----BEGIN [^-]+-----/g, "")
+              .replace(/-----END [^-]+-----/g, "")
+              .replace(/\s+/g, "");
 
-              raw = raw.replace(/^["\x27]|["\x27]$/g, "").replace(/\\n/g, "\n").trim();
-              let b64 = raw
-                .replace(/-----BEGIN [^-]+-----/g, "")
-                .replace(/-----END [^-]+-----/g, "")
-                .replace(/\s+/g, "");
-
-              if (b64.length > 500) {
-                try {
-                  const decoded = Buffer.from(b64, "base64").toString("utf-8");
-                  if (decoded.includes("BEGIN")) {
-                    b64 = decoded
-                      .replace(/-----BEGIN [^-]+-----/g, "")
-                      .replace(/-----END [^-]+-----/g, "")
-                      .replace(/\s+/g, "");
-                  }
-                } catch(e) {}
-              }
-
-              const chunks = b64.match(/.{1,64}/g) || [];
-              const standardPem = `-----BEGIN PRIVATE KEY-----\n${chunks.join("\n")}\n-----END PRIVATE KEY-----\n`;
-
-              const path1 = `${process.env.HOME}/.appstoreconnect/private_keys/AuthKey_${keyId}.p8`;
-              const path2 = `${process.env.HOME}/.private_keys/AuthKey_${keyId}.p8`;
-
-              fs.writeFileSync(path1, standardPem, { mode: 0o600 });
-              fs.writeFileSync(path2, standardPem, { mode: 0o600 });
-              console.log(`✅ Saved AuthKey_${keyId}.p8 successfully.`);
-
-              function base64Url(obj) {
-                return Buffer.from(JSON.stringify(obj)).toString("base64")
-                  .replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
-              }
-
-              if (!teamId) {
-                try {
-                  const header = { alg: "ES256", kid: keyId, typ: "JWT" };
-                  const payload = {
-                    iss: issuerId,
-                    exp: Math.floor(Date.now() / 1000) + 600,
-                    aud: "appstoreconnect-v1"
-                  };
-
-                  const signData = `${base64Url(header)}.${base64Url(payload)}`;
-                  const sign = crypto.createSign("SHA256");
-                  sign.update(signData);
-                  const signature = sign.sign({ key: standardPem, dsaEncoding: "ieee-p1363" }, "base64")
-                    .replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
-                  const token = `${signData}.${signature}`;
-
-                  const res = await new Promise((resolve, reject) => {
-                    const req = https.get("https://api.appstoreconnect.apple.com/v1/bundleIds", {
-                      headers: { "Authorization": `Bearer ${token}` }
-                    }, (response) => {
-                      let data = "";
-                      response.on("data", chunk => data += chunk);
-                      response.on("end", () => {
-                        try { resolve(JSON.parse(data)); } catch(e) { resolve({}); }
-                      });
-                    });
-                    req.on("error", reject);
-                  });
-
-                  if (res.data && res.data.length > 0) {
-                    for (const item of res.data) {
-                      if (item.attributes && item.attributes.seedId) {
-                        teamId = item.attributes.seedId;
-                        console.log(`✅ Found Apple Team ID from App Store Connect: ${teamId}`);
-                        break;
-                      }
-                    }
-                  }
-                } catch (e) {
-                  console.warn("Could not query App Store Connect API for Team ID:", e.message);
+            if (b64.length > 500) {
+              try {
+                const decoded = Buffer.from(b64, "base64").toString("utf-8");
+                if (decoded.includes("BEGIN")) {
+                  b64 = decoded
+                    .replace(/-----BEGIN [^-]+-----/g, "")
+                    .replace(/-----END [^-]+-----/g, "")
+                    .replace(/\s+/g, "");
                 }
-              }
+              } catch(e) {}
+            }
 
-              if (teamId) {
-                fs.appendFileSync(process.env.GITHUB_ENV, `\nAPPLE_TEAM_ID=${teamId}\n`);
-              }
+            const chunks = b64.match(/.{1,64}/g) || [];
+            const standardPem = `-----BEGIN PRIVATE KEY-----\n${chunks.join("\n")}\n-----END PRIVATE KEY-----\n`;
 
-              const pbxPath = "ios/App/App.xcodeproj/project.pbxproj";
-              if (fs.existsSync(pbxPath)) {
-                let pbx = fs.readFileSync(pbxPath, "utf-8");
-                pbx = pbx.replace(/IPHONEOS_DEPLOYMENT_TARGET\s*=\s*[0-9.]+;/g, "IPHONEOS_DEPLOYMENT_TARGET = 15.0;");
-                pbx = pbx.replace(/CURRENT_PROJECT_VERSION\s*=\s*[0-9.]+;/g, "CURRENT_PROJECT_VERSION = ${{ github.run_number }};");
-                if (teamId) {
-                  pbx = pbx.replace(/DEVELOPMENT_TEAM\s*=\s*[^;]+;/g, `DEVELOPMENT_TEAM = ${teamId};`);
-                  pbx = pbx.replace(/buildSettings\s*=\s*\{/g, `buildSettings = {\n\t\t\t\tDEVELOPMENT_TEAM = ${teamId};`);
-                }
-                fs.writeFileSync(pbxPath, pbx);
-                console.log(`✅ Configured project.pbxproj.`);
-              }
-            })();
+            const path1 = `${process.env.HOME}/.appstoreconnect/private_keys/AuthKey_${keyId}.p8`;
+            const path2 = `${process.env.HOME}/.private_keys/AuthKey_${keyId}.p8`;
+
+            fs.writeFileSync(path1, standardPem, { mode: 0o600 });
+            fs.writeFileSync(path2, standardPem, { mode: 0o600 });
+            console.log(`✅ Saved AuthKey_${keyId}.p8 successfully.`);
           '
 
-      - name: Build Archive & Export IPA with App Store Connect Updates
-        env:
-          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
-          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      - name: Build Xcode Archive & Package IPA
         run: |
           cd ios/App
 
-          CLEAN_KEY_ID=$(echo "$KEY_ID" | tr -d '[:space:]')
-          CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
-          KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8"
-
-          # 1. Archive workspace (Allowing App Store Connect to handle provisioning)
+          # 1. Clean Archive with Manual Signing bypass for CI
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
             -archivePath build/App.xcarchive \
             -destination "generic/platform=iOS" \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$KEY_PATH" \
-            -authenticationKeyID "$CLEAN_KEY_ID" \
-            -authenticationKeyIssuerID "$CLEAN_ISSUER_ID" \
+            IPHONEOS_DEPLOYMENT_TARGET=15.0 \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
             archive
 
-          # 2. Generate exportOptions.plist using app-store-connect destination
-          cat << EOF > exportOptions.plist
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store-connect</string>
-            <key>destination</key>
-            <string>upload</string>
-            <key>signingStyle</key>
-            <string>automatic</string>
-            ${APPLE_TEAM_ID:+<key>teamID</key><string>$APPLE_TEAM_ID</string>}
-            <key>stripSwiftSymbols</key>
-            <true/>
-            <key>uploadSymbols</key>
-            <true/>
-            <key>manageAppVersionAndBuildNumber</key>
-            <true/>
-          </dict>
-          </plist>
-          EOF
+          # 2. Package App.xcarchive into App.ipa directly
+          mkdir -p build/Export/Payload
+          cp -r build/App.xcarchive/Products/Applications/App.app build/Export/Payload/
+          cd build/Export
+          zip -qry App.ipa Payload
+          cd ../../
+          echo "✅ Successfully created App.ipa at ios/App/build/Export/App.ipa"
 
-          echo "🚀 Uploading directly to App Store Connect / TestFlight..."
-          xcodebuild -exportArchive \
-            -archivePath build/App.xcarchive \
-            -exportPath build/Export \
-            -exportOptionsPlist exportOptions.plist \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$KEY_PATH" \
-            -authenticationKeyID "$CLEAN_KEY_ID" \
-            -authenticationKeyIssuerID "$CLEAN_ISSUER_ID"
+      - name: Save IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: App-iOS-IPA
+          path: ios/App/build/Export/App.ipa
+
+      - name: Deliver to App Store Connect / TestFlight
+        env:
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          cd ios/App
+          CLEAN_KEY_ID=$(echo "$KEY_ID" | tr -d '[:space:]')
+          CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
+          IPA_PATH="build/Export/App.ipa"
+
+          echo "🚀 Delivering $IPA_PATH to App Store Connect via xcrun altool..."
+          xcrun altool --upload-app \
+            --type ios \
+            --file "$IPA_PATH" \
+            --apiKey "$CLEAN_KEY_ID" \
+            --apiIssuer "$CLEAN_ISSUER_ID"
