@@ -83,12 +83,11 @@ jobs:
         run: |
           npx cap sync ios
 
-      - name: Setup App Store Connect API Key & Profiles
+      - name: Setup App Store Connect API Key
         env:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_KEY_P8: ${{ secrets.APP_STORE_CONNECT_KEY_P8 }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           CLEAN_KEY_ID=$(echo "$APP_STORE_CONNECT_KEY_ID" | tr -d ' \n\r\t')
           CLEAN_ISSUER_ID=$(echo "$APP_STORE_CONNECT_ISSUER_ID" | tr -d ' \n\r\t')
@@ -117,25 +116,28 @@ jobs:
 
           CLEAN_KEY_ID=$(echo "$APP_STORE_CONNECT_KEY_ID" | tr -d ' \n\r\t')
           CLEAN_ISSUER_ID=$(echo "$APP_STORE_CONNECT_ISSUER_ID" | tr -d ' \n\r\t')
+          CLEAN_TEAM_ID=$(echo "$APPLE_TEAM_ID" | tr -d ' \n\r\t')
 
           node -e "
             const fs = require('fs');
             const pbxPath = 'App.xcodeproj/project.pbxproj';
             if (fs.existsSync(pbxPath)) {
               let pbx = fs.readFileSync(pbxPath, 'utf8');
-              const teamId = process.env.APPLE_TEAM_ID ? process.env.APPLE_TEAM_ID.trim() : '';
-              pbx = pbx.replace(/CODE_SIGN_STYLE = Automatic;/g, 'CODE_SIGN_STYLE = Manual;');
+              const teamId = '$CLEAN_TEAM_ID';
+              
+              // Enable Automatic Signing with the Developer Team
+              pbx = pbx.replace(/CODE_SIGN_STYLE = Manual;/g, 'CODE_SIGN_STYLE = Automatic;');
               pbx = pbx.replace(/IPHONEOS_DEPLOYMENT_TARGET\s*=\s*[0-9.]+;/g, 'IPHONEOS_DEPLOYMENT_TARGET = 15.0;');
+              
               if (teamId) {
-                pbx = pbx.replace(/buildSettings = \{/g, 'buildSettings = {\n\t\t\t\tDEVELOPMENT_TEAM = ' + teamId + ';\n\t\t\t\tCODE_SIGN_STYLE = Manual;\n\t\t\t\tCODE_SIGN_IDENTITY = \"\";\n\t\t\t\tCODE_SIGNING_ALLOWED = NO;\n\t\t\t\tCODE_SIGNING_REQUIRED = NO;\n\t\t\t\tIPHONEOS_DEPLOYMENT_TARGET = 15.0;');
+                pbx = pbx.replace(/buildSettings = \{/g, 'buildSettings = {\n\t\t\t\tDEVELOPMENT_TEAM = ' + teamId + ';\n\t\t\t\tCODE_SIGN_STYLE = Automatic;\n\t\t\t\tIPHONEOS_DEPLOYMENT_TARGET = 15.0;');
               }
-              pbx = pbx.replace(/IPHONEOS_DEPLOYMENT_TARGET\s*=\s*[0-9.]+;/g, 'IPHONEOS_DEPLOYMENT_TARGET = 15.0;');
               fs.writeFileSync(pbxPath, pbx);
-              console.log('✅ Configured project.pbxproj for cloud distribution build.');
+              console.log('✅ Configured project.pbxproj with DEVELOPMENT_TEAM: ' + teamId);
             }
           "
 
-          # 1. Archive using Xcode
+          # 1. Archive using Xcode and App Store Connect automatic provisioning
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
@@ -153,12 +155,12 @@ jobs:
           <plist version="1.0">
           <dict>
             <key>method</key>
-            <string>app-store</string>
+            <string>app-store-connect</string>
             <key>destination</key>
             <string>export</string>
             <key>signingStyle</key>
             <string>automatic</string>
-            ${APPLE_TEAM_ID:+<key>teamID</key><string>$APPLE_TEAM_ID</string>}
+            ${CLEAN_TEAM_ID:+<key>teamID</key><string>$CLEAN_TEAM_ID</string>}
             <key>stripSwiftSymbols</key>
             <true/>
             <key>uploadBitcode</key>
