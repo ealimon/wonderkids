@@ -125,7 +125,6 @@ jobs:
               let pbx = fs.readFileSync(pbxPath, 'utf8');
               const teamId = '$CLEAN_TEAM_ID';
               
-              // Enable Automatic Signing with the Developer Team
               pbx = pbx.replace(/CODE_SIGN_STYLE = Manual;/g, 'CODE_SIGN_STYLE = Automatic;');
               pbx = pbx.replace(/IPHONEOS_DEPLOYMENT_TARGET\s*=\s*[0-9.]+;/g, 'IPHONEOS_DEPLOYMENT_TARGET = 15.0;');
               
@@ -137,10 +136,11 @@ jobs:
             }
           "
 
-          # 1. Archive using Xcode and App Store Connect automatic provisioning
+          # 1. Archive specifically for generic iOS platform for App Store
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
+            -destination 'generic/platform=iOS' \
             -archivePath build/App.xcarchive \
             -allowProvisioningUpdates \
             -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8 \
