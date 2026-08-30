@@ -29,6 +29,7 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
+
       - name: Install Fastlane
         run: gem install fastlane --no-document
 
@@ -214,7 +215,7 @@ jobs:
             })();
           '
 
-      - name: Build Xcode Archive & Export IPA
+      - name: Build & Deliver to TestFlight via Fastlane
         env:
           KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -223,75 +224,38 @@ jobs:
 
           CLEAN_KEY_ID=$(echo "$KEY_ID" | tr -d '[:space:]')
           CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
+          KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8"
 
-          # 1. Archive workspace cleanly with Official Xcode 16.2
-          xcodebuild -workspace App.xcworkspace \
-            -scheme App \
-            -configuration Release \
-            -archivePath build/App.xcarchive \
-            -destination "generic/platform=iOS" \
-            IPHONEOS_DEPLOYMENT_TARGET=15.0 \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="" \
-            PROVISIONING_PROFILE_SPECIFIER="" \
-            archive
+          # Fastlane build_app with automatic App Store Connect signing and export
+          fastlane run build_app \
+            workspace:"App.xcworkspace" \
+            scheme:"App" \
+            clean:true \
+            export_method:"app-store" \
+            output_directory:"build/Export" \
+            output_name:"App.ipa" \
+            skip_profile_detection:true \
+            xcargs:"IPHONEOS_DEPLOYMENT_TARGET=15.0 CODE_SIGN_STYLE=Manual CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO"
 
-          # 2. Export local IPA
-          cat << EOF > exportOptions.plist
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>destination</key>
-            <string>export</string>
-            <key>signingStyle</key>
-            <string>automatic</string>
-            ${APPLE_TEAM_ID:+<key>teamID</key><string>$APPLE_TEAM_ID</string>}
-            <key>stripSwiftSymbols</key>
-            <true/>
-            <key>uploadSymbols</key>
-            <true/>
-            <key>manageAppVersionAndBuildNumber</key>
-            <true/>
-          </dict>
-          </plist>
-          EOF
+          IPA_PATH="build/Export/App.ipa"
 
-          echo "📦 Exporting IPA..."
-          xcodebuild -exportArchive \
-            -archivePath build/App.xcarchive \
-            -exportPath build/Export \
-            -exportOptionsPlist exportOptions.plist \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8 \
-            -authenticationKeyID "$CLEAN_KEY_ID" \
-            -authenticationKeyIssuerID "$CLEAN_ISSUER_ID"
+          if [ -f "$IPA_PATH" ]; then
+            echo "🚀 Delivering $IPA_PATH directly to TestFlight..."
+            fastlane run upload_to_testflight \
+              ipa:"$IPA_PATH" \
+              api_key_path:"$KEY_PATH" \
+              api_key_id:"$CLEAN_KEY_ID" \
+              api_issuer_id:"$CLEAN_ISSUER_ID" \
+              skip_waiting_for_build_processing:true
+          else
+            echo "::error::IPA export failed"
+            exit 1
+          fi
 
       - name: Save IPA Artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: App-iOS-IPA
           path: ios/App/build/Export/*.ipa
-
-      - name: Deliver to TestFlight via Fastlane
-        env:
-          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
-          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-        run: |
-          cd ios/App
-          CLEAN_KEY_ID=$(echo "$KEY_ID" | tr -d '[:space:]')
-          CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
-          KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8"
-          IPA_PATH=$(find build/Export -name "*.ipa" | head -n 1)
-
-          echo "🚀 Delivering $IPA_PATH directly to TestFlight with Fastlane..."
-          fastlane run upload_to_testflight \
-            ipa:"$IPA_PATH" \
-            api_key_path:"$KEY_PATH" \
-            api_key_id:"$CLEAN_KEY_ID" \
-            api_issuer_id:"$CLEAN_ISSUER_ID" \
-            skip_waiting_for_build_processing:true
+          if-no-files-found: ignore
