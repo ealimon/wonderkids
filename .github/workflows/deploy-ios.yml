@@ -70,16 +70,17 @@ jobs:
           # Copy web build assets to iOS app
           npx cap copy ios
 
-          # Update deployment target and set build number in Xcode project
+          # Update deployment target, bundle ID, and build version
           node -e '
             const fs = require("fs");
             const pbxPath = "ios/App/App.xcodeproj/project.pbxproj";
             if (fs.existsSync(pbxPath)) {
               let content = fs.readFileSync(pbxPath, "utf-8");
+              content = content.replace(/PRODUCT_BUNDLE_IDENTIFIER\s*=\s*[^;]+;/g, "PRODUCT_BUNDLE_IDENTIFIER = com.limon.storybookeducation;");
               content = content.replace(/IPHONEOS_DEPLOYMENT_TARGET\s*=\s*[0-9.]+;/g, "IPHONEOS_DEPLOYMENT_TARGET = 15.0;");
               content = content.replace(/CURRENT_PROJECT_VERSION\s*=\s*[0-9.]+;/g, "CURRENT_PROJECT_VERSION = ${{ github.run_number }};");
               fs.writeFileSync(pbxPath, content);
-              console.log("✅ Configured IPHONEOS_DEPLOYMENT_TARGET and build version ${{ github.run_number }}");
+              console.log("✅ Configured Bundle ID com.limon.storybookeducation and build version ${{ github.run_number }}");
             }
           '
 
@@ -139,7 +140,7 @@ jobs:
         run: |
           cd ios/App
 
-          # 1. Clean Archive with Manual Signing bypass for CI
+          # 1. Clean Archive
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
@@ -177,7 +178,7 @@ jobs:
           CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
           IPA_PATH="build/Export/App.ipa"
 
-          echo "🚀 Delivering $IPA_PATH to App Store Connect via xcrun altool..."
+          echo "🚀 Delivering $IPA_PATH to App Store Connect (com.limon.storybookeducation)..."
           xcrun altool --upload-app \
             --type ios \
             --file "$IPA_PATH" \
