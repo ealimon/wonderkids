@@ -7,32 +7,8 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: macos-15
+    runs-on: macos-14
     steps:
-      - name: Select Official Release Xcode (GM)
-        run: |
-          echo "Available Xcode installations:"
-          ls -d /Applications/Xcode* || true
-          
-          # Prefer official stable Xcode 16.2 or 16.1 (never beta/preview)
-          STABLE_XCODE=""
-          if [ -d "/Applications/Xcode_16.2.app" ]; then
-            STABLE_XCODE="/Applications/Xcode_16.2.app"
-          elif [ -d "/Applications/Xcode_16.1.app" ]; then
-            STABLE_XCODE="/Applications/Xcode_16.1.app"
-          elif [ -d "/Applications/Xcode_16.0.app" ]; then
-            STABLE_XCODE="/Applications/Xcode_16.0.app"
-          elif [ -d "/Applications/Xcode.app" ]; then
-            STABLE_XCODE="/Applications/Xcode.app"
-          fi
-
-          if [ -n "$STABLE_XCODE" ]; then
-            echo "Selecting stable release Xcode: $STABLE_XCODE"
-            sudo xcode-select -s "$STABLE_XCODE/Contents/Developer"
-            echo "DEVELOPER_DIR=$STABLE_XCODE/Contents/Developer" >> $GITHUB_ENV
-          fi
-          xcodebuild -version
-
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -55,7 +31,7 @@ jobs:
           # Initialize iOS platform
           npx cap add ios || true
           
-          # Write Podfile with iOS 15.0+ target
+          # Write clean Podfile with iOS 15.0+ target
           cat << 'EOF' > ios/App/Podfile
           require_relative '../../node_modules/@capacitor/ios/scripts/pods_helpers'
 
@@ -80,57 +56,17 @@ jobs:
                 config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
               end
             end
-            installer.aggregate_targets.each do |target|
-              target.user_project.targets.each do |user_target|
-                user_target.build_configurations.each do |config|
-                  config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
-                end
-              end
-              target.user_project.save rescue nil
-            end
           end
           EOF
 
-          # Copy web build assets to iOS app
-          npx cap copy ios
-          
-          # Force iOS 15.0 across all Xcode configuration files
-          node -e '
-            const fs = require("fs");
-            const path = require("path");
+          # Sync web build and assets to iOS
+          npx cap sync ios
 
-            function updateFile(filePath) {
-              if (!fs.existsSync(filePath)) return;
-              let content = fs.readFileSync(filePath, "utf-8");
-              let updated = content.replace(/IPHONEOS_DEPLOYMENT_TARGET\s*=\s*[0-9.]+;/g, "IPHONEOS_DEPLOYMENT_TARGET = 15.0;");
-              updated = updated.replace(/IPHONEOS_DEPLOYMENT_TARGET\s*=\s*[0-9.]+/g, "IPHONEOS_DEPLOYMENT_TARGET = 15.0");
-              if (content !== updated) {
-                fs.writeFileSync(filePath, updated);
-                console.log("✅ Updated deployment target to 15.0 in:", filePath);
-              }
-            }
-
-            function walkDir(dir) {
-              if (!fs.existsSync(dir)) return;
-              for (const file of fs.readdirSync(dir)) {
-                const full = path.join(dir, file);
-                if (fs.statSync(full).isDirectory()) {
-                  walkDir(full);
-                } else if (file.endsWith(".pbxproj") || file.endsWith(".xcconfig")) {
-                  updateFile(full);
-                }
-              }
-            }
-
-            walkDir("ios");
-          '
-
-          # Install CocoaPods dependencies with iOS 15.0 target
+          # Install CocoaPods
           cd ios/App
-          pod install --repo-update
-          cd ../..
+          pod install --repo-update || pod install
 
-      - name: Setup App Store Connect API Key & Configure Code Signing
+      - name: Setup App Store Connect API Key
         env:
           KEY_P8: ${{ secrets.APP_STORE_CONNECT_KEY_P8 }}
           KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
@@ -140,146 +76,55 @@ jobs:
           mkdir -p ~/.appstoreconnect/private_keys
           mkdir -p ~/.private_keys
 
-          # Format and write the .p8 file cleanly & discover Team ID
-          node -e '
-            (async () => {
-              const fs = require("fs");
-              const crypto = require("crypto");
-              const https = require("https");
+          CLEAN_KEY_ID=$(echo "$KEY_ID" | tr -d '[:space:]')
+          CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
+          CLEAN_TEAM_ID=$(echo "$EXPLICIT_TEAM_ID" | tr -d '[:space:]')
 
-              let raw = (process.env.KEY_P8 || "").trim();
-              const keyId = (process.env.KEY_ID || "").trim();
-              const issuerId = (process.env.ISSUER_ID || "").trim();
-              let teamId = (process.env.EXPLICIT_TEAM_ID || "").trim();
+          # Write key files
+          echo "$KEY_P8" > ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8
+          chmod 600 ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8
+          cp ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8 ~/.private_keys/
 
-              if (!raw) {
-                console.error("APP_STORE_CONNECT_KEY_P8 secret is empty!");
-                process.exit(1);
-              }
-
-              raw = raw.replace(/^["\x27]|["\x27]$/g, "").replace(/\\n/g, "\n").trim();
-
-              let b64 = raw
-                .replace(/-----BEGIN [^-]+-----/g, "")
-                .replace(/-----END [^-]+-----/g, "")
-                .replace(/\s+/g, "");
-
-              if (b64.length > 500) {
-                try {
-                  const decoded = Buffer.from(b64, "base64").toString("utf-8");
-                  if (decoded.includes("BEGIN")) {
-                    b64 = decoded
-                      .replace(/-----BEGIN [^-]+-----/g, "")
-                      .replace(/-----END [^-]+-----/g, "")
-                      .replace(/\s+/g, "");
-                  }
-                } catch(e) {}
-              }
-
-              const chunks = b64.match(/.{1,64}/g) || [];
-              const standardPem = `-----BEGIN PRIVATE KEY-----\n${chunks.join("\n")}\n-----END PRIVATE KEY-----\n`;
-
-              const path1 = `${process.env.HOME}/.appstoreconnect/private_keys/AuthKey_${keyId}.p8`;
-              const path2 = `${process.env.HOME}/.private_keys/AuthKey_${keyId}.p8`;
-
-              fs.writeFileSync(path1, standardPem, { mode: 0o600 });
-              fs.writeFileSync(path2, standardPem, { mode: 0o600 });
-              console.log(`✅ Saved AuthKey_${keyId}.p8 successfully.`);
-
-              function base64Url(obj) {
-                return Buffer.from(JSON.stringify(obj)).toString("base64")
-                  .replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
-              }
-
-              if (!teamId) {
-                try {
-                  const header = { alg: "ES256", kid: keyId, typ: "JWT" };
-                  const payload = {
-                    iss: issuerId,
-                    exp: Math.floor(Date.now() / 1000) + 600,
-                    aud: "appstoreconnect-v1"
-                  };
-
-                  const signData = `${base64Url(header)}.${base64Url(payload)}`;
-                  const sign = crypto.createSign("SHA256");
-                  sign.update(signData);
-                  const signature = sign.sign({ key: standardPem, dsaEncoding: "ieee-p1363" }, "base64")
-                    .replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
-                  const token = `${signData}.${signature}`;
-
-                  const res = await new Promise((resolve, reject) => {
-                    const req = https.get("https://api.appstoreconnect.apple.com/v1/bundleIds", {
-                      headers: { "Authorization": `Bearer ${token}` }
-                    }, (response) => {
-                      let data = "";
-                      response.on("data", chunk => data += chunk);
-                      response.on("end", () => {
-                        try { resolve(JSON.parse(data)); } catch(e) { resolve({}); }
-                      });
-                    });
-                    req.on("error", reject);
-                  });
-
-                  if (res.data && res.data.length > 0) {
-                    for (const item of res.data) {
-                      if (item.attributes && item.attributes.seedId) {
-                        teamId = item.attributes.seedId;
-                        console.log(`✅ Found Apple Team ID from App Store Connect: ${teamId}`);
-                        break;
-                      }
-                    }
-                  }
-                } catch (e) {
-                  console.warn("Could not query App Store Connect API for Team ID:", e.message);
-                }
-              }
-
+          # Configure project.pbxproj for cloud archive
+          node -e "
+            const fs = require('fs');
+            const pbxPath = 'ios/App/App.xcodeproj/project.pbxproj';
+            if (fs.existsSync(pbxPath)) {
+              let pbx = fs.readFileSync(pbxPath, 'utf8');
+              const teamId = '$CLEAN_TEAM_ID';
+              pbx = pbx.replace(/CODE_SIGN_STYLE = Automatic;/g, 'CODE_SIGN_STYLE = Manual;');
               if (teamId) {
-                fs.appendFileSync(process.env.GITHUB_ENV, `\nAPPLE_TEAM_ID=${teamId}\n`);
+                pbx = pbx.replace(/buildSettings = \{/g, 'buildSettings = {\n\t\t\t\tDEVELOPMENT_TEAM = ' + teamId + ';\n\t\t\t\tCODE_SIGN_STYLE = Manual;\n\t\t\t\tCODE_SIGN_IDENTITY = \"\";\n\t\t\t\tCODE_SIGNING_ALLOWED = NO;\n\t\t\t\tCODE_SIGNING_REQUIRED = NO;');
               }
+              fs.writeFileSync(pbxPath, pbx);
+              console.log('✅ Configured project.pbxproj.');
+            }
+          "
 
-              const pbxPath = "ios/App/App.xcodeproj/project.pbxproj";
-              if (fs.existsSync(pbxPath)) {
-                let pbx = fs.readFileSync(pbxPath, "utf-8");
-                pbx = pbx.replace(/ProvisioningStyle = Automatic;/g, "ProvisioningStyle = Manual;");
-                pbx = pbx.replace(/CODE_SIGN_STYLE = Automatic;/g, "CODE_SIGN_STYLE = Manual;");
-                pbx = pbx.replace(/IPHONEOS_DEPLOYMENT_TARGET\s*=\s*[0-9.]+;/g, "IPHONEOS_DEPLOYMENT_TARGET = 15.0;");
-                if (teamId) {
-                  pbx = pbx.replace(/buildSettings = \{/g, `buildSettings = {\n\t\t\t\tDEVELOPMENT_TEAM = ${teamId};\n\t\t\t\tCODE_SIGN_STYLE = Manual;\n\t\t\t\tCODE_SIGN_IDENTITY = "";\n\t\t\t\tCODE_SIGNING_ALLOWED = NO;\n\t\t\t\tCODE_SIGNING_REQUIRED = NO;\n\t\t\t\tIPHONEOS_DEPLOYMENT_TARGET = 15.0;`);
-                }
-                pbx = pbx.replace(/IPHONEOS_DEPLOYMENT_TARGET\s*=\s*[0-9.]+;/g, "IPHONEOS_DEPLOYMENT_TARGET = 15.0;");
-                fs.writeFileSync(pbxPath, pbx);
-                console.log(`✅ Configured project.pbxproj for cloud distribution build (Team: ${teamId || "Auto"}).`);
-              }
-            })();
-          '
-
-      - name: Build Xcode Archive & Export IPA
+      - name: Build Xcode Archive & Upload to App Store Connect
         env:
           KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           cd ios/App
-          xcrun agvtool new-version -all ${{ github.run_number }} || true
 
           CLEAN_KEY_ID=$(echo "$KEY_ID" | tr -d '[:space:]')
           CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
+          CLEAN_TEAM_ID=$(echo "$APPLE_TEAM_ID" | tr -d '[:space:]')
 
-          # 1. Archive using Official Release Xcode SDK
+          # 1. Archive the project using official GM Xcode
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
+            -destination 'generic/platform=iOS' \
             -archivePath build/App.xcarchive \
-            -destination "generic/platform=iOS" \
-            IPHONEOS_DEPLOYMENT_TARGET=15.0 \
-            CODE_SIGN_STYLE=Manual \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            PROVISIONING_PROFILE_SPECIFIER="" \
             archive
 
-          # 2. Export & Direct Upload to App Store Connect
+          # 2. Export & Upload directly to App Store Connect
           cat << EOF > exportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -291,7 +136,7 @@ jobs:
             <string>app-store</string>
             <key>signingStyle</key>
             <string>automatic</string>
-            ${APPLE_TEAM_ID:+<key>teamID</key><string>$APPLE_TEAM_ID</string>}
+            ${CLEAN_TEAM_ID:+<key>teamID</key><string>$CLEAN_TEAM_ID</string>}
             <key>stripSwiftSymbols</key>
             <true/>
             <key>uploadSymbols</key>
@@ -302,7 +147,7 @@ jobs:
           </plist>
           EOF
 
-          echo "🚀 Exporting and uploading to App Store Connect with official release SDK..."
+          echo "🚀 Exporting and uploading directly to App Store Connect..."
           xcodebuild -exportArchive \
             -archivePath build/App.xcarchive \
             -exportOptionsPlist exportOptions.plist \
