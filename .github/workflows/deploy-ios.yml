@@ -9,7 +9,7 @@ jobs:
   build-and-deploy:
     runs-on: macos-14
     steps:
-      - name: Setup Official Xcode 16.2 GM
+      - name: Setup Official Xcode 16.2
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: '16.2'
@@ -207,7 +207,7 @@ jobs:
             })();
           '
 
-      - name: Build Xcode Archive & Export IPA
+      - name: Build Xcode Archive & Export Local IPA
         env:
           KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -217,7 +217,7 @@ jobs:
           CLEAN_KEY_ID=$(echo "$KEY_ID" | tr -d '[:space:]')
           CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
 
-          # 1. Archive workspace cleanly with Official Xcode 16.2 GM (iOS 18.2 SDK)
+          # 1. Archive workspace cleanly with Official Xcode 16.2
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
@@ -231,16 +231,16 @@ jobs:
             PROVISIONING_PROFILE_SPECIFIER="" \
             archive
 
-          # 2. Export & Direct Upload to App Store Connect
+          # 2. Export local IPA to build/Export directory
           cat << EOF > exportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
-            <key>destination</key>
-            <string>upload</string>
             <key>method</key>
             <string>app-store</string>
+            <key>destination</key>
+            <string>export</string>
             <key>signingStyle</key>
             <string>automatic</string>
             ${APPLE_TEAM_ID:+<key>teamID</key><string>$APPLE_TEAM_ID</string>}
@@ -254,11 +254,36 @@ jobs:
           </plist>
           EOF
 
-          echo "🚀 Exporting and uploading directly to App Store Connect with Xcode 16.2 GM (iOS 18.2 SDK)..."
+          echo "📦 Exporting IPA to local directory..."
           xcodebuild -exportArchive \
             -archivePath build/App.xcarchive \
+            -exportPath build/Export \
             -exportOptionsPlist exportOptions.plist \
             -allowProvisioningUpdates \
             -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8 \
             -authenticationKeyID "$CLEAN_KEY_ID" \
             -authenticationKeyIssuerID "$CLEAN_ISSUER_ID"
+
+          # 3. Direct upload to App Store Connect via Fastlane / notary tool
+          IPA_PATH=$(find build/Export -name "*.ipa" | head -n 1)
+          echo "Found IPA: $IPA_PATH"
+
+          if [ -f "$IPA_PATH" ]; then
+            echo "🚀 Uploading $IPA_PATH to App Store Connect..."
+            xcrun altool --upload-app \
+              --type ios \
+              --file "$IPA_PATH" \
+              --apiKey "$CLEAN_KEY_ID" \
+              --apiIssuer "$CLEAN_ISSUER_ID"
+          else
+            echo "::error::IPA file not found in build/Export"
+            exit 1
+          fi
+
+      - name: Upload IPA Artifact to GitHub
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: App-iOS-IPA
+          path: ios/App/build/Export/*.ipa
+          if-no-files-found: ignore
