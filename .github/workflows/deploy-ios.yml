@@ -70,7 +70,7 @@ jobs:
           # Copy web build assets to iOS app
           npx cap copy ios
 
-          # Update deployment target, bundle ID, and build version
+          # Update deployment target, bundle ID, and build version in Xcode project
           node -e '
             const fs = require("fs");
             const pbxPath = "ios/App/App.xcodeproj/project.pbxproj";
@@ -88,7 +88,7 @@ jobs:
           cd ios/App
           pod install --repo-update || pod install
 
-      - name: Setup App Store Connect API Key
+      - name: Setup App Store Connect API Key & Fetch Provisioning Profile
         env:
           KEY_P8: ${{ secrets.APP_STORE_CONNECT_KEY_P8 }}
           KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
@@ -98,45 +98,162 @@ jobs:
           mkdir -p ~/.private_keys
 
           node -e '
-            const fs = require("fs");
-            let raw = (process.env.KEY_P8 || "").trim();
-            const keyId = (process.env.KEY_ID || "").trim();
+            (async () => {
+              const fs = require("fs");
+              const crypto = require("crypto");
+              const https = require("https");
 
-            if (!raw) {
-              console.error("APP_STORE_CONNECT_KEY_P8 secret is empty!");
-              process.exit(1);
-            }
+              let raw = (process.env.KEY_P8 || "").trim();
+              const keyId = (process.env.KEY_ID || "").trim();
+              const issuerId = (process.env.ISSUER_ID || "").trim();
 
-            raw = raw.replace(/^["\x27]|["\x27]$/g, "").replace(/\\n/g, "\n").trim();
-            let b64 = raw
-              .replace(/-----BEGIN [^-]+-----/g, "")
-              .replace(/-----END [^-]+-----/g, "")
-              .replace(/\s+/g, "");
+              if (!raw) {
+                console.error("APP_STORE_CONNECT_KEY_P8 secret is empty!");
+                process.exit(1);
+              }
 
-            if (b64.length > 500) {
+              raw = raw.replace(/^["\x27]|["\x27]$/g, "").replace(/\\n/g, "\n").trim();
+              let b64 = raw
+                .replace(/-----BEGIN [^-]+-----/g, "")
+                .replace(/-----END [^-]+-----/g, "")
+                .replace(/\s+/g, "");
+
+              if (b64.length > 500) {
+                try {
+                  const decoded = Buffer.from(b64, "base64").toString("utf-8");
+                  if (decoded.includes("BEGIN")) {
+                    b64 = decoded
+                      .replace(/-----BEGIN [^-]+-----/g, "")
+                      .replace(/-----END [^-]+-----/g, "")
+                      .replace(/\s+/g, "");
+                  }
+                } catch(e) {}
+              }
+
+              const chunks = b64.match(/.{1,64}/g) || [];
+              const standardPem = `-----BEGIN PRIVATE KEY-----\n${chunks.join("\n")}\n-----END PRIVATE KEY-----\n`;
+
+              const path1 = `${process.env.HOME}/.appstoreconnect/private_keys/AuthKey_${keyId}.p8`;
+              const path2 = `${process.env.HOME}/.private_keys/AuthKey_${keyId}.p8`;
+
+              fs.writeFileSync(path1, standardPem, { mode: 0o600 });
+              fs.writeFileSync(path2, standardPem, { mode: 0o600 });
+              console.log(`✅ Saved AuthKey_${keyId}.p8 successfully.`);
+
+              function base64Url(obj) {
+                return Buffer.from(JSON.stringify(obj)).toString("base64")
+                  .replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+              }
+
+              function apiRequest(path, method = "GET", postData = null) {
+                const header = { alg: "ES256", kid: keyId, typ: "JWT" };
+                const payload = {
+                  iss: issuerId,
+                  exp: Math.floor(Date.now() / 1000) + 600,
+                  aud: "appstoreconnect-v1"
+                };
+
+                const signData = `${base64Url(header)}.${base64Url(payload)}`;
+                const sign = crypto.createSign("SHA256");
+                sign.update(signData);
+                const signature = sign.sign({ key: standardPem, dsaEncoding: "ieee-p1363" }, "base64")
+                  .replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+                const token = `${signData}.${signature}`;
+
+                return new Promise((resolve, reject) => {
+                  const options = {
+                    hostname: "api.appstoreconnect.apple.com",
+                    path,
+                    method,
+                    headers: {
+                      "Authorization": `Bearer ${token}`,
+                      "Content-Type": "application/json"
+                    }
+                  };
+                  const req = https.request(options, (res) => {
+                    let data = "";
+                    res.on("data", chunk => data += chunk);
+                    res.on("end", () => {
+                      try { resolve(JSON.parse(data)); } catch(e) { resolve({ raw: data }); }
+                    });
+                  });
+                  req.on("error", reject);
+                  if (postData) req.write(JSON.stringify(postData));
+                  req.end();
+                });
+              }
+
               try {
-                const decoded = Buffer.from(b64, "base64").toString("utf-8");
-                if (decoded.includes("BEGIN")) {
-                  b64 = decoded
-                    .replace(/-----BEGIN [^-]+-----/g, "")
-                    .replace(/-----END [^-]+-----/g, "")
-                    .replace(/\s+/g, "");
+                console.log("🔍 Looking up App Store provisioning profile for com.limon.storybookeducation...");
+                const bundleRes = await apiRequest("/v1/bundleIds?filter[identifier]=com.limon.storybookeducation");
+                let bundleId = null;
+                if (bundleRes.data && bundleRes.data.length > 0) {
+                  bundleId = bundleRes.data[0].id;
+                  console.log(`✅ Found Bundle ID record: ${bundleId}`);
                 }
-              } catch(e) {}
-            }
 
-            const chunks = b64.match(/.{1,64}/g) || [];
-            const standardPem = `-----BEGIN PRIVATE KEY-----\n${chunks.join("\n")}\n-----END PRIVATE KEY-----\n`;
+                const profilesRes = await apiRequest("/v1/profiles?limit=100");
+                let profileContent = null;
+                if (profilesRes.data && profilesRes.data.length > 0) {
+                  for (const p of profilesRes.data) {
+                    if (p.attributes && p.attributes.profileContent) {
+                      if (!bundleId || (p.relationships && p.relationships.bundleId && p.relationships.bundleId.data && p.relationships.bundleId.data.id === bundleId)) {
+                        profileContent = p.attributes.profileContent;
+                        console.log(`✅ Found active provisioning profile: ${p.attributes.name} (${p.attributes.profileType})`);
+                        break;
+                      }
+                    }
+                  }
+                  if (!profileContent) {
+                    profileContent = profilesRes.data[0].attributes.profileContent;
+                    console.log(`✅ Using available profile: ${profilesRes.data[0].attributes.name}`);
+                  }
+                }
 
-            const path1 = `${process.env.HOME}/.appstoreconnect/private_keys/AuthKey_${keyId}.p8`;
-            const path2 = `${process.env.HOME}/.private_keys/AuthKey_${keyId}.p8`;
+                if (!profileContent && bundleId) {
+                  console.log("⚙️ Requesting new App Store distribution profile...");
+                  const certsRes = await apiRequest("/v1/certificates?filter[certificateType]=IOS_DISTRIBUTION,DISTRIBUTION");
+                  let certId = null;
+                  if (certsRes.data && certsRes.data.length > 0) {
+                    certId = certsRes.data[0].id;
+                  }
 
-            fs.writeFileSync(path1, standardPem, { mode: 0o600 });
-            fs.writeFileSync(path2, standardPem, { mode: 0o600 });
-            console.log(`✅ Saved AuthKey_${keyId}.p8 successfully.`);
+                  if (certId) {
+                    const newProfile = await apiRequest("/v1/profiles", "POST", {
+                      data: {
+                        type: "profiles",
+                        attributes: {
+                          name: `WonderKids AppStore ${Date.now()}`,
+                          profileType: "IOS_APP_STORE"
+                        },
+                        relationships: {
+                          bundleId: { data: { type: "bundleIds", id: bundleId } },
+                          certificates: { data: [{ type: "certificates", id: certId }] }
+                        }
+                      }
+                    });
+                    if (newProfile.data && newProfile.data.attributes) {
+                      profileContent = newProfile.data.attributes.profileContent;
+                      console.log("✅ Created new App Store distribution profile.");
+                    }
+                  }
+                }
+
+                if (profileContent) {
+                  const buffer = Buffer.from(profileContent, "base64");
+                  fs.mkdirSync("ios/App/build", { recursive: true });
+                  fs.writeFileSync("ios/App/build/embedded.mobileprovision", buffer);
+                  console.log("✅ Successfully saved embedded.mobileprovision");
+                } else {
+                  console.log("ℹ️ Proceeding with archive step...");
+                }
+              } catch(e) {
+                console.warn("Profile fetch note:", e.message);
+              }
+            })();
           '
 
-      - name: Build Xcode Archive & Package IPA
+      - name: Build Xcode Archive & Package IPA with Profile
         run: |
           cd ios/App
 
@@ -154,7 +271,13 @@ jobs:
             PROVISIONING_PROFILE_SPECIFIER="" \
             archive
 
-          # 2. Package App.xcarchive into App.ipa directly
+          # 2. Inject embedded.mobileprovision into App bundle
+          if [ -f "build/embedded.mobileprovision" ]; then
+            cp "build/embedded.mobileprovision" "build/App.xcarchive/Products/Applications/App.app/embedded.mobileprovision"
+            echo "✅ Embedded mobileprovision into App.app"
+          fi
+
+          # 3. Package App.xcarchive into App.ipa
           mkdir -p build/Export/Payload
           cp -r build/App.xcarchive/Products/Applications/App.app build/Export/Payload/
           cd build/Export
