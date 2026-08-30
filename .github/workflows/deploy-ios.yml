@@ -7,8 +7,20 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
+      - name: Select Stable Xcode 16 SDK
+        run: |
+          # Select official stable release Xcode 16.2 / 16.1 / 16.0
+          if [ -d "/Applications/Xcode_16.2.app" ]; then
+            sudo xcode-select -s "/Applications/Xcode_16.2.app/Contents/Developer"
+          elif [ -d "/Applications/Xcode_16.1.app" ]; then
+            sudo xcode-select -s "/Applications/Xcode_16.1.app/Contents/Developer"
+          elif [ -d "/Applications/Xcode_16.0.app" ]; then
+            sudo xcode-select -s "/Applications/Xcode_16.0.app/Contents/Developer"
+          fi
+          xcodebuild -version
+
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -31,7 +43,22 @@ jobs:
           # Initialize iOS platform
           npx cap add ios || true
           
-          # Write clean Podfile with iOS 15.0+ target
+          # Sync web build assets
+          npx cap sync ios
+
+          # Set iOS deployment target to 15.0 in project.pbxproj
+          node -e '
+            const fs = require("fs");
+            const pbxPath = "ios/App/App.xcodeproj/project.pbxproj";
+            if (fs.existsSync(pbxPath)) {
+              let pbx = fs.readFileSync(pbxPath, "utf8");
+              pbx = pbx.replace(/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]+;/g, "IPHONEOS_DEPLOYMENT_TARGET = 15.0;");
+              fs.writeFileSync(pbxPath, pbx);
+              console.log("✅ Set IPHONEOS_DEPLOYMENT_TARGET to 15.0 in project.pbxproj");
+            }
+          '
+
+          # Write clean Podfile with iOS 15.0 platform
           cat << 'EOF' > ios/App/Podfile
           require_relative '../../node_modules/@capacitor/ios/scripts/pods_helpers'
 
@@ -59,10 +86,7 @@ jobs:
           end
           EOF
 
-          # Sync web build and assets to iOS
-          npx cap sync ios
-
-          # Install CocoaPods
+          # Install CocoaPods dependencies
           cd ios/App
           pod install --repo-update || pod install
 
@@ -80,12 +104,12 @@ jobs:
           CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
           CLEAN_TEAM_ID=$(echo "$EXPLICIT_TEAM_ID" | tr -d '[:space:]')
 
-          # Write key files
+          # Save formatted private key
           echo "$KEY_P8" > ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8
           chmod 600 ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8
           cp ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8 ~/.private_keys/
 
-          # Configure project.pbxproj for cloud archive
+          # Configure project.pbxproj with Team ID and Manual Signing for build step
           node -e "
             const fs = require('fs');
             const pbxPath = 'ios/App/App.xcodeproj/project.pbxproj';
@@ -97,7 +121,7 @@ jobs:
                 pbx = pbx.replace(/buildSettings = \{/g, 'buildSettings = {\n\t\t\t\tDEVELOPMENT_TEAM = ' + teamId + ';\n\t\t\t\tCODE_SIGN_STYLE = Manual;\n\t\t\t\tCODE_SIGN_IDENTITY = \"\";\n\t\t\t\tCODE_SIGNING_ALLOWED = NO;\n\t\t\t\tCODE_SIGNING_REQUIRED = NO;');
               }
               fs.writeFileSync(pbxPath, pbx);
-              console.log('✅ Configured project.pbxproj.');
+              console.log('✅ Configured project.pbxproj for cloud build.');
             }
           "
 
@@ -113,7 +137,7 @@ jobs:
           CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
           CLEAN_TEAM_ID=$(echo "$APPLE_TEAM_ID" | tr -d '[:space:]')
 
-          # 1. Archive the project using official GM Xcode
+          # 1. Archive the project unencumbered by device profiles
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
@@ -124,7 +148,7 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             archive
 
-          # 2. Export & Upload directly to App Store Connect
+          # 2. Export and Upload directly to App Store Connect
           cat << EOF > exportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
