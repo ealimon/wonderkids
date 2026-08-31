@@ -88,14 +88,13 @@ jobs:
           cd ios/App
           pod install --repo-update || pod install
 
-      - name: Generate & Download Official Provisioning Profile via Apple API
+      - name: Setup Key & Fetch Provisioning Profile from Apple
         env:
           KEY_P8: ${{ secrets.APP_STORE_CONNECT_KEY_P8 }}
           KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
           mkdir -p ~/.appstoreconnect/private_keys
-          mkdir -p ios/App/build
 
           node -e '
             (async () => {
@@ -133,9 +132,9 @@ jobs:
               const chunks = b64.match(/.{1,64}/g) || [];
               const standardPem = `-----BEGIN PRIVATE KEY-----\n${chunks.join("\n")}\n-----END PRIVATE KEY-----\n`;
 
-              const path1 = `${process.env.HOME}/.appstoreconnect/private_keys/AuthKey_${keyId}.p8`;
-              fs.writeFileSync(path1, standardPem, { mode: 0o600 });
-              console.log(`✅ Saved AuthKey_${keyId}.p8 successfully.`);
+              const keyPath = `${process.env.HOME}/.appstoreconnect/private_keys/AuthKey_${keyId}.p8`;
+              fs.writeFileSync(keyPath, standardPem, { mode: 0o600 });
+              console.log(`✅ Saved AuthKey_${keyId}.p8.`);
 
               function base64Url(obj) {
                 return Buffer.from(JSON.stringify(obj)).toString("base64")
@@ -181,46 +180,36 @@ jobs:
               }
 
               try {
-                console.log("🔍 Fetching Apple certificates and bundle record...");
+                console.log("🔍 Fetching provisioning profile for com.limon.storybookeducation...");
                 const bundleRes = await apiRequest("/v1/bundleIds?filter[identifier]=com.limon.storybookeducation");
                 let bundleId = null;
                 if (bundleRes.data && bundleRes.data.length > 0) {
                   bundleId = bundleRes.data[0].id;
-                  console.log(`✅ Found Bundle ID resource: ${bundleId}`);
                 }
 
                 const certsRes = await apiRequest("/v1/certificates");
-                let certIds = [];
-                if (certsRes.data && certsRes.data.length > 0) {
-                  certIds = certsRes.data.map(c => c.id);
-                  console.log(`✅ Found ${certIds.length} signing certificate(s) on Apple account.`);
-                }
+                let certIds = (certsRes.data || []).map(c => c.id);
 
-                // Check for existing profiles
                 const profilesRes = await apiRequest("/v1/profiles?limit=50");
                 let profileContent = null;
 
                 if (profilesRes.data && profilesRes.data.length > 0) {
                   for (const p of profilesRes.data) {
                     if (p.attributes && p.attributes.profileContent) {
-                      const pType = p.attributes.profileType || "";
-                      if (pType.includes("APP_STORE") || pType.includes("IOS")) {
-                        profileContent = p.attributes.profileContent;
-                        console.log(`✅ Found existing profile: ${p.attributes.name} (${pType})`);
-                        break;
-                      }
+                      profileContent = p.attributes.profileContent;
+                      console.log(`✅ Using profile: ${p.attributes.name}`);
+                      break;
                     }
                   }
                 }
 
-                // If no profile exists, create one via the API
                 if (!profileContent && bundleId && certIds.length > 0) {
-                  console.log("⚙️ Creating App Store distribution profile on Apple Developer account...");
+                  console.log("⚙️ Creating profile on Apple account...");
                   const newProfile = await apiRequest("/v1/profiles", "POST", {
                     data: {
                       type: "profiles",
                       attributes: {
-                        name: `WonderKids TestFlight ${Date.now()}`,
+                        name: `WonderKids AppStore ${Date.now()}`,
                         profileType: "IOS_APP_STORE"
                       },
                       relationships: {
@@ -229,29 +218,23 @@ jobs:
                       }
                     }
                   });
-
-                  if (newProfile.data && newProfile.data.attributes && newProfile.data.attributes.profileContent) {
+                  if (newProfile.data && newProfile.data.attributes) {
                     profileContent = newProfile.data.attributes.profileContent;
-                    console.log("✅ Created and retrieved new App Store profile.");
-                  } else {
-                    console.log("API profile response:", JSON.stringify(newProfile));
                   }
                 }
 
                 if (profileContent) {
                   const buffer = Buffer.from(profileContent, "base64");
-                  fs.writeFileSync("ios/App/build/embedded.mobileprovision", buffer);
-                  console.log("🎉 Saved embedded.mobileprovision to ios/App/build/embedded.mobileprovision (" + buffer.length + " bytes)");
-                } else {
-                  console.warn("⚠️ Could not generate profile via API. Will check certificates in Developer Portal.");
+                  fs.writeFileSync("profile.mobileprovision", buffer);
+                  console.log(`✅ Downloaded profile (${buffer.length} bytes) to profile.mobileprovision`);
                 }
-              } catch (e) {
-                console.error("Provisioning error:", e);
+              } catch(e) {
+                console.error("API error:", e.message);
               }
             })();
           '
 
-      - name: Build Archive & Package IPA with Profile
+      - name: Build Archive, Embed Profile & Package IPA
         run: |
           cd ios/App
 
@@ -269,21 +252,19 @@ jobs:
             PROVISIONING_PROFILE_SPECIFIER="" \
             archive
 
-          # 2. Inject embedded.mobileprovision into App.app
-          if [ -f "build/embedded.mobileprovision" ]; then
-            cp "build/embedded.mobileprovision" "build/App.xcarchive/Products/Applications/App.app/embedded.mobileprovision"
-            echo "✅ Embedded verified Apple profile into App.app bundle"
-          else
-            echo "⚠️ embedded.mobileprovision was not found in build directory"
-          fi
-
-          # 3. Package App.xcarchive into App.ipa
+          # 2. Package App.ipa and embed mobileprovision directly
           mkdir -p build/Export/Payload
           cp -r build/App.xcarchive/Products/Applications/App.app build/Export/Payload/
+
+          if [ -f "../../profile.mobileprovision" ]; then
+            cp "../../profile.mobileprovision" "build/Export/Payload/App.app/embedded.mobileprovision"
+            echo "✅ Successfully injected embedded.mobileprovision into Payload/App.app"
+          fi
+
           cd build/Export
           zip -qry App.ipa Payload
           cd ../../
-          echo "✅ Successfully created App.ipa at ios/App/build/Export/App.ipa"
+          echo "✅ Created App.ipa"
 
       - name: Save IPA Artifact
         uses: actions/upload-artifact@v4
