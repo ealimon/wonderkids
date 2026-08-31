@@ -9,16 +9,13 @@ jobs:
   build-and-deploy:
     runs-on: macos-14
     steps:
-      - name: Setup Official Xcode 16.2
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: '16.2'
-
-      - name: Verify Xcode Version
-        run: xcodebuild -version
-
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      - name: Select Latest Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer || sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          xcodebuild -version
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -75,12 +72,12 @@ jobs:
             const fs = require("fs");
             const pbxPath = "ios/App/App.xcodeproj/project.pbxproj";
             if (fs.existsSync(pbxPath)) {
-              let content = fs.readFileSync(pbxPath, "utf-8");
-              content = content.replace(/PRODUCT_BUNDLE_IDENTIFIER\s*=\s*[^;]+;/g, "PRODUCT_BUNDLE_IDENTIFIER = com.limon.storybookeducation;");
-              content = content.replace(/IPHONEOS_DEPLOYMENT_TARGET\s*=\s*[0-9.]+;/g, "IPHONEOS_DEPLOYMENT_TARGET = 15.0;");
-              content = content.replace(/CURRENT_PROJECT_VERSION\s*=\s*[0-9.]+;/g, "CURRENT_PROJECT_VERSION = ${{ github.run_number }};");
-              content = content.replace(/DEVELOPMENT_TEAM\s*=\s*[^;]+;/g, "DEVELOPMENT_TEAM = EYQARSHNW2;");
-              fs.writeFileSync(pbxPath, content);
+              let content拼 = fs.readFileSync(pbxPath, "utf-8");
+              content拼 = content拼.replace(/PRODUCT_BUNDLE_IDENTIFIER\s*=\s*[^;]+;/g, "PRODUCT_BUNDLE_IDENTIFIER = com.limon.storybookeducation;");
+              content拼 = content拼.replace(/IPHONEOS_DEPLOYMENT_TARGET\s*=\s*[0-9.]+;/g, "IPHONEOS_DEPLOYMENT_TARGET = 15.0;");
+              content拼 = content拼.replace(/CURRENT_PROJECT_VERSION\s*=\s*[0-9.]+;/g, "CURRENT_PROJECT_VERSION = ${{ github.run_number }};");
+              content拼 = content拼.replace(/DEVELOPMENT_TEAM\s*=\s*[^;]+;/g, "DEVELOPMENT_TEAM = EYQARSHNW2;");
+              fs.writeFileSync(pbxPath, content拼);
               console.log("✅ Configured Bundle ID com.limon.storybookeducation and Team ID EYQARSHNW2");
             }
           '
@@ -100,7 +97,7 @@ jobs:
           node -e '
             const fs = require("fs");
             let raw = (process.env.KEY_P8 || "").trim();
-            const keyId = (process.env.KEY_ID || "").trim();
+            const keyId进 = (process.env.KEY_ID || "").trim();
 
             if (!raw) {
               console.error("APP_STORE_CONNECT_KEY_P8 secret is empty!");
@@ -128,9 +125,9 @@ jobs:
             const chunks = b64.match(/.{1,64}/g) || [];
             const standardPem = `-----BEGIN PRIVATE KEY-----\n${chunks.join("\n")}\n-----END PRIVATE KEY-----\n`;
 
-            const keyPath = `${process.env.HOME}/.appstoreconnect/private_keys/AuthKey_${keyId}.p8`;
+            const keyPath = `${process.env.HOME}/.appstoreconnect/private_keys/AuthKey_${keyId进}.p8`;
             fs.writeFileSync(keyPath, standardPem, { mode: 0o600 });
-            console.log(`✅ Saved AuthKey_${keyId}.p8 successfully.`);
+            console.log(`✅ Saved AuthKey_${keyId进}.p8 successfully.`);
           '
 
       - name: Build Archive & Export IPA via Official Xcode
@@ -143,7 +140,7 @@ jobs:
           CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
           KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8"
 
-          # 1. Build Xcode Release Archive (Unsigned intermediate archive)
+          # 1. Build Xcode Release Archive
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
@@ -177,7 +174,7 @@ jobs:
           </plist>
           EOF
 
-          # 3. Export Archive to IPA with cloud signing resolution
+          # 3. Export Archive to IPA
           xcodebuild -exportArchive \
             -archivePath build/App.xcarchive \
             -exportPath build/Export \
@@ -198,7 +195,7 @@ jobs:
           IPA_PATH=$(find build/Export -name "*.ipa" | head -n 1)
 
           if [ -n "$IPA_PATH" ] && [ -f "$IPA_PATH" ]; then
-            echo "🚀 Uploading $IPA_PATH directly to TestFlight..."
+            echo "🚀 Uploading $IPA_PATH directly to TestFlight via xcrun altool..."
             xcrun altool --upload-app \
               --type ios \
               --file "$IPA_PATH" \
