@@ -28,7 +28,7 @@ jobs:
       - name: Setup Ruby and Fastlane
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.2'
+          ruby-version: '3.3'
 
       - name: Install Fastlane
         run: gem install fastlane --no-document
@@ -109,7 +109,6 @@ jobs:
             const fs = require("fs");
             let raw = (process.env.KEY_P8 || "").trim();
             const keyId = (process.env.KEY_ID || "").trim();
-            const issuerId = (process.env.ISSUER_ID || "").trim();
 
             if (!raw) {
               console.error("APP_STORE_CONNECT_KEY_P8 secret is empty!");
@@ -160,32 +159,38 @@ jobs:
                 in_house: false
               )
 
-              # Create CI keychain
+              keychain_name = "ci_signing_keychain.keychain-db"
+              keychain_pwd = "ci_password_123"
+
+              # 1. Create and setup temporary CI keychain
               create_keychain(
-                name: "ci_keychain",
-                password: "password",
+                name: keychain_name,
+                password: keychain_pwd,
                 default_keychain: true,
                 unlock: true,
                 timeout: 3600,
                 lock_when_sleeps: false
               )
 
-              # Generate / Download iOS Distribution Certificate & Private Key
+              # 2. Generate or fetch official iOS Distribution Certificate
               get_certificates(
                 api_key: api_key,
                 development: false,
-                keychain_path: ENV["KEYCHAIN_PATH"],
-                keychain_password: "password"
+                keychain_path: File.expand_path("~/Library/Keychains/#{keychain_name}"),
+                keychain_password: keychain_pwd
               )
 
-              # Generate / Download App Store Provisioning Profile
+              # 3. Grant codesign tools permission to access the private key without prompt
+              sh("security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k #{keychain_pwd} ~/Library/Keychains/#{keychain_name}")
+
+              # 4. Generate or fetch App Store Provisioning Profile
               get_provisioning_profile(
                 api_key: api_key,
                 app_identifier: "com.limon.storybookeducation",
                 type: "app-store"
               )
 
-              # Build and package signed IPA
+              # 5. Build and codesign the IPA
               build_app(
                 workspace: "App.xcworkspace",
                 scheme: "App",
@@ -195,7 +200,7 @@ jobs:
                 output_name: "App.ipa"
               )
 
-              # Upload to TestFlight
+              # 6. Upload directly to TestFlight
               upload_to_testflight(
                 api_key: api_key,
                 ipa: "build/Export/App.ipa",
