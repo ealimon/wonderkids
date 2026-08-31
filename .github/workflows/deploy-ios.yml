@@ -160,7 +160,7 @@ jobs:
                 in_house: false
               )
 
-              # Create a temporary keychain for CI codesigning
+              # Create CI keychain
               create_keychain(
                 name: "ci_keychain",
                 password: "password",
@@ -173,9 +173,8 @@ jobs:
               # Generate / Download iOS Distribution Certificate & Private Key
               get_certificates(
                 api_key: api_key,
-                platform: "ios",
                 development: false,
-                keychain_name: "ci_keychain",
+                keychain_path: ENV["KEYCHAIN_PATH"],
                 keychain_password: "password"
               )
 
@@ -183,7 +182,6 @@ jobs:
               get_provisioning_profile(
                 api_key: api_key,
                 app_identifier: "com.limon.storybookeducation",
-                platform: "ios",
                 type: "app-store"
               )
 
