@@ -78,7 +78,7 @@ jobs:
           # Copy web build assets to iOS app
           npx cap copy ios
 
-          # Configure project.pbxproj
+          # Configure project.pbxproj with bundle ID, team ID, deployment target and build number
           node -e '
             const fs = require("fs");
             const pbxPath = "ios/App/App.xcodeproj/project.pbxproj";
@@ -173,7 +173,7 @@ jobs:
                 lock_when_sleeps: false
               )
 
-              # 2. Fetch or create Distribution Certificate in CI keychain
+              # 2. Fetch or create Distribution Certificate
               get_certificates(
                 api_key: api_key,
                 development: false,
@@ -190,7 +190,7 @@ jobs:
                 app_identifier: "com.limon.storybookeducation"
               )
 
-              # 5. Disable automatic signing and bind the provisioning profile
+              # 5. Disable automatic signing and bind the profile
               update_code_signing_settings(
                 use_automatic_signing: false,
                 path: "App.xcodeproj",
