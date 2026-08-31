@@ -109,6 +109,7 @@ jobs:
             const fs = require("fs");
             let raw = (process.env.KEY_P8 || "").trim();
             const keyId = (process.env.KEY_ID || "").trim();
+            const issuerId = (process.env.ISSUER_ID || "").trim();
 
             if (!raw) {
               console.error("APP_STORE_CONNECT_KEY_P8 secret is empty!");
@@ -172,7 +173,7 @@ jobs:
                 lock_when_sleeps: false
               )
 
-              # 2. Generate or fetch official iOS Distribution Certificate
+              # 2. Fetch or create official iOS Distribution Certificate in Keychain
               get_certificates(
                 api_key: api_key,
                 development: false,
@@ -180,14 +181,15 @@ jobs:
                 keychain_password: keychain_pwd
               )
 
-              # 3. Grant codesign tools permission to access the private key without prompt
+              # 3. Allow codesign tools access to private key
               sh("security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k #{keychain_pwd} ~/Library/Keychains/#{keychain_name}")
 
-              # 4. Generate or fetch App Store Provisioning Profile
+              # 4. Generate or fetch official App Store Distribution Provisioning Profile
               get_provisioning_profile(
                 api_key: api_key,
                 app_identifier: "com.limon.storybookeducation",
-                type: "app-store"
+                adhoc: false,
+                development: false
               )
 
               # 5. Build and codesign the IPA
