@@ -474,7 +474,7 @@ export default function App() {
                         <div>
                           <div className="flex justify-between items-start">
                             {/* Colorful Category badge */}
-                            <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider font-sans shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${g.tagColor}`}>
+                            <span className={`px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-black uppercase tracking-wider font-sans shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${g.tagColor}`}>
                               {g.skill}
                             </span>
 
@@ -492,11 +492,11 @@ export default function App() {
                             <div className="bg-white text-black p-4 rounded-3xl text-4xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-3 border-black flex-shrink-0 animate-pulse-slow">
                               {g.emoji}
                             </div>
-                            <div>
-                              <h4 className="text-2xl font-black tracking-tight uppercase" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-2xl sm:text-3xl font-black tracking-tight uppercase" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
                                 {g.title}
                               </h4>
-                              <p className={`text-xs font-bold mt-1 max-w-[240px] leading-relaxed font-sans ${g.descColor}`}>
+                              <p className={`text-sm sm:text-base font-extrabold mt-1.5 leading-snug font-sans ${g.descColor}`}>
                                 {g.description}
                               </p>
                             </div>
@@ -504,11 +504,11 @@ export default function App() {
                         </div>
 
                         {/* Button indicator */}
-                        <div className="flex justify-between items-center border-t-2 border-black/10 mt-8 pt-4 relative z-10">
-                          <span className={`text-xs font-bold font-sans ${g.descColor}`}>
+                        <div className="flex justify-between items-center border-t-2 border-black/10 mt-6 pt-4 relative z-10">
+                          <span className={`text-xs sm:text-sm font-bold font-sans ${g.descColor}`}>
                             {completedTimes > 0 ? `Played: ${completedTimes} times` : 'READY TO PLAY'}
                           </span>
-                          <span className="flex items-center gap-1.5 bg-white text-black font-black text-xs px-4 py-2.5 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all">
+                          <span className="flex items-center gap-1.5 bg-white text-black font-black text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all">
                             {g.actionText}
                             <ChevronRight className="w-4 h-4 stroke-[3]" />
                           </span>
@@ -599,11 +599,6 @@ export default function App() {
           )}
         </AnimatePresence>
       </main>
-
-      {/* Playful child-friendly floating decorative elements on background */}
-      <div className="absolute top-1/4 -left-12 text-6xl opacity-10 select-none pointer-events-none hover:rotate-12 transition-transform print:hidden">🎈</div>
-      <div className="absolute top-2/3 -right-12 text-6xl opacity-10 select-none pointer-events-none hover:rotate-12 transition-transform print:hidden">🧸</div>
-      <div className="absolute bottom-12 left-12 text-5xl opacity-10 select-none pointer-events-none hover:rotate-12 transition-transform print:hidden">🌸</div>
 
       {/* Footer credits block */}
       <footer className="w-full text-center py-6 text-[10px] sm:text-xs font-bold text-amber-800/50 font-sans mt-auto print:hidden flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
