@@ -309,10 +309,10 @@ export default function App() {
                 showStarCelebration ? 'scale-110 ring-4 ring-black ring-offset-2' : ''
               }`}
             >
-              <Star className={`w-5 h-5 fill-black text-black ${showStarCelebration ? 'animate-spin' : 'animate-bounce-slow'}`} />
+              <Star className={`w-6 h-6 fill-black text-black ${showStarCelebration ? 'animate-spin' : 'animate-bounce-slow'}`} />
               <div className="flex flex-col leading-none">
-                <span className="text-[10px] font-black uppercase tracking-wider">STARS</span>
-                <span className="text-lg font-black font-mono leading-none mt-0.5">
+                <span className="text-xs font-black uppercase tracking-wider">STARS</span>
+                <span className="text-xl font-black font-mono leading-none mt-0.5">
                   {scoreState.stars}
                 </span>
               </div>
@@ -335,7 +335,7 @@ export default function App() {
             {/* Sound Toggle Button */}
             <button
               onClick={toggleMute}
-              className={`w-11 h-11 rounded-2xl flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer transition-all border-4 border-black ${
+              className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer transition-all border-4 border-black ${
                 muted
                   ? 'bg-rose-400 text-white hover:bg-rose-500'
                   : 'bg-white text-black hover:bg-gray-100'
@@ -343,7 +343,7 @@ export default function App() {
               title={muted ? 'Unmute Sounds' : 'Mute Sounds'}
               id="mute-toggle-btn"
             >
-              {muted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+              {muted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
             </button>
 
             {/* Certificate & Trophies Button */}
@@ -352,7 +352,7 @@ export default function App() {
                 audioManager.playPop();
                 setShowCertificateModal(true);
               }}
-              className={`flex items-center gap-2 border-4 border-black px-3.5 py-2 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer font-black text-xs uppercase tracking-wider ${
+              className={`flex items-center gap-2 border-4 border-black px-4 py-2.5 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer font-black text-sm uppercase tracking-wider ${
                 Object.keys(scoreState.completedGames).length > 0
                   ? 'bg-emerald-400 hover:bg-emerald-500 text-black'
                   : 'bg-yellow-100 hover:bg-yellow-200 text-gray-800'
@@ -367,7 +367,7 @@ export default function App() {
               {Object.keys(scoreState.completedGames).length > 0 ? (
                 <Trophy className="w-5 h-5 text-black fill-yellow-300" />
               ) : (
-                <span className="text-sm">🔒</span>
+                <span className="text-base">🔒</span>
               )}
               <span className="hidden sm:inline">
                 {Object.keys(scoreState.completedGames).length > 0
@@ -379,7 +379,7 @@ export default function App() {
         </div>
 
         {/* Navigation Quick Links (Visible on all screens, wrap-friendly) */}
-        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-6 gap-y-2 font-bold text-xs sm:text-sm tracking-wide border-t-2 border-dashed border-black/15 pt-3 mt-1">
+        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-6 gap-y-2 font-black text-sm sm:text-base tracking-wide border-t-2 border-dashed border-black/15 pt-3 mt-1">
           <button onClick={goBack} className={`pb-1 border-b-3 transition-colors cursor-pointer ${!activeGame ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-black'}`}>ALL GAMES</button>
           <button onClick={() => selectGame('phonics')} className={`pb-1 border-b-3 transition-colors cursor-pointer ${activeGame === 'phonics' ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-black'}`}>PHONICS</button>
           <button onClick={() => selectGame('math')} className={`pb-1 border-b-3 transition-colors cursor-pointer ${activeGame === 'math' ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-black'}`}>ADDITION</button>
@@ -407,13 +407,13 @@ export default function App() {
                 <div className="absolute bottom-0 left-0 transform -translate-x-12 translate-y-12 w-48 h-48 bg-white/10 rounded-full pointer-events-none" />
 
                 <div className="max-w-xl relative z-10">
-                  <span className="bg-yellow-300 text-black border-2 border-black font-extrabold text-xs px-4 py-1.5 rounded-full uppercase tracking-widest font-sans shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                  <span className="bg-yellow-300 text-black border-2 border-black font-black text-sm px-4 py-1.5 rounded-full uppercase tracking-widest font-sans shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                     Welcome Friend! 👋
                   </span>
                   <h2 className="text-4xl sm:text-5xl font-black tracking-tighter mt-4 leading-tight italic uppercase" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
                     Let's Play & Learn!
                   </h2>
-                  <p className="text-sm font-bold mt-2 text-orange-50 leading-relaxed font-sans max-w-lg">
+                  <p className="text-base sm:text-lg font-extrabold mt-2 text-orange-50 leading-relaxed font-sans max-w-lg">
                     Select any creative activity below. Count in the magical garden, sort colorful fruits, spell CVC words, solve math equations, or practice reading worksheets!
                   </p>
                 </div>
@@ -428,8 +428,8 @@ export default function App() {
                 >
                   <Trophy className="w-6 h-6 text-black fill-black/20" />
                   <div className="flex flex-col text-left">
-                    <span className="text-[10px] font-black uppercase tracking-wider">Trophy Case</span>
-                    <span className="text-sm font-black font-sans">
+                    <span className="text-xs font-black uppercase tracking-wider">Trophy Case</span>
+                    <span className="text-base font-black font-sans">
                       {Object.keys(scoreState.completedGames).length === 0
                         ? '0 Activities Completed'
                         : `${Object.keys(scoreState.completedGames).length} ${
@@ -444,7 +444,7 @@ export default function App() {
 
               {/* Game Cards Grid */}
               <div className="flex flex-col gap-6">
-                <h3 className="text-md font-black uppercase tracking-wider text-black font-sans">
+                <h3 className="text-lg font-black uppercase tracking-wider text-black font-sans">
                   CHOOSE YOUR ADVENTURE:
                 </h3>
 
@@ -474,14 +474,14 @@ export default function App() {
                         <div>
                           <div className="flex justify-between items-start">
                             {/* Colorful Category badge */}
-                            <span className={`px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-black uppercase tracking-wider font-sans shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${g.tagColor}`}>
+                            <span className={`px-4 py-1.5 rounded-full text-xs sm:text-sm font-black uppercase tracking-wider font-sans shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${g.tagColor}`}>
                               {g.skill}
                             </span>
 
                             {/* Completed tick badge */}
                             {isCompleted && (
-                              <div className="flex items-center gap-1.5 bg-emerald-400 text-black px-3 py-1 rounded-full text-[10px] font-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] select-none">
-                                <Award className="w-3.5 h-3.5 fill-white" />
+                              <div className="flex items-center gap-1.5 bg-emerald-400 text-black px-3.5 py-1.5 rounded-full text-xs font-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] select-none">
+                                <Award className="w-4 h-4 fill-white" />
                                 <span>DONE!</span>
                               </div>
                             )}
@@ -496,7 +496,7 @@ export default function App() {
                               <h4 className="text-2xl sm:text-3xl font-black tracking-tight uppercase" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
                                 {g.title}
                               </h4>
-                              <p className={`text-sm sm:text-base font-extrabold mt-1.5 leading-snug font-sans ${g.descColor}`}>
+                              <p className={`text-base sm:text-lg font-extrabold mt-1.5 leading-snug font-sans ${g.descColor}`}>
                                 {g.description}
                               </p>
                             </div>
@@ -505,10 +505,10 @@ export default function App() {
 
                         {/* Button indicator */}
                         <div className="flex justify-between items-center border-t-2 border-black/10 mt-6 pt-4 relative z-10">
-                          <span className={`text-xs sm:text-sm font-bold font-sans ${g.descColor}`}>
+                          <span className={`text-sm sm:text-base font-extrabold font-sans ${g.descColor}`}>
                             {completedTimes > 0 ? `Played: ${completedTimes} times` : 'READY TO PLAY'}
                           </span>
-                          <span className="flex items-center gap-1.5 bg-white text-black font-black text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all">
+                          <span className="flex items-center gap-1.5 bg-white text-black font-black text-sm sm:text-base px-5 py-2.5 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all">
                             {g.actionText}
                             <ChevronRight className="w-4 h-4 stroke-[3]" />
                           </span>
@@ -526,7 +526,7 @@ export default function App() {
                 <div className="w-full flex justify-center mt-4">
                   <button
                     onClick={resetAllStars}
-                    className="text-xs font-bold text-amber-700/60 hover:text-amber-700/90 transition-colors font-sans underline cursor-pointer"
+                    className="text-sm font-black text-amber-800 hover:text-amber-950 transition-colors font-sans underline cursor-pointer"
                   >
                     Clear Star Score & Progress
                   </button>
@@ -546,17 +546,17 @@ export default function App() {
               <div className="flex flex-col sm:flex-row gap-4 justify-between items-center print:hidden">
                 <button
                   onClick={goBack}
-                  className="flex items-center gap-2 px-6 py-3 bg-white hover:bg-gray-100 text-black font-black rounded-2xl text-sm font-sans transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[2px] active:translate-y-[2px] cursor-pointer select-none print:hidden"
+                  className="flex items-center gap-2 px-6 py-3.5 bg-white hover:bg-gray-100 text-black font-black rounded-2xl text-base font-sans transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[2px] active:translate-y-[2px] cursor-pointer select-none print:hidden"
                   id="back-playground-btn"
                 >
-                  <ArrowLeft className="w-4 h-4 stroke-[3]" />
+                  <ArrowLeft className="w-5 h-5 stroke-[3]" />
                   BACK TO PLAYGROUND
                 </button>
 
                 {/* Show active game title floating */}
-                <div className="flex items-center gap-2 bg-yellow-300 border-4 border-black px-4 py-2 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] select-none print:hidden">
-                  <Sparkles className="w-4 h-4 text-black animate-spin" />
-                  <span className="text-xs font-black text-black uppercase tracking-wider font-sans">
+                <div className="flex items-center gap-2 bg-yellow-300 border-4 border-black px-5 py-2.5 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] select-none print:hidden">
+                  <Sparkles className="w-5 h-5 text-black animate-spin" />
+                  <span className="text-sm sm:text-base font-black text-black uppercase tracking-wider font-sans">
                     PLAYING: {activeGame === 'sorter' ? 'Color Sorter' : activeGame === 'matcher' ? 'Shape Matcher' : activeGame === 'pattern' ? 'Pattern Train' : activeGame === 'garden' ? 'Counting Garden' : activeGame === 'phonics' ? 'Phonics Safari' : activeGame === 'math' ? 'Math Addition' : activeGame === 'subtraction' ? 'Math Subtraction' : 'Simple Reading'}
                   </span>
                 </div>
@@ -601,11 +601,11 @@ export default function App() {
       </main>
 
       {/* Footer credits block */}
-      <footer className="w-full text-center py-6 text-[10px] sm:text-xs font-bold text-amber-800/50 font-sans mt-auto print:hidden flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
+      <footer className="w-full text-center py-6 text-xs sm:text-sm font-black text-amber-900/70 font-sans mt-auto print:hidden flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
         <span>© 2026 Storybook Education. Built for active play & early learning.</span>
         <button
           onClick={handleResetProgress}
-          className="text-amber-800/70 hover:text-amber-900 underline cursor-pointer font-extrabold"
+          className="text-amber-900 hover:text-black underline cursor-pointer font-black"
         >
           Reset Stars & Progress
         </button>
@@ -630,19 +630,19 @@ export default function App() {
           >
             <div className="bg-yellow-300 border-4 border-black rounded-[40px] p-8 max-w-md w-full text-center flex flex-col items-center shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] relative">
               <div className="text-6xl animate-bounce my-2">🎉 🌟 🏆</div>
-              <h2 className="text-3xl font-black uppercase text-black tracking-tight font-sans">
+              <h2 className="text-3xl sm:text-4xl font-black uppercase text-black tracking-tight font-sans">
                 MODULE COMPLETED!
               </h2>
-              <p className="text-xs sm:text-sm font-extrabold text-black/80 font-sans mt-1">
+              <p className="text-base sm:text-lg font-extrabold text-black/90 font-sans mt-1">
                 Super job! You earned 3 Stars & completed this learning adventure!
               </p>
 
               {activeGame && (
                 <button
                   onClick={handlePrintModuleWorksheet}
-                  className="w-full py-3 my-2 bg-purple-500 hover:bg-purple-600 text-white border-3 border-black font-black text-xs uppercase tracking-wider rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.02] active:scale-95"
+                  className="w-full py-4 my-2.5 bg-purple-500 hover:bg-purple-600 text-white border-3 border-black font-black text-sm sm:text-base uppercase tracking-wider rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.02] active:scale-95"
                 >
-                  <Printer className="w-4 h-4 stroke-[3]" />
+                  <Printer className="w-5 h-5 stroke-[3]" />
                   {getWorksheetButtonLabel(activeGame)}
                 </button>
               )}
@@ -650,30 +650,30 @@ export default function App() {
               <div className="bg-white border-3 border-black p-4 rounded-2xl my-2 w-full flex items-center justify-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                 <Award className="w-8 h-8 text-orange-500 flex-shrink-0" />
                 <div className="text-left font-sans">
-                  <div className="text-[10px] font-black uppercase text-gray-500">Certificate Status</div>
-                  <div className="text-sm font-black text-black">
+                  <div className="text-xs font-black uppercase text-gray-500">Certificate Status</div>
+                  <div className="text-base font-black text-black">
                     📜 Certificate of Excellence Unlocked!
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 w-full mt-2">
+              <div className="flex flex-col gap-3 w-full mt-3">
                 <button
                   onClick={() => {
                     audioManager.playPop();
                     setShowStarCelebration(false);
                     setShowCertificateModal(true);
                   }}
-                  className="w-full py-3.5 bg-emerald-400 hover:bg-emerald-500 text-black border-3 border-black font-black text-xs uppercase tracking-wider rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-105"
+                  className="w-full py-4 bg-emerald-400 hover:bg-emerald-500 text-black border-3 border-black font-black text-sm sm:text-base uppercase tracking-wider rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-105"
                 >
-                  <Trophy className="w-4 h-4 text-black fill-yellow-300" />
+                  <Trophy className="w-5 h-5 text-black fill-yellow-300" />
                   VIEW & PRINT CERTIFICATE
                 </button>
 
                 <div className="flex gap-3 w-full">
                   <button
                     onClick={handlePlayAgain}
-                    className="flex-1 py-3.5 bg-white hover:bg-gray-100 text-black border-3 border-black font-black text-xs uppercase tracking-wider rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all"
+                    className="flex-1 py-4 bg-white hover:bg-gray-100 text-black border-3 border-black font-black text-sm sm:text-base uppercase tracking-wider rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all"
                   >
                     {activeGame && (scoreState.completedGames[activeGame] || 1) >= 3
                       ? 'REPLAY MODULE'
@@ -681,10 +681,10 @@ export default function App() {
                   </button>
                   <button
                     onClick={handleNextModule}
-                    className="flex-1 py-3.5 bg-sky-400 hover:bg-sky-500 text-black border-3 border-black font-black text-xs uppercase tracking-wider rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-1.5 cursor-pointer transition-all hover:translate-x-[-2px] hover:translate-y-[-2px]"
+                    className="flex-1 py-4 bg-sky-400 hover:bg-sky-500 text-black border-3 border-black font-black text-sm sm:text-base uppercase tracking-wider rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-1.5 cursor-pointer transition-all hover:translate-x-[-2px] hover:translate-y-[-2px]"
                   >
                     NEXT MODULE
-                    <ArrowRight className="w-4 h-4 stroke-[3]" />
+                    <ArrowRight className="w-5 h-5 stroke-[3]" />
                   </button>
                 </div>
               </div>

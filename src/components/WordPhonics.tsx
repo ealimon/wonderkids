@@ -258,7 +258,7 @@ export default function WordPhonics({
             audioManager.playPop();
             setActiveTab('game');
           }}
-          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-xs sm:text-sm tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
+          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm sm:text-base tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
             activeTab === 'game'
               ? 'bg-pink-300 text-gray-950'
               : 'bg-white text-gray-700 hover:bg-gray-100'
@@ -275,7 +275,7 @@ export default function WordPhonics({
               setActiveTab('worksheet');
             }
           }}
-          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-xs sm:text-sm tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
+          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm sm:text-base tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
             activeTab === 'worksheet'
               ? 'bg-purple-400 text-white'
               : 'bg-white text-gray-700 hover:bg-gray-100'
@@ -292,7 +292,7 @@ export default function WordPhonics({
             {/* Progress & Header */}
             <div className="w-full flex flex-col sm:flex-row justify-between items-center gap-4 bg-pink-300 px-6 py-4 rounded-3xl mb-8 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <div className="flex items-center gap-3">
-                <span className="text-sm font-black uppercase tracking-wider">SAFARI LEVELS:</span>
+                <span className="text-sm sm:text-base font-black uppercase tracking-wider">SAFARI LEVELS:</span>
                 <div className="flex gap-2">
                   {rounds.map((_, idx) => {
                     const isSolved = idx < currentRoundIdx || (idx === currentRoundIdx && roundComplete);
@@ -300,7 +300,7 @@ export default function WordPhonics({
                     return (
                       <div
                         key={idx}
-                        className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 ${
+                        className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm font-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 ${
                           isSolved
                             ? 'bg-emerald-400 text-black'
                             : isCurrent
@@ -315,14 +315,14 @@ export default function WordPhonics({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 bg-white px-4 py-1.5 rounded-xl border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                 <Star className="w-5 h-5 fill-yellow-400 text-black animate-bounce" />
-                <span className="font-black font-mono text-sm">{score} / {rounds.length} SPELLED</span>
+                <span className="font-black font-mono text-sm sm:text-base">{score} / {rounds.length} SPELLED</span>
               </div>
             </div>
 
             {/* Main Interactive Board */}
-            <div className="w-full bg-pink-100 rounded-3xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-8 flex flex-col justify-between min-h-[380px] relative overflow-hidden">
+            <div className="w-full bg-pink-100 rounded-3xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6 sm:p-8 flex flex-col justify-between min-h-[380px] relative overflow-hidden">
               
               {/* Decorative jungle corner leaf/vibe */}
               <div className="absolute top-2 right-2 text-3xl opacity-30 select-none">🌴</div>
@@ -331,10 +331,10 @@ export default function WordPhonics({
               {/* Intro / Instruction prompt */}
               <div className="text-center mb-6">
                 <div className="inline-block bg-yellow-300 border-3 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] p-3.5 rounded-2xl mb-3 text-2xl">🦁</div>
-                <h2 className="text-2xl font-black uppercase tracking-tight" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>PHONICS WORD BUILDER</h2>
+                <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>PHONICS WORD BUILDER</h2>
                 
                 {/* Subtitle helper showing letter sounds guidance */}
-                <div className="bg-white border-2 border-black rounded-xl px-4 py-1.5 inline-block mt-2 font-black text-xs uppercase tracking-wide shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                <div className="bg-white border-3 border-black rounded-2xl px-6 py-2.5 inline-block mt-2 font-black text-base sm:text-lg uppercase tracking-wide shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                   ✨ {phonicsSubtitle}
                 </div>
               </div>
@@ -345,19 +345,21 @@ export default function WordPhonics({
                 <motion.div
                   animate={roundComplete ? { scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] } : {}}
                   transition={{ duration: 0.6 }}
-                  className="w-32 h-32 bg-white border-4 border-black rounded-[28px] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center justify-center relative flex-shrink-0"
+                  className="w-36 h-36 sm:w-44 sm:h-44 bg-white border-4 border-black rounded-[32px] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center justify-center relative flex-shrink-0"
                 >
-                  <span className="text-6xl filter drop-shadow-md select-none">{activeRound.emoji}</span>
+                  <span className="text-7xl sm:text-8xl filter drop-shadow-md select-none">{activeRound.emoji}</span>
                 </motion.div>
 
                 {/* Right: Slots for Letters */}
                 <div className="flex flex-col items-center md:items-start gap-4">
-                  <p className="text-xs font-bold text-gray-700 max-w-xs text-center md:text-left leading-relaxed">
-                    💡 {activeRound.hint}
-                  </p>
+                  <div className="bg-amber-100/90 border-2 border-black px-4 py-2 rounded-2xl shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                    <p className="text-lg sm:text-xl font-extrabold text-neutral-950 max-w-md text-center md:text-left leading-relaxed">
+                      💡 {activeRound.hint}
+                    </p>
+                  </div>
 
                   {/* Empty and filled letter slots */}
-                  <div className="flex gap-3" id="phonics-drop-zone">
+                  <div className="flex gap-3 sm:gap-4" id="phonics-drop-zone">
                     {spelledLetters.map((char, idx) => {
                       const isActiveSlot = idx === currentLetterIdx && !roundComplete;
                       return (
@@ -365,7 +367,7 @@ export default function WordPhonics({
                           key={idx}
                           animate={isActiveSlot ? { scale: [1, 1.05, 1], borderColor: ['#000000', '#F97316', '#000000'] } : {}}
                           transition={{ repeat: Infinity, duration: 1.5 }}
-                          className={`w-14 h-16 rounded-2xl border-4 flex items-center justify-center text-3xl font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all ${
+                          className={`w-16 h-20 sm:w-20 sm:h-24 rounded-2xl sm:rounded-3xl border-4 flex items-center justify-center text-4xl sm:text-5xl font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all ${
                             char
                               ? 'bg-emerald-300 border-black text-black'
                               : isActiveSlot
@@ -392,31 +394,31 @@ export default function WordPhonics({
                       exit={{ opacity: 0, y: -10 }}
                       className="flex flex-col items-center text-center"
                     >
-                      <div className="flex items-center gap-2 text-emerald-800 font-black text-lg mb-4">
-                        <CheckCircle className="w-6 h-6 fill-white text-black" />
+                      <div className="flex items-center gap-2 text-emerald-800 font-black text-xl sm:text-2xl mb-4">
+                        <CheckCircle className="w-7 h-7 fill-white text-black" />
                         SPECTACULAR SPELLING MASTER! 🎉
                       </div>
                       {!gameComplete ? (
                         <button
                           onClick={handleNextRound}
-                          className="flex items-center gap-2 px-8 py-4 bg-yellow-300 text-black border-4 border-black font-black uppercase rounded-2xl text-xs font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+                          className="flex items-center gap-2 px-8 py-4 bg-yellow-300 text-black border-4 border-black font-black uppercase rounded-2xl text-sm sm:text-base font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
                         >
                           Next Word
-                          <ArrowRight className="w-4 h-4 stroke-[3]" />
+                          <ArrowRight className="w-5 h-5 stroke-[3]" />
                         </button>
                       ) : (
                         <div className="flex flex-col items-center">
-                          <span className="text-xl text-pink-950 font-black uppercase tracking-widest font-sans">JUNGLE VICTORY! 🏆</span>
-                          <span className="text-xs font-bold text-pink-900 mt-2">Awesome reading & phonics skills! You earned 3 Shiny Stars!</span>
+                          <span className="text-2xl sm:text-3xl text-pink-950 font-black uppercase tracking-widest font-sans">JUNGLE VICTORY! 🏆</span>
+                          <span className="text-lg font-extrabold text-pink-900 mt-2">Awesome reading & phonics skills! You earned 3 Shiny Stars!</span>
                         </div>
                       )}
                     </motion.div>
                   ) : (
                     <div className="flex flex-col items-center w-full" key="bubbles-panel">
-                      <span className="text-xs font-black uppercase tracking-wider text-pink-950 mb-4 font-sans flex items-center gap-1.5">
+                      <span className="text-base sm:text-lg font-black uppercase tracking-wider text-pink-950 mb-4 font-sans flex items-center gap-2">
                         <span>✋</span> DRAG OR TAP A LETTER BUBBLE TO SPELL THE WORD:
                       </span>
-                      <div className="flex flex-wrap gap-4 justify-center">
+                      <div className="flex flex-wrap gap-4 sm:gap-5 justify-center">
                         {letterOptions.map((letter, idx) => {
                           const isWrong = wrongOption === letter;
                           return (
@@ -432,7 +434,7 @@ export default function WordPhonics({
                               whileDrag={{ scale: 1.25, zIndex: 100 }}
                               animate={isWrong ? { x: [-10, 10, -10, 10, 0] } : {}}
                               transition={{ duration: 0.4 }}
-                              className={`w-16 h-16 rounded-full border-4 border-black font-black text-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none hover:translate-x-[-2px] hover:translate-y-[-2px] transition-colors ${
+                              className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-black font-black text-2xl sm:text-3xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none hover:translate-x-[-2px] hover:translate-y-[-2px] transition-colors ${
                                 isWrong
                                   ? 'bg-red-400 text-white'
                                   : 'bg-white hover:bg-yellow-100 text-black'
@@ -453,18 +455,18 @@ export default function WordPhonics({
             <div className="mt-10 flex flex-wrap gap-4">
               <button
                 onClick={restartGame}
-                className="flex items-center gap-2 px-6 py-4 bg-yellow-300 text-black border-4 border-black font-black uppercase rounded-2xl text-xs font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+                className="flex items-center gap-2 px-8 py-4 bg-yellow-300 text-black border-4 border-black font-black uppercase rounded-2xl text-sm sm:text-base font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
               >
-                <RotateCcw className="w-4 h-4 stroke-[3]" />
+                <RotateCcw className="w-5 h-5 stroke-[3]" />
                 PLAY AGAIN
               </button>
               {onNextGame && (
                 <button
                   onClick={onNextGame}
-                  className="flex items-center gap-2 px-6 py-4 bg-sky-400 hover:bg-sky-500 text-black border-4 border-black font-black uppercase rounded-2xl text-xs font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+                  className="flex items-center gap-2 px-8 py-4 bg-sky-400 hover:bg-sky-500 text-black border-4 border-black font-black uppercase rounded-2xl text-sm sm:text-base font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
                 >
                   NEXT MODULE
-                  <ArrowRight className="w-4 h-4 stroke-[3]" />
+                  <ArrowRight className="w-5 h-5 stroke-[3]" />
                 </button>
               )}
             </div>

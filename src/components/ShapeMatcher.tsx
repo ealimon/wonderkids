@@ -340,7 +340,7 @@ export default function ShapeMatcher({
             audioManager.playPop();
             setActiveTab('game');
           }}
-          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-xs sm:text-sm tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
+          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm sm:text-base tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
             activeTab === 'game'
               ? 'bg-rose-300 text-gray-950'
               : 'bg-white text-gray-700 hover:bg-gray-100'
@@ -358,7 +358,7 @@ export default function ShapeMatcher({
               setActiveTab('worksheet');
             }
           }}
-          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-xs sm:text-sm tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
+          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm sm:text-base tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
             activeTab === 'worksheet'
               ? 'bg-purple-400 text-white'
               : 'bg-white text-gray-700 hover:bg-gray-100'
@@ -376,14 +376,14 @@ export default function ShapeMatcher({
             {/* Progress & Info */}
             <div className="w-full flex flex-col sm:flex-row justify-between items-center gap-4 bg-sky-300 px-6 py-4 rounded-3xl mb-8 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <div className="flex items-center gap-3">
-                <span className="text-sm font-black uppercase tracking-wider">MATCH PROGRESS:</span>
+                <span className="text-base sm:text-lg font-black uppercase tracking-wider">MATCH PROGRESS:</span>
                 <div className="flex gap-2">
                   {SHAPES_LIST.map((shape) => {
                     const isSolved = solved[shape.id];
                     return (
                       <div
                         key={shape.id}
-                        className={`w-5 h-5 rounded-full transition-all duration-300 border-2 border-black ${
+                        className={`w-6 h-6 rounded-full transition-all duration-300 border-2 border-black ${
                           isSolved ? 'bg-emerald-400 scale-110' : 'bg-white'
                         }`}
                       />
@@ -392,17 +392,17 @@ export default function ShapeMatcher({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 bg-white px-4 py-1.5 rounded-xl border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                 <Star className="w-5 h-5 fill-yellow-400 text-black" />
-                <span className="font-black font-mono text-sm">{score} / {SHAPES_LIST.length} MATCHED</span>
+                <span className="font-black font-mono text-base">{score} / {SHAPES_LIST.length} MATCHED</span>
               </div>
             </div>
 
             {/* Content Columns: Pieces & Silhouettes */}
             <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
               {/* Left Card: Colorful Toy Pieces */}
-              <div className="bg-orange-100 border-4 border-black rounded-3xl p-8 flex flex-col items-center justify-center relative shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] min-h-[350px]">
-                <h3 className="text-sm font-black uppercase tracking-wider text-black font-sans mb-6">
+              <div className="bg-orange-100 border-4 border-black rounded-3xl p-6 sm:p-8 flex flex-col items-center justify-center relative shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] min-h-[350px]">
+                <h3 className="text-base sm:text-lg font-black uppercase tracking-wider text-black font-sans mb-6">
                   1. TAP OR DRAG A SHAPE BLOCK!
                 </h3>
 
@@ -439,7 +439,7 @@ export default function ShapeMatcher({
                                 className={`${SHAPE_DESIGNS[shape.type].color} stroke-black stroke-4`}
                               />
                             </svg>
-                            <span className="text-[10px] font-black tracking-wider text-black mt-1 uppercase font-mono pointer-events-none">
+                            <span className="text-xs font-black tracking-wider text-black mt-1 uppercase font-mono pointer-events-none">
                               {SHAPE_DESIGNS[shape.type].label}
                             </span>
                           </motion.div>
@@ -460,8 +460,8 @@ export default function ShapeMatcher({
                     className="absolute inset-0 bg-emerald-300 border-4 border-black rounded-2xl flex flex-col items-center justify-center text-center p-6"
                   >
                     <div className="bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 rounded-full mb-3 text-3xl">🧩🌟</div>
-                    <h4 className="text-2xl font-black uppercase tracking-tight">SENSATIONAL!</h4>
-                    <p className="text-xs font-bold text-gray-800 mt-2 max-w-[240px]">
+                    <h4 className="text-2xl sm:text-3xl font-black uppercase tracking-tight">SENSATIONAL!</h4>
+                    <p className="text-base font-extrabold text-neutral-800 mt-2 max-w-[280px]">
                       You fitted every single shape block back into the board!
                     </p>
                   </motion.div>
@@ -469,8 +469,8 @@ export default function ShapeMatcher({
               </div>
 
               {/* Right Card: Grey Silhouette Board */}
-              <div className="bg-sky-100 border-4 border-black rounded-3xl p-8 flex flex-col items-center justify-center shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-                <h3 className="text-sm font-black uppercase tracking-wider text-black font-sans mb-6">
+              <div className="bg-sky-100 border-4 border-black rounded-3xl p-6 sm:p-8 flex flex-col items-center justify-center shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+                <h3 className="text-base sm:text-lg font-black uppercase tracking-wider text-black font-sans mb-6">
                   2. MATCH OR DROP TO SILHOUETTE!
                 </h3>
 
@@ -512,7 +512,7 @@ export default function ShapeMatcher({
                             }`}
                           />
                         </svg>
-                        <span className="text-[10px] font-black uppercase tracking-wider mt-2 text-center font-sans">
+                        <span className="text-xs sm:text-sm font-black uppercase tracking-wider mt-2 text-center font-sans">
                           {isMatched ? 'FITTED!' : SHAPE_DESIGNS[target.type].label}
                         </span>
 
@@ -536,18 +536,18 @@ export default function ShapeMatcher({
             <div className="mt-10 flex flex-wrap gap-4">
               <button
                 onClick={restartGame}
-                className="flex items-center gap-2 px-6 py-4 bg-yellow-300 text-black border-4 border-black font-black uppercase rounded-2xl text-xs font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+                className="flex items-center gap-2 px-8 py-4 bg-yellow-300 text-black border-4 border-black font-black uppercase rounded-2xl text-sm sm:text-base font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
               >
-                <RotateCcw className="w-4 h-4 stroke-[3]" />
+                <RotateCcw className="w-5 h-5 stroke-[3]" />
                 PLAY AGAIN
               </button>
               {onNextGame && (
                 <button
                   onClick={onNextGame}
-                  className="flex items-center gap-2 px-6 py-4 bg-sky-400 hover:bg-sky-500 text-black border-4 border-black font-black uppercase rounded-2xl text-xs font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+                  className="flex items-center gap-2 px-8 py-4 bg-sky-400 hover:bg-sky-500 text-black border-4 border-black font-black uppercase rounded-2xl text-sm sm:text-base font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
                 >
                   NEXT MODULE
-                  <ArrowRight className="w-4 h-4 stroke-[3]" />
+                  <ArrowRight className="w-5 h-5 stroke-[3]" />
                 </button>
               )}
             </div>

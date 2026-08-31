@@ -327,7 +327,7 @@ export default function PatternCompleter({
             audioManager.playPop();
             setActiveTab('game');
           }}
-          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-xs sm:text-sm tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
+          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm sm:text-base tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
             activeTab === 'game'
               ? 'bg-purple-300 text-gray-950'
               : 'bg-white text-gray-700 hover:bg-gray-100'
@@ -344,7 +344,7 @@ export default function PatternCompleter({
               setActiveTab('worksheet');
             }
           }}
-          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-xs sm:text-sm tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
+          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm sm:text-base tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
             activeTab === 'worksheet'
               ? 'bg-purple-500 text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'
               : 'bg-white text-gray-700 hover:bg-gray-100'
@@ -361,7 +361,7 @@ export default function PatternCompleter({
             {/* Progress tracking */}
             <div className="w-full flex flex-col sm:flex-row justify-between items-center gap-4 bg-purple-300 px-6 py-4 rounded-3xl mb-8 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <div className="flex items-center gap-3">
-                <span className="text-sm font-black uppercase tracking-wider">ROUND PROGRESS:</span>
+                <span className="text-base sm:text-lg font-black uppercase tracking-wider">ROUND PROGRESS:</span>
                 <div className="flex gap-2 font-sans">
                   {rounds.map((_, idx) => {
                     const isSolved = idx < currentRoundIdx || (idx === currentRoundIdx && answeredCorrectly === true);
@@ -369,7 +369,7 @@ export default function PatternCompleter({
                     return (
                       <div
                         key={idx}
-                        className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 ${
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 ${
                           isSolved
                             ? 'bg-emerald-400 text-black'
                             : isCurrent
@@ -384,41 +384,41 @@ export default function PatternCompleter({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 bg-white px-4 py-1.5 rounded-xl border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                 <Star className="w-5 h-5 fill-yellow-400 text-black animate-bounce" />
-                <span className="font-black font-mono text-sm">{score} / {rounds.length} SOLVED</span>
+                <span className="font-black font-mono text-base">{score} / {rounds.length} SOLVED</span>
               </div>
             </div>
 
             {/* Main Layout Card */}
-            <div className="w-full bg-purple-100 rounded-3xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-8 flex flex-col justify-between min-h-[360px]">
+            <div className="w-full bg-purple-100 rounded-3xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6 sm:p-8 flex flex-col justify-between min-h-[360px]">
               {/* Intro prompt */}
               <div className="text-center mb-6">
-                <div className="inline-block bg-yellow-300 border-3 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] p-3.5 rounded-2xl mb-3 text-2xl">🧩</div>
-                <h2 className="text-2xl font-black uppercase tracking-tight" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>WHAT COMES NEXT?</h2>
-                <p className="text-xs font-bold text-gray-700 mt-2">
+                <div className="inline-block bg-yellow-300 border-3 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] p-3.5 rounded-2xl mb-3 text-3xl">🧩</div>
+                <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>WHAT COMES NEXT?</h2>
+                <p className="text-base sm:text-lg font-extrabold text-neutral-800 mt-2.5 leading-relaxed max-w-xl mx-auto">
                   Look closely at the pattern, then drag or tap the bubble below that fits into the question mark!
                 </p>
               </div>
 
               {/* Pattern Train */}
               {activeRound && (
-                <div className="flex justify-center items-center gap-4 py-8 overflow-x-auto w-full max-w-full">
+                <div className="flex justify-center items-center gap-4 sm:gap-6 py-8 overflow-x-auto w-full max-w-full">
                   {activeRound.sequence.map((item, idx) => (
                     <motion.div
                       key={`${item.id}-${idx}`}
                       initial={{ scale: 0.3, y: 15, opacity: 0 }}
                       animate={{ scale: 1, y: 0, opacity: 1 }}
                       transition={{ delay: idx * 0.1, type: 'spring', stiffness: 200 }}
-                      className="w-20 h-20 rounded-2xl bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center justify-center flex-shrink-0"
+                      className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-white border-4 border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center justify-center flex-shrink-0"
                     >
-                      <span className="text-4xl filter drop-shadow-sm select-none">{item.emoji}</span>
+                      <span className="text-5xl sm:text-6xl filter drop-shadow-sm select-none">{item.emoji}</span>
                     </motion.div>
                   ))}
 
                   {/* Connecting arrow */}
                   <div className="text-black flex-shrink-0">
-                    <ArrowRight className="w-6 h-6 stroke-[3]" />
+                    <ArrowRight className="w-8 h-8 stroke-[3]" />
                   </div>
 
                   {/* Target Mystery Slot */}
@@ -428,9 +428,9 @@ export default function PatternCompleter({
                         key="solved"
                         initial={{ scale: 0.2, rotate: -30 }}
                         animate={{ scale: 1.1, rotate: 0 }}
-                        className="w-20 h-20 rounded-2xl border-4 border-black bg-emerald-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center flex-shrink-0"
+                        className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl border-4 border-black bg-emerald-400 shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center flex-shrink-0"
                       >
-                        <span className="text-4xl select-none animate-bounce">
+                        <span className="text-5xl sm:text-6xl select-none animate-bounce">
                           {activeRound.options[selectedOptionIdx].emoji}
                         </span>
                       </motion.div>
@@ -440,13 +440,13 @@ export default function PatternCompleter({
                         id="pattern-mystery-target"
                         animate={{ scale: draggedOptionHover !== null ? 1.25 : [1, 1.05, 1] }}
                         transition={{ repeat: draggedOptionHover !== null ? 0 : Infinity, duration: 1.5 }}
-                        className={`w-20 h-20 rounded-2xl border-4 border-dashed border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center flex-shrink-0 cursor-pointer transition-all ${
+                        className={`w-24 h-24 sm:w-28 sm:h-28 rounded-3xl border-4 border-dashed border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center flex-shrink-0 cursor-pointer transition-all ${
                           draggedOptionHover !== null
                             ? 'bg-yellow-300 ring-4 ring-emerald-400 scale-110 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'
                             : 'bg-yellow-300'
                         }`}
                       >
-                        <span className="text-3xl font-black text-black font-sans">❓</span>
+                        <span className="text-4xl sm:text-5xl font-black text-black font-sans">❓</span>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -464,31 +464,31 @@ export default function PatternCompleter({
                       exit={{ opacity: 0, y: -10 }}
                       className="flex flex-col items-center text-center"
                     >
-                      <div className="flex items-center gap-2 text-emerald-800 font-black text-lg mb-4">
-                        <CheckCircle className="w-6 h-6 fill-white text-black" />
+                      <div className="flex items-center gap-2 text-emerald-800 font-black text-xl sm:text-2xl mb-4">
+                        <CheckCircle className="w-7 h-7 fill-white text-black" />
                         GREAT LOGIC! THAT MATCHES PERFECTLY!
                       </div>
                       {!gameComplete ? (
                         <button
                           onClick={handleNextRound}
-                          className="flex items-center gap-2 px-8 py-4 bg-yellow-300 text-black border-4 border-black font-black uppercase rounded-2xl text-xs font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+                          className="flex items-center gap-2 px-8 py-4 bg-yellow-300 text-black border-4 border-black font-black uppercase rounded-2xl text-sm sm:text-base font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
                         >
                           NEXT PATTERN
-                          <ArrowRight className="w-4 h-4 stroke-[3]" />
+                          <ArrowRight className="w-5 h-5 stroke-[3]" />
                         </button>
                       ) : (
                         <div className="flex flex-col items-center">
-                          <span className="text-xl text-purple-950 font-black uppercase tracking-widest font-sans">VICTORY MASTER!</span>
-                          <span className="text-xs font-bold text-purple-900 mt-2">All levels solved! You are a brilliant pattern scientist!</span>
+                          <span className="text-2xl sm:text-3xl text-purple-950 font-black uppercase tracking-widest font-sans">VICTORY MASTER!</span>
+                          <span className="text-lg font-bold text-purple-900 mt-2">All levels solved! You are a brilliant pattern scientist!</span>
                         </div>
                       )}
                     </motion.div>
                   ) : activeRound ? (
                     <div className="flex flex-col items-center w-full" key="options-panel">
-                      <span className="text-xs font-black uppercase tracking-wider text-purple-950 mb-4 font-sans">
-                        DRAG OR TAP THE MATCHING BUBBLE:
+                      <span className="text-lg sm:text-xl font-black uppercase tracking-wider text-purple-950 mb-5 font-sans flex items-center gap-2">
+                        <span>✋</span> DRAG OR TAP THE MATCHING BUBBLE:
                       </span>
-                      <div className="flex gap-4 justify-center">
+                      <div className="flex gap-4 sm:gap-6 justify-center">
                         {activeRound.options.map((option, idx) => {
                           const isWrong = wrongOptionIdx === idx;
                           return (
@@ -506,14 +506,14 @@ export default function PatternCompleter({
                               whileDrag={{ scale: 1.25, zIndex: 100 }}
                               animate={isWrong ? { x: [-10, 10, -10, 10, 0] } : {}}
                               transition={{ duration: 0.4 }}
-                              className={`w-20 h-20 rounded-3xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none ${
+                              className={`w-20 h-20 sm:w-24 sm:h-24 rounded-3xl border-4 border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none hover:translate-x-[-2px] hover:translate-y-[-2px] ${
                                 isWrong
                                   ? 'bg-red-400 text-white'
                                   : 'bg-white hover:bg-yellow-100'
                               }`}
                               id={`pattern-option-${idx}`}
                             >
-                              <span className="text-5xl select-none pointer-events-none">{option.emoji}</span>
+                              <span className="text-5xl sm:text-6xl select-none pointer-events-none">{option.emoji}</span>
                             </motion.div>
                           );
                         })}
@@ -528,18 +528,18 @@ export default function PatternCompleter({
             <div className="mt-10 flex flex-wrap gap-4">
               <button
                 onClick={restartGame}
-                className="flex items-center gap-2 px-6 py-4 bg-yellow-300 text-black border-4 border-black font-black uppercase rounded-2xl text-xs font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+                className="flex items-center gap-2 px-8 py-4 bg-yellow-300 text-black border-4 border-black font-black uppercase rounded-2xl text-sm sm:text-base font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
               >
-                <RotateCcw className="w-4 h-4 stroke-[3]" />
+                <RotateCcw className="w-5 h-5 stroke-[3]" />
                 PLAY AGAIN
               </button>
               {onNextGame && (
                 <button
                   onClick={onNextGame}
-                  className="flex items-center gap-2 px-6 py-4 bg-sky-400 hover:bg-sky-500 text-black border-4 border-black font-black uppercase rounded-2xl text-xs font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+                  className="flex items-center gap-2 px-8 py-4 bg-sky-400 hover:bg-sky-500 text-black border-4 border-black font-black uppercase rounded-2xl text-sm sm:text-base font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
                 >
                   NEXT MODULE
-                  <ArrowRight className="w-4 h-4 stroke-[3]" />
+                  <ArrowRight className="w-5 h-5 stroke-[3]" />
                 </button>
               )}
             </div>

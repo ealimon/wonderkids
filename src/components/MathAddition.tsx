@@ -255,7 +255,7 @@ export default function MathAddition({
             audioManager.playPop();
             setActiveTab('game');
           }}
-          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-xs sm:text-sm tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
+          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm sm:text-base tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
             activeTab === 'game'
               ? 'bg-emerald-400 text-gray-950'
               : 'bg-white text-gray-700 hover:bg-gray-100'
@@ -272,7 +272,7 @@ export default function MathAddition({
               setActiveTab('worksheet');
             }
           }}
-          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-xs sm:text-sm tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
+          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm sm:text-base tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
             activeTab === 'worksheet'
               ? 'bg-purple-400 text-white'
               : 'bg-white text-gray-700 hover:bg-gray-100'
@@ -289,7 +289,7 @@ export default function MathAddition({
             {/* Progress & Header info */}
             <div className="w-full flex flex-col sm:flex-row justify-between items-center gap-4 bg-amber-300 px-6 py-4 rounded-3xl mb-8 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <div className="flex items-center gap-3">
-                <span className="text-xs font-black uppercase tracking-wider">CHALLENGES:</span>
+                <span className="text-sm sm:text-base font-black uppercase tracking-wider">CHALLENGES:</span>
                 <div className="flex gap-1.5 sm:gap-2">
                   {rounds.map((_, idx) => {
                     const isSolved = idx < currentRoundIdx || (idx === currentRoundIdx && roundComplete);
@@ -297,7 +297,7 @@ export default function MathAddition({
                     return (
                       <div
                         key={idx}
-                        className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 ${
+                        className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm font-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 ${
                           isSolved
                             ? 'bg-emerald-400 text-black'
                             : isCurrent
@@ -312,9 +312,9 @@ export default function MathAddition({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 bg-white px-4 py-1.5 rounded-xl border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                 <Star className="w-5 h-5 fill-yellow-400 text-black animate-bounce" />
-                <span className="font-black font-mono text-xs sm:text-sm">{score} / {rounds.length} SOLVED</span>
+                <span className="font-black font-mono text-sm sm:text-base">{score} / {rounds.length} SOLVED</span>
               </div>
             </div>
 
@@ -327,11 +327,13 @@ export default function MathAddition({
                 <div className="absolute bottom-2 left-2 text-3xl opacity-20 select-none">📐</div>
 
                 <div className="text-center mb-6">
-                  <div className="inline-block bg-yellow-300 border-3 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] p-3 rounded-2xl mb-3 text-xl">➕</div>
-                  <h2 className="text-2xl font-black uppercase tracking-tight">MATH ADVENTURE</h2>
-                  <p className="text-xs font-bold text-gray-700 mt-1">
-                    Add the two numbers together to find the correct total!
-                  </p>
+                  <div className="inline-block bg-yellow-300 border-3 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] p-3 rounded-2xl mb-3 text-2xl">➕</div>
+                  <h2 className="text-2xl sm:text-4xl font-black uppercase tracking-tight">MATH ADVENTURE</h2>
+                  <div className="bg-amber-200/80 border-2 border-black px-4 py-2 rounded-2xl inline-block mt-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                    <p className="text-lg sm:text-xl font-extrabold text-neutral-950">
+                      💡 Add the two numbers together to find the correct total!
+                    </p>
+                  </div>
                 </div>
 
                 {/* Visual Addition Showcase */}
@@ -339,10 +341,10 @@ export default function MathAddition({
                   
                   {/* Left Box (First Number) */}
                   <div className="flex flex-col items-center">
-                    <div className="w-28 h-28 sm:w-32 sm:h-32 bg-white border-4 border-black rounded-[32px] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center relative">
+                    <div className="w-32 h-32 sm:w-36 sm:h-36 bg-white border-4 border-black rounded-[32px] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center relative">
                       <motion.span
                         animate={roundComplete ? { scale: [1, 1.25, 1], rotate: [0, 10, -10, 0] } : {}}
-                        className="text-5xl sm:text-6xl font-black text-amber-500 font-mono select-none"
+                        className="text-6xl sm:text-7xl font-black text-amber-500 font-mono select-none"
                       >
                         {activeProblem.num1}
                       </motion.span>
@@ -350,16 +352,16 @@ export default function MathAddition({
                   </div>
 
                   {/* Plus sign */}
-                  <div className="bg-yellow-300 border-3 border-black rounded-full p-2.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                    <Plus className="w-5 h-5 stroke-[4]" />
+                  <div className="bg-yellow-300 border-3 border-black rounded-full p-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                    <Plus className="w-6 h-6 stroke-[4]" />
                   </div>
 
                   {/* Right Box (Second Number) */}
                   <div className="flex flex-col items-center">
-                    <div className="w-28 h-28 sm:w-32 sm:h-32 bg-white border-4 border-black rounded-[32px] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center relative">
+                    <div className="w-32 h-32 sm:w-36 sm:h-36 bg-white border-4 border-black rounded-[32px] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center relative">
                       <motion.span
                         animate={roundComplete ? { scale: [1, 1.25, 1], rotate: [0, 10, -10, 0] } : {}}
-                        className="text-5xl sm:text-6xl font-black text-orange-500 font-mono select-none"
+                        className="text-6xl sm:text-7xl font-black text-orange-500 font-mono select-none"
                       >
                         {activeProblem.num2}
                       </motion.span>
@@ -367,12 +369,12 @@ export default function MathAddition({
                   </div>
 
                   {/* Equals sign */}
-                  <div className="text-3xl font-black px-2">=</div>
+                  <div className="text-4xl font-black px-2">=</div>
 
                   {/* Answer Slot */}
                   <div
                     id="addition-answer-target"
-                    className="w-28 h-28 sm:w-32 sm:h-32 bg-yellow-300 border-4 border-black rounded-[32px] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center relative"
+                    className="w-32 h-32 sm:w-36 sm:h-36 bg-yellow-300 border-4 border-black rounded-[32px] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center relative"
                   >
                     <AnimatePresence mode="wait">
                       {roundComplete ? (
@@ -382,10 +384,10 @@ export default function MathAddition({
                           animate={{ scale: 1.1, rotate: 0 }}
                           className="flex flex-col items-center"
                         >
-                          <span className="text-4xl font-black font-mono">
+                          <span className="text-5xl font-black font-mono">
                             {activeProblem.num1 + activeProblem.num2}
                           </span>
-                          <span className="text-[10px] font-black uppercase text-amber-950 mt-1">
+                          <span className="text-xs sm:text-sm font-black uppercase text-amber-950 mt-1">
                             CORRECT!
                           </span>
                         </motion.div>
@@ -394,7 +396,7 @@ export default function MathAddition({
                           key="question-mark"
                           animate={{ scale: [1, 1.1, 1] }}
                           transition={{ repeat: Infinity, duration: 1.5 }}
-                          className="text-3xl font-black text-black font-sans"
+                          className="text-4xl font-black text-black font-sans"
                         >
                           ❓
                         </motion.span>
@@ -415,31 +417,31 @@ export default function MathAddition({
                         exit={{ opacity: 0, y: -10 }}
                         className="flex flex-col items-center text-center"
                       >
-                        <div className="flex items-center justify-center gap-2 text-emerald-800 font-black text-sm sm:text-lg mb-4">
-                          <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 fill-white text-black animate-bounce" />
+                        <div className="flex items-center justify-center gap-2 text-emerald-800 font-black text-lg sm:text-2xl mb-4">
+                          <CheckCircle className="w-7 h-7 fill-white text-black animate-bounce" />
                           {activeProblem.num1} + {activeProblem.num2} IS EXACTLY {activeProblem.num1 + activeProblem.num2}! WONDERFUL! 🎉
                         </div>
                         {!gameComplete ? (
                           <button
                             onClick={handleNextRound}
-                            className="flex items-center gap-2 px-8 py-3.5 bg-yellow-300 text-black border-4 border-black font-black uppercase rounded-2xl text-xs font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+                            className="flex items-center gap-2 px-8 py-4 bg-yellow-300 text-black border-4 border-black font-black uppercase rounded-2xl text-sm sm:text-base font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
                           >
                             Next Sum
-                            <ArrowRight className="w-4 h-4 stroke-[3]" />
+                            <ArrowRight className="w-5 h-5 stroke-[3]" />
                           </button>
                         ) : (
                           <div className="flex flex-col items-center">
-                            <span className="text-xl text-amber-950 font-black uppercase tracking-widest font-sans">MATH MASTER! 👑🎓</span>
-                            <span className="text-xs font-bold text-amber-900 mt-1">Incredible summing skills! You solved all addition levels!</span>
+                            <span className="text-2xl sm:text-3xl text-amber-950 font-black uppercase tracking-widest font-sans">MATH MASTER! 👑🎓</span>
+                            <span className="text-lg font-extrabold text-amber-900 mt-1">Incredible summing skills! You solved all addition levels!</span>
                           </div>
                         )}
                       </motion.div>
                     ) : (
                       <div className="flex flex-col items-center w-full" key="options-picker">
-                        <span className="text-xs font-black uppercase tracking-wider text-amber-950 mb-4 font-sans flex items-center gap-1.5">
+                        <span className="text-base sm:text-lg font-black uppercase tracking-wider text-amber-950 mb-4 font-sans flex items-center gap-2">
                           <span>✋</span> DRAG OR TAP THE CORRECT TOTAL SUM BUBBLE:
                         </span>
-                        <div className="flex gap-3 sm:gap-4 justify-center">
+                        <div className="flex gap-4 sm:gap-5 justify-center">
                           {options.map((opt) => {
                             const isWrong = wrongAnswer === opt;
                             return (
@@ -455,7 +457,7 @@ export default function MathAddition({
                                 whileDrag={{ scale: 1.25, zIndex: 100 }}
                                 animate={isWrong ? { x: [-10, 10, -10, 10, 0] } : {}}
                                 transition={{ duration: 0.4 }}
-                                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full border-4 border-black font-black text-xl sm:text-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none hover:translate-x-[-2px] hover:translate-y-[-2px] transition-colors ${
+                                className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-black font-black text-2xl sm:text-3xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none hover:translate-x-[-2px] hover:translate-y-[-2px] transition-colors ${
                                   isWrong
                                     ? 'bg-red-400 text-white'
                                     : 'bg-white hover:bg-yellow-100 text-black'
@@ -479,18 +481,18 @@ export default function MathAddition({
             <div className="mt-8 flex flex-wrap gap-4">
               <button
                 onClick={restartGame}
-                className="flex items-center gap-2 px-6 py-3.5 bg-yellow-300 text-black border-4 border-black font-black uppercase rounded-2xl text-xs font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+                className="flex items-center gap-2 px-8 py-4 bg-yellow-300 text-black border-4 border-black font-black uppercase rounded-2xl text-sm sm:text-base font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
               >
-                <RotateCcw className="w-4 h-4 stroke-[3]" />
+                <RotateCcw className="w-5 h-5 stroke-[3]" />
                 PLAY AGAIN
               </button>
               {onNextGame && (
                 <button
                   onClick={onNextGame}
-                  className="flex items-center gap-2 px-6 py-3.5 bg-sky-400 hover:bg-sky-500 text-black border-4 border-black font-black uppercase rounded-2xl text-xs font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+                  className="flex items-center gap-2 px-8 py-4 bg-sky-400 hover:bg-sky-500 text-black border-4 border-black font-black uppercase rounded-2xl text-sm sm:text-base font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
                 >
                   NEXT MODULE
-                  <ArrowRight className="w-4 h-4 stroke-[3]" />
+                  <ArrowRight className="w-5 h-5 stroke-[3]" />
                 </button>
               )}
             </div>

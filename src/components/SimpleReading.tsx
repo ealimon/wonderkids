@@ -150,7 +150,7 @@ export default function SimpleReading({
             audioManager.playPop();
             setActiveTab('game');
           }}
-          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-xs sm:text-sm tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
+          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm sm:text-base tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
             activeTab === 'game'
               ? 'bg-emerald-400 text-gray-950'
               : 'bg-white text-gray-700 hover:bg-gray-100'
@@ -167,7 +167,7 @@ export default function SimpleReading({
               setActiveTab('worksheet');
             }
           }}
-          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-xs sm:text-sm tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
+          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm sm:text-base tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
             activeTab === 'worksheet'
               ? 'bg-purple-400 text-white'
               : 'bg-white text-gray-700 hover:bg-gray-100'
@@ -192,7 +192,7 @@ export default function SimpleReading({
                 
                 {/* Top Left Name Field */}
                 <div className="flex items-center gap-2 border-3 border-black bg-white rounded-xl px-4 py-2 w-full md:w-auto">
-                  <span className="font-black text-sm uppercase tracking-wider text-gray-700">Name:</span>
+                  <span className="font-black text-sm sm:text-base uppercase tracking-wider text-gray-700">Name:</span>
                   {isEditingName ? (
                     <div className="flex items-center gap-2">
                       <input
@@ -201,7 +201,7 @@ export default function SimpleReading({
                         onChange={(e) => setUserName(e.target.value)}
                         onBlur={() => setIsEditingName(false)}
                         onKeyDown={(e) => { if (e.key === 'Enter') setIsEditingName(false); }}
-                        className="font-bold text-sm border-b-2 border-black focus:outline-none px-1 py-0.5 w-36 text-purple-700"
+                        className="font-bold text-sm sm:text-base border-b-2 border-black focus:outline-none px-1 py-0.5 w-36 text-purple-700"
                         maxLength={15}
                         autoFocus
                       />
@@ -214,7 +214,7 @@ export default function SimpleReading({
                     </div>
                   ) : (
                     <div className="flex items-center gap-2 group cursor-pointer" onClick={() => setIsEditingName(true)}>
-                      <span className="font-black text-sm text-purple-700 underline decoration-dashed decoration-2">
+                      <span className="font-black text-sm sm:text-base text-purple-700 underline decoration-dashed decoration-2">
                         {userName}
                       </span>
                       <Edit2 className="w-3.5 h-3.5 text-gray-400 group-hover:text-black transition-colors" />
@@ -227,8 +227,8 @@ export default function SimpleReading({
                   <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-gray-950 font-sans" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
                     I Can Read Words! 📖
                   </h1>
-                  <p className="text-xs font-bold text-gray-600 mt-2 max-w-md mx-auto leading-relaxed">
-                    <span className="bg-yellow-200 border border-black/15 px-1.5 py-0.5 rounded-md font-extrabold text-[10px] mr-1">DIRECTIONS:</span>
+                  <p className="text-base font-extrabold text-neutral-800 mt-2 max-w-md mx-auto leading-relaxed">
+                    <span className="bg-yellow-200 border border-black/15 px-2 py-0.5 rounded-md font-extrabold text-xs mr-1">DIRECTIONS:</span>
                     Look at each cute picture. Tap and circle the word that matches the picture!
                   </p>
                 </div>
@@ -237,7 +237,7 @@ export default function SimpleReading({
                 <div className="flex items-center gap-3 bg-white border-3 border-black px-4 py-2 rounded-2xl shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] select-none">
                   <div className="flex flex-col items-center">
                     <span className="text-2xl animate-bounce">🏠</span>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700 font-mono">READING CLUB</span>
+                    <span className="text-xs font-black uppercase tracking-widest text-emerald-700 font-mono">READING CLUB</span>
                   </div>
                   <div className="flex -space-x-2">
                     <span className="text-xl">🧒</span>
@@ -263,7 +263,7 @@ export default function SimpleReading({
                       }`}
                     >
                       {/* Index badge */}
-                      <span className="absolute top-2 left-3 text-[10px] font-black font-mono text-gray-400 bg-gray-50 border border-black/10 px-1.5 py-0.5 rounded-md">
+                      <span className="absolute top-2 left-3 text-xs font-black font-mono text-gray-400 bg-gray-50 border border-black/10 px-2 py-0.5 rounded-md">
                         Q{index + 1}
                       </span>
 
@@ -371,18 +371,18 @@ export default function SimpleReading({
             <div className="mt-10 flex flex-wrap justify-center gap-4">
               <button
                 onClick={generateNewWorksheet}
-                className="flex items-center gap-2 px-6 py-4 bg-yellow-300 text-black border-4 border-black font-black uppercase rounded-2xl text-xs font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+                className="flex items-center gap-2 px-8 py-4 bg-yellow-300 text-black border-4 border-black font-black uppercase rounded-2xl text-sm sm:text-base font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
               >
-                <RotateCcw className="w-4 h-4 stroke-[3]" />
+                <RotateCcw className="w-5 h-5 stroke-[3]" />
                 PLAY AGAIN
               </button>
               {onNextGame && (
                 <button
                   onClick={onNextGame}
-                  className="flex items-center gap-2 px-6 py-4 bg-sky-400 hover:bg-sky-500 text-black border-4 border-black font-black uppercase rounded-2xl text-xs font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+                  className="flex items-center gap-2 px-8 py-4 bg-sky-400 hover:bg-sky-500 text-black border-4 border-black font-black uppercase rounded-2xl text-sm sm:text-base font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
                 >
                   NEXT MODULE
-                  <ArrowRight className="w-4 h-4 stroke-[3]" />
+                  <ArrowRight className="w-5 h-5 stroke-[3]" />
                 </button>
               )}
             </div>

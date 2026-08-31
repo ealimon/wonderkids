@@ -266,7 +266,7 @@ export default function CountingGarden({
             audioManager.playPop();
             setActiveTab('game');
           }}
-          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-xs sm:text-sm tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
+          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm sm:text-base tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
             activeTab === 'game'
               ? 'bg-rose-300 text-gray-950'
               : 'bg-white text-gray-700 hover:bg-gray-100'
@@ -284,7 +284,7 @@ export default function CountingGarden({
               setActiveTab('worksheet');
             }
           }}
-          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-xs sm:text-sm tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
+          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm sm:text-base tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
             activeTab === 'worksheet'
               ? 'bg-purple-400 text-white'
               : 'bg-white text-gray-700 hover:bg-gray-100'
@@ -306,10 +306,10 @@ export default function CountingGarden({
                 <div className="flex items-center gap-3">
                   <span className="text-3xl animate-bounce">🌟</span>
                   <div>
-                    <h2 className="text-lg font-black uppercase tracking-tight leading-none" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
+                    <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight leading-none" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
                       {theme.actionWord} {theme.targetCount} {theme.name}!
                     </h2>
-                    <p className="text-xs font-bold text-gray-800 mt-1">
+                    <p className="text-base font-extrabold text-neutral-800 mt-1">
                       {roundComplete
                         ? 'Fantastic! You did a perfect counting job!'
                         : 'Tap the seed bubbles to make them grow! Hear the musical bells count up!'}
@@ -318,12 +318,12 @@ export default function CountingGarden({
                 </div>
 
                 {/* Current Score */}
-                <div className="flex items-center gap-3 bg-white px-5 py-2 rounded-2xl border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex-shrink-0">
-                  <span className="text-xs font-black uppercase tracking-widest font-sans">GARDEN COUNT:</span>
+                <div className="flex items-center gap-3 bg-white px-5 py-2.5 rounded-2xl border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex-shrink-0">
+                  <span className="text-sm sm:text-base font-black uppercase tracking-wider font-sans">GARDEN COUNT:</span>
                   <div className="flex items-center gap-1">
                     <span className="text-2xl font-black text-black font-mono">{tapCount}</span>
                     <span className="text-black font-mono">/</span>
-                    <span className="text-sm font-black text-gray-700 font-mono">{theme.targetCount}</span>
+                    <span className="text-base font-black text-gray-700 font-mono">{theme.targetCount}</span>
                   </div>
                 </div>
               </div>
@@ -336,14 +336,14 @@ export default function CountingGarden({
                     <button
                       key={t.type}
                       onClick={() => handleSwitchTheme(t)}
-                      className={`px-4 py-2 rounded-2xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${
+                      className={`px-4 py-2.5 rounded-2xl text-sm sm:text-base font-black flex items-center gap-2 transition-all cursor-pointer border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${
                         isSelected
                           ? 'bg-yellow-300 text-black'
                           : 'bg-white hover:bg-yellow-100 text-black'
                       }`}
                       id={`garden-tab-${t.type}`}
                     >
-                      <span>{t.emoji}</span>
+                      <span className="text-xl">{t.emoji}</span>
                       <span className="font-sans uppercase">{t.name}</span>
                     </button>
                   );
@@ -380,7 +380,7 @@ export default function CountingGarden({
                       {!item.tapped ? (
                         <motion.div
                           key="seed"
-                          className="w-14 h-14 rounded-full bg-white border-3 border-black hover:border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center relative hover:scale-110 active:scale-95 transition-all"
+                          className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-white border-4 border-black hover:border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center relative hover:scale-110 active:scale-95 transition-all"
                           initial={{ scale: 0 }}
                           animate={{
                             scale: [0.9, 1.05, 0.9],
@@ -391,7 +391,7 @@ export default function CountingGarden({
                             duration: 2.5 + (idx * 0.2),
                           }}
                         >
-                          <span className="text-2xl filter drop-shadow-sm select-none">{theme.seedEmoji}</span>
+                          <span className="text-3xl filter drop-shadow-sm select-none">{theme.seedEmoji}</span>
                           <div className="absolute inset-0 border-2 border-black rounded-full animate-ping opacity-25" />
                         </motion.div>
                       ) : (
@@ -402,18 +402,18 @@ export default function CountingGarden({
                           transition={{ type: 'spring', damping: 10, stiffness: 180 }}
                           className="relative flex flex-col items-center"
                         >
-                          <span className="text-6xl filter drop-shadow-md select-none animate-wiggle">
+                          <span className="text-7xl filter drop-shadow-md select-none animate-wiggle">
                             {item.emoji}
                           </span>
 
                           <motion.div
                             initial={{ scale: 0, y: 10 }}
-                            animate={{ scale: 1, y: -45 }}
+                            animate={{ scale: 1, y: -48 }}
                             transition={{ type: 'spring', damping: 8 }}
-                            className="absolute bg-yellow-300 text-black font-black text-sm px-2.5 py-0.5 rounded-full shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-2 border-black font-mono flex items-center gap-1"
+                            className="absolute bg-yellow-300 text-black font-black text-base px-3 py-1 rounded-full shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-2 border-black font-mono flex items-center gap-1"
                           >
                             <span>{item.tapOrder}</span>
-                            <Sparkles className="w-3 h-3 fill-black text-black" />
+                            <Sparkles className="w-4 h-4 fill-black text-black" />
                           </motion.div>
                         </motion.div>
                       )}
@@ -443,14 +443,14 @@ export default function CountingGarden({
                         <Star className="w-8 h-8 fill-yellow-400 text-black animate-bounce delay-150" />
                       </div>
 
-                      <h3 className="text-2xl font-black uppercase tracking-tight leading-none">SUPER GARDENER!</h3>
-                      <p className="text-xs font-bold text-gray-800 mt-2">
+                      <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-tight leading-none">SUPER GARDENER!</h3>
+                      <p className="text-base font-extrabold text-neutral-800 mt-2">
                         You planted and counted all {theme.targetCount} {theme.name}!
                       </p>
 
                       <button
                         onClick={restartGame}
-                        className="mt-6 w-full py-3 bg-yellow-300 text-black border-4 border-black font-black uppercase rounded-2xl text-xs font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+                        className="mt-6 w-full py-3.5 bg-yellow-300 text-black border-4 border-black font-black uppercase rounded-2xl text-sm sm:text-base font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
                       >
                         PLAY GARDEN AGAIN
                       </button>
@@ -464,18 +464,18 @@ export default function CountingGarden({
             <div className="mt-10 flex flex-wrap gap-4">
               <button
                 onClick={restartGame}
-                className="flex items-center gap-2 px-6 py-4 bg-yellow-300 text-black border-4 border-black font-black uppercase rounded-2xl text-xs font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+                className="flex items-center gap-2 px-8 py-4 bg-yellow-300 text-black border-4 border-black font-black uppercase rounded-2xl text-sm sm:text-base font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
               >
-                <RotateCcw className="w-4 h-4 stroke-[3]" />
+                <RotateCcw className="w-5 h-5 stroke-[3]" />
                 PLAY AGAIN
               </button>
               {onNextGame && (
                 <button
                   onClick={onNextGame}
-                  className="flex items-center gap-2 px-6 py-4 bg-sky-400 hover:bg-sky-500 text-black border-4 border-black font-black uppercase rounded-2xl text-xs font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+                  className="flex items-center gap-2 px-8 py-4 bg-sky-400 hover:bg-sky-500 text-black border-4 border-black font-black uppercase rounded-2xl text-sm sm:text-base font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
                 >
                   NEXT MODULE
-                  <ArrowRight className="w-4 h-4 stroke-[3]" />
+                  <ArrowRight className="w-5 h-5 stroke-[3]" />
                 </button>
               )}
             </div>

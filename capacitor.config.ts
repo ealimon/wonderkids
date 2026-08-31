@@ -1,4 +1,11 @@
-import type { CapacitorConfig } from '@capacitor/cli';
+interface CapacitorConfig {
+  appId: string;
+  appName: string;
+  webDir: string;
+  server?: {
+    androidScheme?: string;
+  };
+}
 
 const config: CapacitorConfig = {
   appId: 'com.limon.wonderkids',

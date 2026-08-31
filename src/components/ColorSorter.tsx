@@ -326,7 +326,7 @@ export default function ColorSorter({
             audioManager.playPop();
             setActiveTab('game');
           }}
-          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-xs sm:text-sm tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
+          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm sm:text-base tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
             activeTab === 'game'
               ? 'bg-rose-300 text-gray-950'
               : 'bg-white text-gray-700 hover:bg-gray-100'
@@ -344,7 +344,7 @@ export default function ColorSorter({
               setActiveTab('worksheet');
             }
           }}
-          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-xs sm:text-sm tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
+          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm sm:text-base tracking-wider transition-all border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer select-none ${
             activeTab === 'worksheet'
               ? 'bg-purple-400 text-white'
               : 'bg-white text-gray-700 hover:bg-gray-100'
@@ -362,7 +362,7 @@ export default function ColorSorter({
             {/* Progress Tracker */}
             <div className="w-full flex flex-col sm:flex-row justify-between items-center gap-4 bg-yellow-300 px-6 py-4 rounded-3xl mb-8 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <div className="flex items-center gap-3">
-                <span className="text-sm font-black uppercase tracking-wider">PROGRESS:</span>
+                <span className="text-base sm:text-lg font-black uppercase tracking-wider">PROGRESS:</span>
                 <div className="flex gap-2">
                   {items.map((item, idx) => {
                     const isSolved = solvedItems[item.id] !== undefined;
@@ -370,11 +370,11 @@ export default function ColorSorter({
                     return (
                       <div
                         key={item.id}
-                        className={`w-5 h-5 rounded-full transition-all duration-300 border-2 border-black ${
+                        className={`w-6 h-6 rounded-full transition-all duration-300 border-2 border-black ${
                           isSolved
                             ? 'bg-emerald-400 scale-110'
                             : isCurrent
-                            ? 'bg-orange-500 animate-pulse scale-110'
+                            ? 'bg-orange-500 animate-pulse'
                             : 'bg-white'
                         }`}
                       />
@@ -383,23 +383,23 @@ export default function ColorSorter({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 bg-white px-4 py-1.5 rounded-xl border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                 <Star className="w-5 h-5 fill-yellow-400 text-black" />
-                <span className="font-black font-mono text-sm">{score} / {items.length} MATCHED</span>
+                <span className="font-black font-mono text-base">{score} / {items.length} MATCHED</span>
               </div>
             </div>
 
             {/* Main Game Screen */}
             <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
               {/* Left Side: Goal / Prompt */}
-              <div className="flex flex-col items-center md:items-start text-center md:text-left bg-orange-100 p-6 rounded-3xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] justify-center">
+              <div className="flex flex-col items-center md:items-start text-center md:text-left bg-orange-100 p-6 sm:p-8 rounded-3xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] justify-center">
                 <div className="bg-yellow-300 border-3 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] p-4 rounded-2xl mb-4">
                   <span className="text-3xl">🎨</span>
                 </div>
-                <h2 className="text-2xl font-black uppercase tracking-tight leading-none" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
+                <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight leading-none" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
                   {roundComplete ? 'SPECTACULAR!' : 'SORT BY COLOR'}
                 </h2>
-                <p className="text-xs font-bold text-gray-700 mt-3 leading-relaxed">
+                <p className="text-base font-extrabold text-neutral-800 mt-3 leading-relaxed">
                   {roundComplete
                     ? 'Awesome job! All colorful items are safe and happy in their colored baskets!'
                     : 'Drag or tap the active toy, animal, or fruit inside the dotted zone into its matching colored basket!'}
@@ -431,7 +431,7 @@ export default function ColorSorter({
                       id={`sorter-item-${currentItem.id}`}
                     >
                       <span className="text-7xl mb-1 filter drop-shadow-md select-none pointer-events-none">{currentItem.emoji}</span>
-                      <span className="text-xs font-black uppercase tracking-wide text-black font-sans pointer-events-none">{currentItem.name}</span>
+                      <span className="text-sm sm:text-base font-black uppercase tracking-wide text-black font-sans pointer-events-none">{currentItem.name}</span>
                     </motion.div>
                   ) : roundComplete ? (
                     <motion.div
@@ -446,7 +446,7 @@ export default function ColorSorter({
                         <Star className="w-10 h-10 fill-yellow-400 text-black animate-bounce delay-200" />
                       </div>
                       <h3 className="text-2xl font-black uppercase text-emerald-600">PERFECT!</h3>
-                      <p className="text-xs font-bold text-gray-700 mt-2 max-w-[200px]">You found the right color basket for every item!</p>
+                      <p className="text-base font-bold text-gray-700 mt-2 max-w-[200px]">You found the right color basket for every item!</p>
                     </motion.div>
                   ) : null}
                 </AnimatePresence>
@@ -454,10 +454,10 @@ export default function ColorSorter({
 
               {/* Right Side: Solved Queue List */}
               <div className="bg-rose-100 p-6 rounded-3xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-center min-h-[160px]">
-                <h3 className="text-xs font-black uppercase tracking-widest mb-4 font-sans text-center md:text-left text-rose-950">MATCHED ITEMS</h3>
+                <h3 className="text-sm sm:text-base font-black uppercase tracking-widest mb-4 font-sans text-center md:text-left text-rose-950">MATCHED ITEMS</h3>
                 <div className="flex flex-wrap gap-3 justify-center md:justify-start">
                   {Object.keys(solvedItems).length === 0 ? (
-                    <span className="text-xs font-bold text-rose-900 font-sans italic py-4">Waiting for first match...</span>
+                    <span className="text-sm sm:text-base font-bold text-rose-900 font-sans italic py-4">Waiting for first match...</span>
                   ) : (
                     items.map((item) => {
                       const isSolved = solvedItems[item.id] !== undefined;
@@ -501,7 +501,7 @@ export default function ColorSorter({
                     id={`sorter-bucket-${bucket.color}`}
                   >
                     <span className="text-6xl mb-2 filter drop-shadow-sm select-none pointer-events-none">{bucket.emoji}</span>
-                    <span className="font-black text-lg uppercase tracking-wide font-sans pointer-events-none">{bucket.color}</span>
+                    <span className="font-black text-xl uppercase tracking-wider font-sans pointer-events-none">{bucket.color}</span>
                   </motion.div>
                 );
               })}
@@ -511,18 +511,18 @@ export default function ColorSorter({
             <div className="mt-10 flex flex-wrap gap-4">
               <button
                 onClick={restartGame}
-                className="flex items-center gap-2 px-6 py-4 bg-yellow-300 text-black border-4 border-black font-black uppercase rounded-2xl text-xs font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+                className="flex items-center gap-2 px-8 py-4 bg-yellow-300 text-black border-4 border-black font-black uppercase rounded-2xl text-sm sm:text-base font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
               >
-                <RotateCcw className="w-4 h-4 stroke-[3]" />
+                <RotateCcw className="w-5 h-5 stroke-[3]" />
                 PLAY AGAIN
               </button>
               {onNextGame && (
                 <button
                   onClick={onNextGame}
-                  className="flex items-center gap-2 px-6 py-4 bg-sky-400 hover:bg-sky-500 text-black border-4 border-black font-black uppercase rounded-2xl text-xs font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+                  className="flex items-center gap-2 px-8 py-4 bg-sky-400 hover:bg-sky-500 text-black border-4 border-black font-black uppercase rounded-2xl text-sm sm:text-base font-sans shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
                 >
                   NEXT MODULE
-                  <ArrowRight className="w-4 h-4 stroke-[3]" />
+                  <ArrowRight className="w-5 h-5 stroke-[3]" />
                 </button>
               )}
             </div>
