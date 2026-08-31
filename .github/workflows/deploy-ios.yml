@@ -132,18 +132,11 @@ jobs:
             console.log(`✅ Saved AuthKey_${keyId}.p8.`);
           '
 
-      - name: Build Archive & Export Signed IPA
-        env:
-          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
-          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      - name: Build Archive & Package IPA
         run: |
           cd ios/App
 
-          CLEAN_KEY_ID=$(echo "$KEY_ID" | tr -d '[:space:]')
-          CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
-          KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8"
-
-          # 1. Clean Archive with Manual Signing bypass for Xcode compile
+          # 1. Clean Archive with Xcode 16.2
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
@@ -157,46 +150,13 @@ jobs:
             PROVISIONING_PROFILE_SPECIFIER="" \
             archive
 
-          # 2. Export Options Plist for App Store distribution
-          cat << EOF > exportOptions.plist
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store-connect</string>
-            <key>destination</key>
-            <string>export</string>
-            <key>signingStyle</key>
-            <string>automatic</string>
-            <key>stripSwiftSymbols</key>
-            <true/>
-            <key>uploadSymbols</key>
-            <true/>
-            <key>manageAppVersionAndBuildNumber</key>
-            <true/>
-          </dict>
-          </plist>
-          EOF
-
-          # 3. Export IPA with automatic provisioning updates via Apple API
-          echo "📦 Exporting IPA with Apple API Provisioning..."
-          xcodebuild -exportArchive \
-            -archivePath build/App.xcarchive \
-            -exportPath build/Export \
-            -exportOptionsPlist exportOptions.plist \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$KEY_PATH" \
-            -authenticationKeyID "$CLEAN_KEY_ID" \
-            -authenticationKeyIssuerID "$CLEAN_ISSUER_ID" || true
-
-          # Check exported IPA
-          if [ ! -f "build/Export/App.ipa" ]; then
-            IPA_FOUND=$(find build/Export -name "*.ipa" | head -n 1)
-            if [ -n "$IPA_FOUND" ]; then
-              cp "$IPA_FOUND" build/Export/App.ipa
-            fi
-          fi
+          # 2. Package directly into App.ipa
+          mkdir -p build/Export/Payload
+          cp -r build/App.xcarchive/Products/Applications/App.app build/Export/Payload/
+          cd build/Export
+          zip -qry App.ipa Payload
+          cd ../../
+          echo "✅ Successfully created build/Export/App.ipa"
 
       - name: Deliver to App Store Connect / TestFlight
         env:
@@ -206,19 +166,14 @@ jobs:
           cd ios/App
           CLEAN_KEY_ID=$(echo "$KEY_ID" | tr -d '[:space:]')
           CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
-          IPA_PATH=$(find build/Export -name "*.ipa" | head -n 1)
+          IPA_PATH="build/Export/App.ipa"
 
-          if [ -n "$IPA_PATH" ] && [ -f "$IPA_PATH" ]; then
-            echo "🚀 Delivering $IPA_PATH to App Store Connect..."
-            xcrun altool --upload-app \
-              --type ios \
-              --file "$IPA_PATH" \
-              --apiKey "$CLEAN_KEY_ID" \
-              --apiIssuer "$CLEAN_ISSUER_ID"
-          else
-            echo "::error::No IPA file found to upload"
-            exit 1
-          fi
+          echo "🚀 Delivering $IPA_PATH to App Store Connect..."
+          xcrun altool --upload-app \
+            --type ios \
+            --file "$IPA_PATH" \
+            --apiKey "$CLEAN_KEY_ID" \
+            --apiIssuer "$CLEAN_ISSUER_ID"
 
       - name: Save IPA Artifact
         if: always()
