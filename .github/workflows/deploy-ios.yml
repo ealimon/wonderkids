@@ -25,14 +25,6 @@ jobs:
         with:
           node-version: 20
 
-      - name: Setup Ruby and Fastlane
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.3'
-
-      - name: Install Fastlane
-        run: gem install fastlane --no-document
-
       - name: Install Project Dependencies
         run: npm install
 
@@ -97,14 +89,13 @@ jobs:
           cd ios/App
           pod install --repo-update || pod install
 
-      - name: Setup App Store Connect Key & Fastlane Fastfile
+      - name: Setup App Store Connect API Key
         env:
           KEY_P8: ${{ secrets.APP_STORE_CONNECT_KEY_P8 }}
           KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
           mkdir -p ~/.appstoreconnect/private_keys
-          mkdir -p ios/App/fastlane
 
           node -e '
             const fs = require("fs");
@@ -137,94 +128,89 @@ jobs:
             const chunks = b64.match(/.{1,64}/g) || [];
             const standardPem = `-----BEGIN PRIVATE KEY-----\n${chunks.join("\n")}\n-----END PRIVATE KEY-----\n`;
 
-            const path1 = `${process.env.HOME}/.appstoreconnect/private_keys/AuthKey_${keyId}.p8`;
-            fs.writeFileSync(path1, standardPem, { mode: 0o600 });
+            const keyPath = `${process.env.HOME}/.appstoreconnect/private_keys/AuthKey_${keyId}.p8`;
+            fs.writeFileSync(keyPath, standardPem, { mode: 0o600 });
             console.log(`✅ Saved AuthKey_${keyId}.p8 successfully.`);
           '
 
-          CLEAN_KEY_ID=$(echo "${{ secrets.APP_STORE_CONNECT_KEY_ID }}" | tr -d '[:space:]')
-          CLEAN_ISSUER_ID=$(echo "${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}" | tr -d '[:space:]')
-          KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8"
-
-          cat << EOF > ios/App/fastlane/Fastfile
-          default_platform(:ios)
-
-          platform :ios do
-            desc "Sign and upload to TestFlight"
-            lane :release do
-              api_key = app_store_connect_api_key(
-                key_id: "$CLEAN_KEY_ID",
-                issuer_id: "$CLEAN_ISSUER_ID",
-                key_filepath: "$KEY_PATH",
-                duration: 1200,
-                in_house: false
-              )
-
-              keychain_name = "ci_signing_keychain.keychain-db"
-              keychain_pwd = "ci_password_123"
-
-              # 1. Create temporary CI keychain
-              create_keychain(
-                name: keychain_name,
-                password: keychain_pwd,
-                default_keychain: true,
-                unlock: true,
-                timeout: 3600,
-                lock_when_sleeps: false
-              )
-
-              # 2. Fetch or create Distribution Certificate
-              get_certificates(
-                api_key: api_key,
-                development: false,
-                keychain_path: File.expand_path("~/Library/Keychains/#{keychain_name}"),
-                keychain_password: keychain_pwd
-              )
-
-              # 3. Allow codesign tools access to private key
-              sh("security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k #{keychain_pwd} ~/Library/Keychains/#{keychain_name}")
-
-              # 4. Generate or fetch official App Store Distribution Provisioning Profile
-              profile_uuid = get_provisioning_profile(
-                api_key: api_key,
-                app_identifier: "com.limon.storybookeducation"
-              )
-
-              # 5. Disable automatic signing and bind the profile
-              update_code_signing_settings(
-                use_automatic_signing: false,
-                path: "App.xcodeproj",
-                team_id: "EYQARSHNW2",
-                bundle_identifier: "com.limon.storybookeducation",
-                profile_uuid: profile_uuid,
-                code_sign_identity: "Apple Distribution"
-              )
-
-              # 6. Build and codesign the IPA
-              build_app(
-                workspace: "App.xcworkspace",
-                scheme: "App",
-                clean: true,
-                export_method: "app-store",
-                export_team_id: "EYQARSHNW2",
-                output_directory: "build/Export",
-                output_name: "App.ipa"
-              )
-
-              # 7. Upload directly to TestFlight
-              upload_to_testflight(
-                api_key: api_key,
-                ipa: "build/Export/App.ipa",
-                skip_waiting_for_build_processing: true
-              )
-            end
-          end
-          EOF
-
-      - name: Run Fastlane (Certificates, Sign & Deliver to TestFlight)
+      - name: Build Archive & Export IPA via Official Xcode
+        env:
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
           cd ios/App
-          fastlane ios release
+          CLEAN_KEY_ID=$(echo "$KEY_ID" | tr -d '[:space:]')
+          CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
+          KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8"
+
+          # 1. Build Xcode Release Archive
+          xcodebuild -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -archivePath build/App.xcarchive \
+            -destination "generic/platform=iOS" \
+            IPHONEOS_DEPLOYMENT_TARGET=15.0 \
+            DEVELOPMENT_TEAM=EYQARSHNW2 \
+            CODE_SIGN_STYLE=Automatic \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$KEY_PATH" \
+            -authenticationKeyID "$CLEAN_KEY_ID" \
+            -authenticationKeyIssuerID "$CLEAN_ISSUER_ID" \
+            archive
+
+          # 2. Write ExportOptions plist
+          cat << 'EOF' > exportOptions.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>EYQARSHNW2</string>
+            <key>signingStyle</key>
+            <string>automatic</string>
+            <key>stripSwiftSymbols</key>
+            <true/>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>manageAppVersionAndBuildNumber</key>
+            <true/>
+          </dict>
+          </plist>
+          EOF
+
+          # 3. Export Archive to IPA
+          xcodebuild -exportArchive \
+            -archivePath build/App.xcarchive \
+            -exportPath build/Export \
+            -exportOptionsPlist exportOptions.plist \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$KEY_PATH" \
+            -authenticationKeyID "$CLEAN_KEY_ID" \
+            -authenticationKeyIssuerID "$CLEAN_ISSUER_ID"
+
+      - name: Upload to App Store Connect / TestFlight
+        env:
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          cd ios/App
+          CLEAN_KEY_ID=$(echo "$KEY_ID" | tr -d '[:space:]')
+          CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
+          IPA_PATH=$(find build/Export -name "*.ipa" | head -n 1)
+
+          if [ -n "$IPA_PATH" ] && [ -f "$IPA_PATH" ]; then
+            echo "🚀 Uploading $IPA_PATH directly to TestFlight..."
+            xcrun altool --upload-app \
+              --type ios \
+              --file "$IPA_PATH" \
+              --apiKey "$CLEAN_KEY_ID" \
+              --apiIssuer "$CLEAN_ISSUER_ID"
+          else
+            echo "::error::IPA export failed to create an IPA file"
+            exit 1
+          fi
 
       - name: Save IPA Artifact
         if: always()
