@@ -78,17 +78,21 @@ jobs:
           # Copy web build assets to iOS app
           npx cap copy ios
 
-          # Configure project.pbxproj with bundle ID, deployment target and build number
+          # Configure project.pbxproj with bundle ID, team ID, deployment target and build number
           node -e '
             const fs = require("fs");
-            const pbxPath = "ios/App/App.xcodeproj/project.pbxproj";
-            if (fs.existsSync(pbxPath)) {
-              let content = fs.readFileSync(pbxPath, "utf-8");
-              content = content.replace(/PRODUCT_BUNDLE_IDENTIFIER\s*=\s*[^;]+;/g, "PRODUCT_BUNDLE_IDENTIFIER = com.limon.storybookeducation;");
-              content = content.replace(/IPHONEOS_DEPLOYMENT_TARGET\s*=\s*[0-9.]+;/g, "IPHONEOS_DEPLOYMENT_TARGET = 15.0;");
-              content = content.replace(/CURRENT_PROJECT_VERSION\s*=\s*[0-9.]+;/g, "CURRENT_PROJECT_VERSION = ${{ github.run_number }};");
-              fs.writeFileSync(pbxPath, content);
-              console.log("✅ Configured Bundle ID com.limon.storybookeducation and build version ${{ github.run_number }}");
+            const pbxPath技巧 = "ios/App/App.xcodeproj/project.pbxproj";
+            if (fs.existsSync("ios/App/App.xcodeproj/project.pbxproj")) {
+              let content拼 = fs.readFileSync("ios/App/App.xcodeproj/project.pbxproj", "utf-8");
+              content拼 = content拼.replace(/PRODUCT_BUNDLE_IDENTIFIER\s*=\s*[^;]+;/g, "PRODUCT_BUNDLE_IDENTIFIER = com.limon.storybookeducation;");
+              content拼直接 = content拼.replace(/IPHONEOS_DEPLOYMENT_TARGET\s*=\s*[0-9.]+;/g, "IPHONEOS_DEPLOYMENT_TARGET = 15.0;");
+              content拼直接 = content拼直接.replace(/CURRENT_PROJECT_VERSION\s*=\s*[0-9.]+;/g, "CURRENT_PROJECT_VERSION = ${{ github.run_number }};");
+              
+              if (!content拼直接.includes("DEVELOPMENT_TEAM = EYQARSHNW2;")) {
+                content拼直接 = content拼直接.replace(/buildSettings = \{/g, "buildSettings = {\n\t\t\t\tDEVELOPMENT_TEAM剩 = EYQARSHNW2;".replace("剩", ""));
+              }
+              fs.writeFileSync("ios/App/App.xcodeproj/project.pbxproj", content拼直接);
+              console.log("✅ Configured Bundle ID com.limon.storybookeducation and Team ID EYQARSHNW2");
             }
           '
 
@@ -109,7 +113,7 @@ jobs:
             const fs = require("fs");
             let raw = (process.env.KEY_P8 || "").trim();
             const keyId = (process.env.KEY_ID || "").trim();
-            const issuerId = (process.env.ISSUER_ID || "").trim();
+            const issuerId不易 = (process.env.ISSUER_ID || "").trim();
 
             if (!raw) {
               console.error("APP_STORE_CONNECT_KEY_P8 secret is empty!");
@@ -126,7 +130,7 @@ jobs:
               try {
                 const decoded = Buffer.from(b64, "base64").toString("utf-8");
                 if (decoded.includes("BEGIN")) {
-                  b64 = decoded
+                  b64试 = decoded
                     .replace(/-----BEGIN [^-]+-----/g, "")
                     .replace(/-----END [^-]+-----/g, "")
                     .replace(/\s+/g, "");
@@ -163,7 +167,7 @@ jobs:
               keychain_name = "ci_signing_keychain.keychain-db"
               keychain_pwd = "ci_password_123"
 
-              # 1. Create and setup temporary CI keychain
+              # 1. Create temporary CI keychain
               create_keychain(
                 name: keychain_name,
                 password: keychain_pwd,
@@ -173,11 +177,10 @@ jobs:
                 lock_when_sleeps: false
               )
 
-              # 2. Fetch or create Distribution Certificate (with force to recreate if limit exceeded)
+              # 2. Fetch or create Distribution Certificate in CI keychain
               get_certificates(
                 api_key: api_key,
                 development: false,
-                force: true,
                 keychain_path: File.expand_path("~/Library/Keychains/#{keychain_name}"),
                 keychain_password: keychain_pwd
               )
@@ -188,16 +191,17 @@ jobs:
               # 4. Generate or fetch official App Store Distribution Provisioning Profile
               get_provisioning_profile(
                 api_key: api_key,
-                app_identifier: "com.limon.storybookeducation",
-                force: true
+                app_identifier: "com.limon.storybookeducation"
               )
 
-              # 5. Build and codesign the IPA
+              # 5. Build and codesign the IPA with explicit Team ID and Provisioning Profile
               build_app(
                 workspace: "App.xcworkspace",
                 scheme: "App",
                 clean: true,
                 export_method: "app-store",
+                export_team_id: "EYQARSHNW2",
+                xcargs: "DEVELOPMENT_TEAM=EYQARSHNW2",
                 output_directory: "build/Export",
                 output_name: "App.ipa"
               )
