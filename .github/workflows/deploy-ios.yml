@@ -88,7 +88,7 @@ jobs:
           cd ios/App
           pod install --repo-update || pod install
 
-      - name: Setup Key & Fetch Provisioning Profile from Apple
+      - name: Setup App Store Connect API Key
         env:
           KEY_P8: ${{ secrets.APP_STORE_CONNECT_KEY_P8 }}
           KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
@@ -97,148 +97,53 @@ jobs:
           mkdir -p ~/.appstoreconnect/private_keys
 
           node -e '
-            (async () => {
-              const fs = require("fs");
-              const crypto = require("crypto");
-              const https = require("https");
+            const fs = require("fs");
+            let raw = (process.env.KEY_P8 || "").trim();
+            const keyId = (process.env.KEY_ID || "").trim();
 
-              let raw = (process.env.KEY_P8 || "").trim();
-              const keyId = (process.env.KEY_ID || "").trim();
-              const issuerId = (process.env.ISSUER_ID || "").trim();
+            if (!raw) {
+              console.error("APP_STORE_CONNECT_KEY_P8 secret is empty!");
+              process.exit(1);
+            }
 
-              if (!raw) {
-                console.error("APP_STORE_CONNECT_KEY_P8 secret is empty!");
-                process.exit(1);
-              }
+            raw = raw.replace(/^["\x27]|["\x27]$/g, "").replace(/\\n/g, "\n").trim();
+            let b64 = raw
+              .replace(/-----BEGIN [^-]+-----/g, "")
+              .replace(/-----END [^-]+-----/g, "")
+              .replace(/\s+/g, "");
 
-              raw = raw.replace(/^["\x27]|["\x27]$/g, "").replace(/\\n/g, "\n").trim();
-              let b64 = raw
-                .replace(/-----BEGIN [^-]+-----/g, "")
-                .replace(/-----END [^-]+-----/g, "")
-                .replace(/\s+/g, "");
-
-              if (b64.length > 500) {
-                try {
-                  const decoded = Buffer.from(b64, "base64").toString("utf-8");
-                  if (decoded.includes("BEGIN")) {
-                    b64 = decoded
-                      .replace(/-----BEGIN [^-]+-----/g, "")
-                      .replace(/-----END [^-]+-----/g, "")
-                      .replace(/\s+/g, "");
-                  }
-                } catch(e) {}
-              }
-
-              const chunks = b64.match(/.{1,64}/g) || [];
-              const standardPem = `-----BEGIN PRIVATE KEY-----\n${chunks.join("\n")}\n-----END PRIVATE KEY-----\n`;
-
-              const keyPath = `${process.env.HOME}/.appstoreconnect/private_keys/AuthKey_${keyId}.p8`;
-              fs.writeFileSync(keyPath, standardPem, { mode: 0o600 });
-              console.log(`✅ Saved AuthKey_${keyId}.p8.`);
-
-              function base64Url(obj) {
-                return Buffer.from(JSON.stringify(obj)).toString("base64")
-                  .replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
-              }
-
-              function apiRequest(apiPath, method = "GET", postData = null) {
-                const header = { alg: "ES256", kid: keyId, typ: "JWT" };
-                const payload = {
-                  iss: issuerId,
-                  exp: Math.floor(Date.now() / 1000) + 600,
-                  aud: "appstoreconnect-v1"
-                };
-
-                const signData = `${base64Url(header)}.${base64Url(payload)}`;
-                const sign = crypto.createSign("SHA256");
-                sign.update(signData);
-                const signature = sign.sign({ key: standardPem, dsaEncoding: "ieee-p1363" }, "base64")
-                  .replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
-                const token = `${signData}.${signature}`;
-
-                return new Promise((resolve, reject) => {
-                  const options = {
-                    hostname: "api.appstoreconnect.apple.com",
-                    path: apiPath,
-                    method,
-                    headers: {
-                      "Authorization": `Bearer ${token}`,
-                      "Content-Type": "application/json"
-                    }
-                  };
-                  const req = https.request(options, (res) => {
-                    let data = "";
-                    res.on("data", chunk => data += chunk);
-                    res.on("end", () => {
-                      try { resolve(JSON.parse(data)); } catch(e) { resolve({ raw: data }); }
-                    });
-                  });
-                  req.on("error", reject);
-                  if (postData) req.write(JSON.stringify(postData));
-                  req.end();
-                });
-              }
-
+            if (b64.length > 500) {
               try {
-                console.log("🔍 Fetching provisioning profile for com.limon.storybookeducation...");
-                const bundleRes = await apiRequest("/v1/bundleIds?filter[identifier]=com.limon.storybookeducation");
-                let bundleId = null;
-                if (bundleRes.data && bundleRes.data.length > 0) {
-                  bundleId = bundleRes.data[0].id;
+                const decoded = Buffer.from(b64, "base64").toString("utf-8");
+                if (decoded.includes("BEGIN")) {
+                  b64 = decoded
+                    .replace(/-----BEGIN [^-]+-----/g, "")
+                    .replace(/-----END [^-]+-----/g, "")
+                    .replace(/\s+/g, "");
                 }
+              } catch(e) {}
+            }
 
-                const certsRes = await apiRequest("/v1/certificates");
-                let certIds = (certsRes.data || []).map(c => c.id);
+            const chunks = b64.match(/.{1,64}/g) || [];
+            const standardPem = `-----BEGIN PRIVATE KEY-----\n${chunks.join("\n")}\n-----END PRIVATE KEY-----\n`;
 
-                const profilesRes = await apiRequest("/v1/profiles?limit=50");
-                let profileContent = null;
-
-                if (profilesRes.data && profilesRes.data.length > 0) {
-                  for (const p of profilesRes.data) {
-                    if (p.attributes && p.attributes.profileContent) {
-                      profileContent = p.attributes.profileContent;
-                      console.log(`✅ Using profile: ${p.attributes.name}`);
-                      break;
-                    }
-                  }
-                }
-
-                if (!profileContent && bundleId && certIds.length > 0) {
-                  console.log("⚙️ Creating profile on Apple account...");
-                  const newProfile = await apiRequest("/v1/profiles", "POST", {
-                    data: {
-                      type: "profiles",
-                      attributes: {
-                        name: `WonderKids AppStore ${Date.now()}`,
-                        profileType: "IOS_APP_STORE"
-                      },
-                      relationships: {
-                        bundleId: { data: { type: "bundleIds", id: bundleId } },
-                        certificates: { data: certIds.map(id => ({ type: "certificates", id })) }
-                      }
-                    }
-                  });
-                  if (newProfile.data && newProfile.data.attributes) {
-                    profileContent = newProfile.data.attributes.profileContent;
-                  }
-                }
-
-                if (profileContent) {
-                  const buffer = Buffer.from(profileContent, "base64");
-                  fs.writeFileSync("profile.mobileprovision", buffer);
-                  console.log(`✅ Downloaded profile (${buffer.length} bytes) to profile.mobileprovision`);
-                }
-              } catch(e) {
-                console.error("API error:", e.message);
-              }
-            })();
+            const keyPath = `${process.env.HOME}/.appstoreconnect/private_keys/AuthKey_${keyId}.p8`;
+            fs.writeFileSync(keyPath, standardPem, { mode: 0o600 });
+            console.log(`✅ Saved AuthKey_${keyId}.p8.`);
           '
 
-      - name: Build Archive, Embed Profile & Package IPA
+      - name: Build Archive & Export Signed IPA
+        env:
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
           cd ios/App
 
-          # 1. Clean Archive
+          CLEAN_KEY_ID=$(echo "$KEY_ID" | tr -d '[:space:]')
+          CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
+          KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8"
+
+          # 1. Clean Archive with Manual Signing bypass for Xcode compile
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
@@ -252,25 +157,46 @@ jobs:
             PROVISIONING_PROFILE_SPECIFIER="" \
             archive
 
-          # 2. Package App.ipa and embed mobileprovision directly
-          mkdir -p build/Export/Payload
-          cp -r build/App.xcarchive/Products/Applications/App.app build/Export/Payload/
+          # 2. Export Options Plist for App Store distribution
+          cat << EOF > exportOptions.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store-connect</string>
+            <key>destination</key>
+            <string>export</string>
+            <key>signingStyle</key>
+            <string>automatic</string>
+            <key>stripSwiftSymbols</key>
+            <true/>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>manageAppVersionAndBuildNumber</key>
+            <true/>
+          </dict>
+          </plist>
+          EOF
 
-          if [ -f "../../profile.mobileprovision" ]; then
-            cp "../../profile.mobileprovision" "build/Export/Payload/App.app/embedded.mobileprovision"
-            echo "✅ Successfully injected embedded.mobileprovision into Payload/App.app"
+          # 3. Export IPA with automatic provisioning updates via Apple API
+          echo "📦 Exporting IPA with Apple API Provisioning..."
+          xcodebuild -exportArchive \
+            -archivePath build/App.xcarchive \
+            -exportPath build/Export \
+            -exportOptionsPlist exportOptions.plist \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$KEY_PATH" \
+            -authenticationKeyID "$CLEAN_KEY_ID" \
+            -authenticationKeyIssuerID "$CLEAN_ISSUER_ID" || true
+
+          # Check exported IPA
+          if [ ! -f "build/Export/App.ipa" ]; then
+            IPA_FOUND=$(find build/Export -name "*.ipa" | head -n 1)
+            if [ -n "$IPA_FOUND" ]; then
+              cp "$IPA_FOUND" build/Export/App.ipa
+            fi
           fi
-
-          cd build/Export
-          zip -qry App.ipa Payload
-          cd ../../
-          echo "✅ Created App.ipa"
-
-      - name: Save IPA Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: App-iOS-IPA
-          path: ios/App/build/Export/App.ipa
 
       - name: Deliver to App Store Connect / TestFlight
         env:
@@ -280,11 +206,24 @@ jobs:
           cd ios/App
           CLEAN_KEY_ID=$(echo "$KEY_ID" | tr -d '[:space:]')
           CLEAN_ISSUER_ID=$(echo "$ISSUER_ID" | tr -d '[:space:]')
-          IPA_PATH="build/Export/App.ipa"
+          IPA_PATH=$(find build/Export -name "*.ipa" | head -n 1)
 
-          echo "🚀 Delivering $IPA_PATH to App Store Connect (com.limon.storybookeducation)..."
-          xcrun altool --upload-app \
-            --type ios \
-            --file "$IPA_PATH" \
-            --apiKey "$CLEAN_KEY_ID" \
-            --apiIssuer "$CLEAN_ISSUER_ID"
+          if [ -n "$IPA_PATH" ] && [ -f "$IPA_PATH" ]; then
+            echo "🚀 Delivering $IPA_PATH to App Store Connect..."
+            xcrun altool --upload-app \
+              --type ios \
+              --file "$IPA_PATH" \
+              --apiKey "$CLEAN_KEY_ID" \
+              --apiIssuer "$CLEAN_ISSUER_ID"
+          else
+            echo "::error::No IPA file found to upload"
+            exit 1
+          fi
+
+      - name: Save IPA Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: App-iOS-IPA
+          path: ios/App/build/Export/*.ipa
+          if-no-files-found: ignore
