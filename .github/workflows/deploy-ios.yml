@@ -173,10 +173,11 @@ jobs:
                 lock_when_sleeps: false
               )
 
-              # 2. Fetch or create official iOS Distribution Certificate in Keychain
+              # 2. Fetch or create Distribution Certificate (with force to recreate if limit exceeded)
               get_certificates(
                 api_key: api_key,
                 development: false,
+                force: true,
                 keychain_path: File.expand_path("~/Library/Keychains/#{keychain_name}"),
                 keychain_password: keychain_pwd
               )
@@ -188,8 +189,7 @@ jobs:
               get_provisioning_profile(
                 api_key: api_key,
                 app_identifier: "com.limon.storybookeducation",
-                adhoc: false,
-                development: false
+                force: true
               )
 
               # 5. Build and codesign the IPA
