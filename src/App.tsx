@@ -11,6 +11,7 @@ import MathAddition from './components/MathAddition';
 import MathSubtraction from './components/MathSubtraction';
 import SimpleReading from './components/SimpleReading';
 import CertificateModal from './components/CertificateModal';
+import WorksheetHubModal from './components/WorksheetHubModal';
 import {
   Volume2,
   VolumeX,
@@ -34,6 +35,7 @@ export default function App() {
   });
   const [showStarCelebration, setShowStarCelebration] = useState(false);
   const [showCertificateModal, setShowCertificateModal] = useState(false);
+  const [showWorksheetHub, setShowWorksheetHub] = useState(false);
   const [activeModuleTab, setActiveModuleTab] = useState<'game' | 'worksheet'>('game');
 
   // Load score state from local storage on mount
@@ -106,11 +108,11 @@ export default function App() {
     }
   };
 
-  const selectGame = (game: GameType) => {
+  const selectGame = (game: GameType, tab: 'game' | 'worksheet' = 'game') => {
     audioManager.ensureAudioUnlocked();
     audioManager.playPop();
     setActiveGame(game);
-    setActiveModuleTab('game');
+    setActiveModuleTab(tab);
     setGameResetKey((prev) => prev + 1);
   };
 
@@ -343,13 +345,27 @@ export default function App() {
               {muted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
             </button>
 
+            {/* Worksheets & Print Hub Button (Prominent Purple) */}
+            <button
+              onClick={() => {
+                audioManager.playPop();
+                setShowWorksheetHub(true);
+              }}
+              className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white border-4 border-black px-4 py-2.5 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer font-black text-xs sm:text-sm uppercase tracking-wider"
+              title="Open Printable Worksheets & Teacher Answer Keys"
+              id="worksheets-hub-btn"
+            >
+              <Printer className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
+              <span>WORKSHEETS (PRINT)</span>
+            </button>
+
             {/* Certificate & Trophies Button */}
             <button
               onClick={() => {
                 audioManager.playPop();
                 setShowCertificateModal(true);
               }}
-              className={`flex items-center gap-2 border-4 border-black px-4 py-2.5 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer font-black text-sm uppercase tracking-wider ${
+              className={`flex items-center gap-2 border-4 border-black px-4 py-2.5 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer font-black text-xs sm:text-sm uppercase tracking-wider ${
                 Object.keys(scoreState.completedGames).length > 0
                   ? 'bg-emerald-400 hover:bg-emerald-500 text-black'
                   : 'bg-yellow-100 hover:bg-yellow-200 text-gray-800'
@@ -376,8 +392,12 @@ export default function App() {
         </div>
 
         {/* Navigation Quick Links (Visible on all screens, wrap-friendly) */}
-        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-6 gap-y-2 font-black text-sm sm:text-base tracking-wide border-t-2 border-dashed border-black/15 pt-3 mt-1">
+        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-6 gap-y-2 font-black text-xs sm:text-sm tracking-wide border-t-2 border-dashed border-black/15 pt-3 mt-1">
           <button onClick={goBack} className={`pb-1 border-b-3 transition-colors cursor-pointer ${!activeGame ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-black'}`}>ALL GAMES</button>
+          <button onClick={() => { audioManager.playPop(); setShowWorksheetHub(true); }} className="pb-1 border-b-3 border-transparent text-purple-700 hover:text-purple-950 flex items-center gap-1 cursor-pointer font-black">
+            <Printer className="w-3.5 h-3.5 stroke-[2.5]" />
+            PRINTABLE WORKSHEETS
+          </button>
           <button onClick={() => selectGame('phonics')} className={`pb-1 border-b-3 transition-colors cursor-pointer ${activeGame === 'phonics' ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-black'}`}>PHONICS</button>
           <button onClick={() => selectGame('math')} className={`pb-1 border-b-3 transition-colors cursor-pointer ${activeGame === 'math' ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-black'}`}>ADDITION</button>
           <button onClick={() => selectGame('subtraction')} className={`pb-1 border-b-3 transition-colors cursor-pointer ${activeGame === 'subtraction' ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-black'}`}>SUBTRACTION</button>
@@ -456,10 +476,7 @@ export default function App() {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: idx * 0.08, type: 'spring', stiffness: 120 }}
-                        whileHover={{ scale: 1.025, rotate: idx % 2 === 0 ? 0.5 : -0.5 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => selectGame(g.id)}
-                        className={`${g.bgColor} rounded-[40px] p-7 flex flex-col justify-between cursor-pointer transition-shadow relative overflow-hidden`}
+                        className={`${g.bgColor} rounded-[40px] p-7 flex flex-col justify-between transition-shadow relative overflow-hidden`}
                         id={`dashboard-card-${g.id}`}
                       >
                         {/* Background subtle icons decoration */}
@@ -485,8 +502,11 @@ export default function App() {
                           </div>
 
                           {/* App Card Content */}
-                          <div className="flex items-center gap-5 mt-5 relative z-10">
-                            <div className="bg-white text-black p-4 rounded-3xl text-4xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-3 border-black flex-shrink-0 animate-pulse-slow">
+                          <div
+                            onClick={() => selectGame(g.id, 'game')}
+                            className="flex items-center gap-5 mt-5 relative z-10 cursor-pointer group"
+                          >
+                            <div className="bg-white text-black p-4 rounded-3xl text-4xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-3 border-black flex-shrink-0 group-hover:scale-105 transition-transform">
                               {g.emoji}
                             </div>
                             <div className="flex-1 min-w-0">
@@ -500,15 +520,29 @@ export default function App() {
                           </div>
                         </div>
 
-                        {/* Button indicator */}
-                        <div className="flex justify-between items-center border-t-2 border-black/10 mt-6 pt-4 relative z-10">
-                          <span className={`text-sm sm:text-base font-extrabold font-sans ${g.descColor}`}>
-                            {completedTimes > 0 ? `Played: ${completedTimes} times` : 'READY TO PLAY'}
-                          </span>
-                          <span className="flex items-center gap-1.5 bg-white text-black font-black text-sm sm:text-base px-5 py-2.5 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all">
+                        {/* Dual Action Buttons: Play Game & Printable Worksheet */}
+                        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2.5 border-t-2 border-black/10 mt-6 pt-4 relative z-10">
+                          {/* Worksheet / Print action */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              selectGame(g.id, 'worksheet');
+                            }}
+                            className="flex items-center justify-center gap-1.5 bg-purple-500 hover:bg-purple-600 text-white font-black text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] border-2 border-black hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer"
+                            title={`Open & print ${g.title} worksheet`}
+                          >
+                            <Printer className="w-3.5 h-3.5 stroke-[2.5]" />
+                            WORKSHEET
+                          </button>
+
+                          {/* Interactive Game action */}
+                          <button
+                            onClick={() => selectGame(g.id, 'game')}
+                            className="flex items-center justify-center gap-1.5 bg-white text-black font-black text-xs sm:text-sm px-5 py-2.5 rounded-xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] border-2 border-black hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer"
+                          >
                             {g.actionText}
                             <ChevronRight className="w-4 h-4 stroke-[3]" />
-                          </span>
+                          </button>
                         </div>
                       </motion.div>
                     );
@@ -607,6 +641,16 @@ export default function App() {
           Reset Stars & Progress
         </button>
       </footer>
+
+      {/* All-in-One Worksheets & Print Hub Modal */}
+      <WorksheetHubModal
+        isOpen={showWorksheetHub}
+        onClose={() => setShowWorksheetHub(false)}
+        onSelectWorksheet={(gameId) => {
+          setShowWorksheetHub(false);
+          selectGame(gameId, 'worksheet');
+        }}
+      />
 
       {/* Trophy & Certificate Modal */}
       <CertificateModal

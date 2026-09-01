@@ -38,11 +38,12 @@ jobs:
       - name: Initialize and Configure iOS Project
         run: |
           npm install -g @capacitor/cli
-          npm install --save @capacitor/core @capacitor/ios
+          npm install --save @capacitor/core @capacitor/ios @capacitor/share @capacitor/filesystem
           
           # Initialize iOS platform
           npx cap add ios || true
-          
+          npx cap sync ios || true
+
           # Write clean Podfile
           cat << 'EOF' > ios/App/Podfile
           require_relative '../../node_modules/@capacitor/ios/scripts/pods_helpers'
@@ -55,6 +56,8 @@ jobs:
           def capacitor_pods
             pod 'Capacitor', :path => '../../node_modules/@capacitor/ios'
             pod 'CapacitorCordova', :path => '../../node_modules/@capacitor/ios'
+            pod 'CapacitorShare', :path => '../../node_modules/@capacitor/share'
+            pod 'CapacitorFilesystem', :path => '../../node_modules/@capacitor/filesystem'
           end
 
           target 'App' do

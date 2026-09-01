@@ -1,4 +1,7 @@
 import html2canvas from 'html2canvas';
+import { Capacitor } from '@capacitor/core';
+import { Share } from '@capacitor/share';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 
 export interface ExportPrintOptions {
   element: HTMLElement | null;
@@ -10,11 +13,12 @@ export interface ExportPrintOptions {
 }
 
 /**
- * Universal print, download, and native iPad share helper.
- * On iPadOS / iOS WKWebView, window.print() and iframe printing are often blocked.
- * This helper renders a high-res image via html2canvas and:
- * 1. Invokes native iPad Action Sheet (navigator.share) with Print (AirPrint), Save Image, Save to Files, AirDrop.
- * 2. Fallbacks to direct PNG download + window.print() for desktop and standard browsers.
+ * Universal print, download, and native iPad / Apple App AirPrint helper.
+ * 
+ * Works seamlessly across:
+ * 1. Native Capacitor iOS / iPadOS App (via Capacitor Share & Filesystem -> AirPrint & Save to Photos)
+ * 2. Web Share API (Safari iOS / iPadOS Action Sheet)
+ * 3. Fallback Printable Window & direct PNG download for desktop / standard browsers
  */
 export async function exportOrPrintElement({
   element,
@@ -25,15 +29,18 @@ export async function exportOrPrintElement({
   onError,
 }: ExportPrintOptions): Promise<boolean> {
   if (!element) {
-    // Fallback if element not found: standard window.print
-    window.print();
+    try {
+      window.print();
+    } catch {
+      // ignore
+    }
     return true;
   }
 
   try {
     if (onStart) onStart();
 
-    // Render high-resolution canvas (2x scale for retina / high-DPI print clarity)
+    // Render high-resolution canvas (2x scale for crisp Retina / high-DPI print clarity)
     const canvas = await html2canvas(element, {
       scale: 2,
       useCORS: true,
@@ -44,19 +51,50 @@ export async function exportOrPrintElement({
       windowHeight: element.scrollHeight,
     });
 
+    const safeFilename = `${filename.replace(/[^a-z0-9_-]/gi, '_')}.png`;
+    const dataUrl = canvas.toDataURL('image/png');
+
+    // 1. Check if running inside Capacitor Native iOS / iPadOS App
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const base64Data = dataUrl.split(',')[1] || dataUrl;
+        
+        // Write the high-resolution file to native cache
+        const savedFile = await Filesystem.writeFile({
+          path: safeFilename,
+          data: base64Data,
+          directory: Directory.Cache,
+        });
+
+        // Open native iOS Action Sheet (AirPrint, Save Image, Files, AirDrop)
+        await Share.share({
+          title: title,
+          text: `${title} - Storybook Education`,
+          url: savedFile.uri,
+          dialogTitle: `Print or Save ${title}`,
+        });
+
+        if (onSuccess) onSuccess();
+        return true;
+      } catch (nativeErr) {
+        console.warn('Capacitor native share error, falling back:', nativeErr);
+      }
+    }
+
     return new Promise((resolve) => {
       canvas.toBlob(async (blob) => {
         if (!blob) {
-          window.print();
+          try {
+            window.print();
+          } catch {}
           if (onSuccess) onSuccess();
           resolve(false);
           return;
         }
 
-        const safeFilename = `${filename.replace(/[^a-z0-9_-]/gi, '_')}.png`;
         const file = new File([blob], safeFilename, { type: 'image/png' });
 
-        // 1. Check if native iOS / iPadOS Web Share with file is available
+        // 2. Check if native iOS / iPadOS Web Share with file is available
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           try {
             await navigator.share({
@@ -68,12 +106,11 @@ export async function exportOrPrintElement({
             resolve(true);
             return;
           } catch (shareErr) {
-            // User cancelled share sheet or share error - proceed to fallbacks
-            console.log('Share dismissed or handled:', shareErr);
+            console.log('Share sheet dismissed or handled:', shareErr);
           }
         }
 
-        // 2. Fallback: Direct Download anchor tag
+        // 3. Fallback: Direct download anchor tag
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -99,7 +136,6 @@ export async function exportOrPrintElement({
   } catch (err) {
     console.error('Error generating document image:', err);
     if (onError) onError(err);
-    // Final fallback
     try {
       window.print();
     } catch (e) {
@@ -108,3 +144,4 @@ export async function exportOrPrintElement({
     return false;
   }
 }
+
