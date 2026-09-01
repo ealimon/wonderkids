@@ -33,31 +33,40 @@ function showPrintModal({
 
   const modal = document.createElement('div');
   modal.id = 'storybook-print-modal';
-  modal.className = 'fixed inset-0 z-[99999] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 select-none font-sans';
+  modal.className = 'fixed inset-0 z-[99999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 font-sans';
   
   modal.innerHTML = `
-    <div class="bg-white border-4 border-black rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center gap-4 text-center text-black">
-      <div class="w-14 h-14 bg-purple-100 border-3 border-black rounded-2xl flex items-center justify-center text-3xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+    <div class="bg-white border-4 border-black rounded-3xl p-5 sm:p-7 max-w-lg w-full shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center gap-3.5 text-center text-black">
+      <div class="w-12 h-12 bg-purple-100 border-3 border-black rounded-2xl flex items-center justify-center text-2xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
         🖨️
       </div>
 
-      <div class="flex flex-col gap-1">
-        <h3 class="text-xl sm:text-2xl font-black uppercase tracking-tight text-purple-950">${title}</h3>
-        <p class="text-xs sm:text-sm font-bold text-gray-600">Choose an option below to print or save your worksheet:</p>
+      <div class="flex flex-col gap-0.5">
+        <h3 class="text-lg sm:text-xl font-black uppercase tracking-tight text-purple-950">${title}</h3>
+        <p class="text-xs font-bold text-gray-600">Worksheet rendered at high resolution!</p>
       </div>
 
       ${dataUrl ? `
-        <div class="w-full max-h-52 overflow-hidden rounded-2xl border-3 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] bg-gray-50 flex items-center justify-center p-2">
-          <img src="${dataUrl}" alt="Worksheet Preview" class="max-h-48 object-contain rounded-lg shadow-sm" />
+        <div class="w-full flex flex-col items-center gap-1.5">
+          <div class="w-full max-h-52 overflow-hidden rounded-2xl border-3 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] bg-gray-50 flex items-center justify-center p-2">
+            <img 
+              id="modal-worksheet-img"
+              src="${dataUrl}" 
+              alt="Worksheet Preview" 
+              class="max-h-48 object-contain rounded-lg shadow-sm cursor-pointer select-auto" 
+              style="-webkit-touch-callout: default !important; -webkit-user-select: auto !important; user-select: auto !important;"
+            />
+          </div>
+          <span class="text-[11px] font-bold text-purple-700">💡 Tip: Tap & hold image to Save to Photos or Print</span>
         </div>
       ` : ''}
 
-      <div class="flex flex-col sm:flex-row gap-3 w-full justify-center mt-2">
-        <button id="modal-share-airprint-btn" class="flex-1 flex items-center justify-center gap-2 bg-purple-500 hover:bg-purple-600 text-white font-black text-sm uppercase px-5 py-3.5 rounded-xl border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-[1px] hover:translate-y-[-1px] transition-all cursor-pointer">
-          <span>🖨️ AIRPRINT / SHARE</span>
+      <div class="flex flex-col sm:flex-row gap-2.5 w-full justify-center mt-1">
+        <button id="modal-share-airprint-btn" class="flex-1 flex items-center justify-center gap-2 bg-purple-500 hover:bg-purple-600 text-white font-black text-xs sm:text-sm uppercase px-4 py-3.5 rounded-xl border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-[1px] hover:translate-y-[-1px] transition-all cursor-pointer">
+          <span>🖨️ SEND TO AIRPRINT</span>
         </button>
-        <button id="modal-download-btn" class="flex-1 flex items-center justify-center gap-2 bg-yellow-300 hover:bg-yellow-400 text-black font-black text-sm uppercase px-5 py-3.5 rounded-xl border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-[1px] hover:translate-y-[-1px] transition-all cursor-pointer">
-          <span>📥 SAVE / DOWNLOAD</span>
+        <button id="modal-fullscreen-btn" class="flex-1 flex items-center justify-center gap-2 bg-yellow-300 hover:bg-yellow-400 text-black font-black text-xs sm:text-sm uppercase px-4 py-3.5 rounded-xl border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-[1px] hover:translate-y-[-1px] transition-all cursor-pointer">
+          <span>🔍 FULLSCREEN</span>
         </button>
       </div>
 
@@ -78,26 +87,65 @@ function showPrintModal({
     };
   }
 
+  // Fullscreen viewer
+  const fsBtn = document.getElementById('modal-fullscreen-btn');
+  if (fsBtn && dataUrl) {
+    fsBtn.onclick = () => {
+      const fsOverlay = document.createElement('div');
+      fsOverlay.id = 'storybook-fs-overlay';
+      fsOverlay.className = 'fixed inset-0 z-[100000] bg-black flex flex-col items-center justify-between p-4';
+      fsOverlay.innerHTML = `
+        <div class="w-full flex justify-between items-center max-w-2xl text-white py-2">
+          <span class="font-black text-sm uppercase">${title}</span>
+          <button id="fs-close-btn" class="bg-white text-black font-black text-xs px-4 py-2 rounded-xl border-2 border-white">DONE ✕</button>
+        </div>
+        <div class="flex-1 flex items-center justify-center overflow-auto w-full max-w-4xl p-2">
+          <img src="${dataUrl}" class="max-h-[80vh] max-w-full object-contain rounded-xl shadow-2xl bg-white" style="-webkit-touch-callout: default !important;" />
+        </div>
+        <div class="w-full max-w-md py-2 flex gap-3">
+          <button id="fs-print-btn" class="flex-1 bg-purple-500 text-white font-black text-sm py-3 rounded-xl border-2 border-white">🖨️ PRINT SHEET</button>
+        </div>
+      `;
+      document.body.appendChild(fsOverlay);
+
+      const fsClose = document.getElementById('fs-close-btn');
+      if (fsClose) fsClose.onclick = () => fsOverlay.remove();
+
+      const fsPrint = document.getElementById('fs-print-btn');
+      if (fsPrint) {
+        fsPrint.onclick = () => {
+          triggerShareOrAirPrint();
+        };
+      }
+    };
+  }
+
   // Helper to trigger native iOS share sheet or download
   const triggerShareOrAirPrint = async () => {
     if (!dataUrl) return;
+    showStatusToast('🖨️ Opening AirPrint & Share Sheet...');
 
     try {
       if (Capacitor.isNativePlatform()) {
-        const base64Data = dataUrl.split(',')[1] || dataUrl;
-        const savedFile = await Filesystem.writeFile({
-          path: safeFilename,
-          data: base64Data,
-          directory: Directory.Cache,
-        });
+        try {
+          const base64Data = dataUrl.split(',')[1] || dataUrl;
+          const savedFile = await Filesystem.writeFile({
+            path: safeFilename,
+            data: base64Data,
+            directory: Directory.Cache,
+          });
 
-        await Share.share({
-          title,
-          text: `${title} - Storybook Education`,
-          url: savedFile.uri,
-          dialogTitle: `AirPrint or Save ${title}`,
-        });
-        return;
+          await Share.share({
+            title,
+            text: `${title} - Storybook Education`,
+            url: savedFile.uri,
+            dialogTitle: `AirPrint or Save ${title}`,
+          });
+          showStatusToast('✅ AirPrint sheet opened!');
+          return;
+        } catch (capErr) {
+          console.warn('Native Capacitor Share failed, trying fallback:', capErr);
+        }
       }
 
       // Convert data URL to Blob File
@@ -112,24 +160,20 @@ function showPrintModal({
           title,
           text: `${title} - Storybook Education`,
         });
+        showStatusToast('✅ Share sheet opened!');
         return;
       }
 
-      // Fallback: Open in new tab or trigger print
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.write(`
-          <html>
-            <head><title>${title}</title></head>
-            <body style="margin:0;display:flex;justify-content:center;align-items:center;background:#f5f5f5;">
-              <img src="${dataUrl}" style="max-width:100%;height:auto;" onload="window.print();"/>
-            </body>
-          </html>
-        `);
-        printWindow.document.close();
-      } else {
-        window.print();
-      }
+      // Direct download link
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = safeFilename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Browser standard print
+      window.print();
     } catch (e) {
       console.warn('Share modal action error:', e);
       try { window.print(); } catch {}
@@ -141,19 +185,6 @@ function showPrintModal({
   if (shareBtn) {
     shareBtn.onclick = () => {
       triggerShareOrAirPrint();
-    };
-  }
-
-  // Save / Download button handler
-  const dlBtn = document.getElementById('modal-download-btn');
-  if (dlBtn && dataUrl) {
-    dlBtn.onclick = () => {
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.download = safeFilename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
     };
   }
 }
