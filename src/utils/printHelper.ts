@@ -36,28 +36,28 @@ function showPrintModal({
   modal.className = 'fixed inset-0 z-[99999] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 select-none font-sans';
   
   modal.innerHTML = `
-    <div class="bg-white border-4 border-black rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center gap-5 text-center text-black">
+    <div class="bg-white border-4 border-black rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center gap-4 text-center text-black">
       <div class="w-14 h-14 bg-purple-100 border-3 border-black rounded-2xl flex items-center justify-center text-3xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
         🖨️
       </div>
 
       <div class="flex flex-col gap-1">
         <h3 class="text-xl sm:text-2xl font-black uppercase tracking-tight text-purple-950">${title}</h3>
-        <p class="text-xs sm:text-sm font-bold text-gray-600">Your high-resolution printable worksheet is ready!</p>
+        <p class="text-xs sm:text-sm font-bold text-gray-600">Choose an option below to print or save your worksheet:</p>
       </div>
 
       ${dataUrl ? `
-        <div class="w-full max-h-48 overflow-hidden rounded-2xl border-3 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] bg-gray-50 flex items-center justify-center p-2">
-          <img src="${dataUrl}" alt="Worksheet Preview" class="max-h-44 object-contain rounded-lg shadow-sm" />
+        <div class="w-full max-h-52 overflow-hidden rounded-2xl border-3 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] bg-gray-50 flex items-center justify-center p-2">
+          <img src="${dataUrl}" alt="Worksheet Preview" class="max-h-48 object-contain rounded-lg shadow-sm" />
         </div>
       ` : ''}
 
       <div class="flex flex-col sm:flex-row gap-3 w-full justify-center mt-2">
-        <button id="modal-share-airprint-btn" class="flex-1 flex items-center justify-center gap-2 bg-purple-500 hover:bg-purple-600 text-white font-black text-sm uppercase px-5 py-3.5 rounded-xl border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[-1px] transition-all cursor-pointer">
-          <span>AIRPRINT / SHARE</span>
+        <button id="modal-share-airprint-btn" class="flex-1 flex items-center justify-center gap-2 bg-purple-500 hover:bg-purple-600 text-white font-black text-sm uppercase px-5 py-3.5 rounded-xl border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-[1px] hover:translate-y-[-1px] transition-all cursor-pointer">
+          <span>🖨️ AIRPRINT / SHARE</span>
         </button>
-        <button id="modal-download-btn" class="flex-1 flex items-center justify-center gap-2 bg-yellow-300 hover:bg-yellow-400 text-black font-black text-sm uppercase px-5 py-3.5 rounded-xl border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[-1px] transition-all cursor-pointer">
-          <span>SAVE / DOWNLOAD</span>
+        <button id="modal-download-btn" class="flex-1 flex items-center justify-center gap-2 bg-yellow-300 hover:bg-yellow-400 text-black font-black text-sm uppercase px-5 py-3.5 rounded-xl border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-[1px] hover:translate-y-[-1px] transition-all cursor-pointer">
+          <span>📥 SAVE / DOWNLOAD</span>
         </button>
       </div>
 
@@ -78,46 +78,69 @@ function showPrintModal({
     };
   }
 
+  // Helper to trigger native iOS share sheet or download
+  const triggerShareOrAirPrint = async () => {
+    if (!dataUrl) return;
+
+    try {
+      if (Capacitor.isNativePlatform()) {
+        const base64Data = dataUrl.split(',')[1] || dataUrl;
+        const savedFile = await Filesystem.writeFile({
+          path: safeFilename,
+          data: base64Data,
+          directory: Directory.Cache,
+        });
+
+        await Share.share({
+          title,
+          text: `${title} - Storybook Education`,
+          url: savedFile.uri,
+          dialogTitle: `AirPrint or Save ${title}`,
+        });
+        return;
+      }
+
+      // Convert data URL to Blob File
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const file = new File([blob], safeFilename, { type: 'image/png' });
+
+      // Web Share API on Safari iPadOS/iOS supports sharing files directly to AirPrint & Save Image
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title,
+          text: `${title} - Storybook Education`,
+        });
+        return;
+      }
+
+      // Fallback: Open in new tab or trigger print
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(`
+          <html>
+            <head><title>${title}</title></head>
+            <body style="margin:0;display:flex;justify-content:center;align-items:center;background:#f5f5f5;">
+              <img src="${dataUrl}" style="max-width:100%;height:auto;" onload="window.print();"/>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+      } else {
+        window.print();
+      }
+    } catch (e) {
+      console.warn('Share modal action error:', e);
+      try { window.print(); } catch {}
+    }
+  };
+
   // AirPrint / Share button handler
   const shareBtn = document.getElementById('modal-share-airprint-btn');
-  if (shareBtn && dataUrl) {
-    shareBtn.onclick = async () => {
-      try {
-        if (Capacitor.isNativePlatform()) {
-          const base64Data = dataUrl.split(',')[1] || dataUrl;
-          const savedFile = await Filesystem.writeFile({
-            path: safeFilename,
-            data: base64Data,
-            directory: Directory.Cache,
-          });
-          await Share.share({
-            title,
-            text: `${title} - Storybook Education`,
-            url: savedFile.uri,
-            dialogTitle: `AirPrint or Save ${title}`,
-          });
-          return;
-        }
-
-        const res = await fetch(dataUrl);
-        const blob = await res.blob();
-        const file = new File([blob], safeFilename, { type: 'image/png' });
-
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            files: [file],
-            title,
-            text: `${title} - Storybook Education`,
-          });
-          return;
-        }
-
-        // Browser standard print
-        window.print();
-      } catch (e) {
-        console.warn('Share modal action error:', e);
-        try { window.print(); } catch {}
-      }
+  if (shareBtn) {
+    shareBtn.onclick = () => {
+      triggerShareOrAirPrint();
     };
   }
 
