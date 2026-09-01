@@ -1,10 +1,10 @@
 {
   "appId": "com.limon.storybookeducation",
-  "appName": "Storybook Education",
+  "appName": "WonderKids Adventure Portal",
   "webDir": "dist",
   "bundledWebRuntime": false,
   "ios": {
-    "minVersion": "15.0",
+    "minVersion": "16.0",
     "contentInset": "always",
     "allowsLinkPreview": false,
     "handleApplicationURL": false

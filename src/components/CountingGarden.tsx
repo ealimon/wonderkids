@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { GardenFlower } from '../types';
 import { audioManager } from '../utils/audio';
 import ConfettiEffect from './ConfettiEffect';
+import { exportOrPrintElement } from '../utils/printHelper';
 import {
   RotateCcw,
   Star,
@@ -11,7 +12,8 @@ import {
   RefreshCw,
   FileText,
   Check,
-  ArrowRight
+  ArrowRight,
+  Loader2
 } from 'lucide-react';
 
 interface GardenTheme {
@@ -112,6 +114,7 @@ export default function CountingGarden({
   const [wsMascotTheme, setWsMascotTheme] = useState<'garden' | 'meadow' | 'fairy'>('garden');
   const [wsType, setWsType] = useState<'count_and_write' | 'color_to_match' | 'count_trace'>('count_and_write');
   const [wsProblems, setWsProblems] = useState<GardenProblem[]>([]);
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     restartGame();
@@ -210,9 +213,18 @@ export default function CountingGarden({
     setWsProblems(generated);
   };
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     audioManager.playPop();
-    window.print();
+    const paperElement = document.getElementById('counting-worksheet-paper');
+    setIsExporting(true);
+    await exportOrPrintElement({
+      element: paperElement,
+      filename: `Storybook_Counting_Worksheet_${wsMascotTheme}`,
+      title: `Counting Garden Worksheet - ${getMascotDetails().title}`,
+      onSuccess: () => setIsExporting(false),
+      onError: () => setIsExporting(false),
+    });
+    setIsExporting(false);
   };
 
   const getMascotDetails = () => {
@@ -279,7 +291,7 @@ export default function CountingGarden({
           onClick={() => {
             audioManager.playPop();
             if (activeTab === 'worksheet') {
-              window.print();
+              handlePrint();
             } else {
               setActiveTab('worksheet');
             }
@@ -610,10 +622,20 @@ export default function CountingGarden({
               <div className="flex justify-end gap-3 border-t-2 border-purple-200 pt-6">
                 <button
                   onClick={handlePrint}
-                  className="flex items-center gap-2 px-8 py-4 bg-purple-500 hover:bg-purple-600 text-white border-4 border-black font-black uppercase rounded-2xl text-xs tracking-wider shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+                  disabled={isExporting}
+                  className="flex items-center gap-2 px-8 py-4 bg-purple-500 hover:bg-purple-600 disabled:opacity-75 text-white border-4 border-black font-black uppercase rounded-2xl text-xs tracking-wider shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
                 >
-                  <Printer className="w-4 h-4 stroke-[3]" />
-                  PRINT / DOWNLOAD PDF
+                  {isExporting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 stroke-[3] animate-spin" />
+                      PREPARING...
+                    </>
+                  ) : (
+                    <>
+                      <Printer className="w-4 h-4 stroke-[3]" />
+                      PRINT / DOWNLOAD PDF
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -640,7 +662,7 @@ export default function CountingGarden({
                 }
               `}} />
 
-              <div className="bg-white border-4 border-black p-8 sm:p-12 rounded-[44px] shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] w-full max-w-[800px] font-sans relative overflow-hidden print:border-none print:shadow-none print:p-0 print:m-0 print:rounded-none print:max-w-none print:bg-white text-black">
+              <div id="counting-worksheet-paper" className="bg-white border-4 border-black p-8 sm:p-12 rounded-[44px] shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] w-full max-w-[800px] font-sans relative overflow-hidden print:border-none print:shadow-none print:p-0 print:m-0 print:rounded-none print:max-w-none print:bg-white text-black">
                 {/* Lined notebook paper side margin lines */}
                 <div className="absolute top-0 bottom-0 left-10 w-1 bg-red-400 opacity-20 pointer-events-none print:hidden" />
 

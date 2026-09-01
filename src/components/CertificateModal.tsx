@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ScoreState, GameType } from '../types';
 import { audioManager } from '../utils/audio';
+import { exportOrPrintElement } from '../utils/printHelper';
 import {
   Trophy,
   Award,
@@ -10,9 +11,9 @@ import {
   X,
   Sparkles,
   CheckCircle,
-  Medal,
-  Heart,
-  Crown
+  Share2,
+  Download,
+  Loader2,
 } from 'lucide-react';
 
 interface CertificateModalProps {
@@ -47,267 +48,28 @@ export default function CertificateModal({ isOpen, onClose, scoreState, onResetP
   const [activeTab, setActiveTab] = useState<'trophies' | 'certificate'>('certificate');
   const [childName, setChildName] = useState('Storybook Scholar');
   const [selectedBuddy, setSelectedBuddy] = useState('🧸');
+  const [isExporting, setIsExporting] = useState(false);
 
   if (!isOpen) return null;
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     audioManager.playPop();
-
+    const certElement = document.getElementById('printable-certificate');
     const displayName = childName.trim() || 'Storybook Scholar';
-    const formattedDate = new Date().toLocaleDateString();
 
-    const printIframe = document.createElement('iframe');
-    printIframe.style.position = 'fixed';
-    printIframe.style.right = '0';
-    printIframe.style.bottom = '0';
-    printIframe.style.width = '0px';
-    printIframe.style.height = '0px';
-    printIframe.style.border = 'none';
-    document.body.appendChild(printIframe);
-
-    const doc = printIframe.contentWindow?.document;
-    if (!doc) return;
-
-    doc.open();
-    doc.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Certificate of Excellence - ${displayName}</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700;800&display=swap" rel="stylesheet">
-        <style>
-          @page {
-            size: landscape;
-            margin: 8mm;
-          }
-          * { box-sizing: border-box; }
-          body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Fredoka', 'Helvetica Neue', Arial, sans-serif;
-            background: #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 98vh;
-            color: #1f2937;
-          }
-          .cert-container {
-            width: 100%;
-            max-width: 900px;
-            background-color: #FFFDF9;
-            border: 10px double #ea580c;
-            border-radius: 28px;
-            padding: 32px 40px;
-            text-align: center;
-            position: relative;
-            box-shadow: inset 0 0 20px rgba(217, 119, 6, 0.1);
-          }
-          .corner { position: absolute; font-size: 28px; }
-          .top-left { top: 12px; left: 16px; }
-          .top-right { top: 12px; right: 16px; }
-          .bottom-left { bottom: 12px; left: 16px; }
-          .bottom-right { bottom: 12px; right: 16px; }
-          .badge-wrapper {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 72px;
-            height: 72px;
-            background-color: #fde047;
-            border: 4px solid #000000;
-            border-radius: 50%;
-            font-size: 40px;
-            margin-bottom: 8px;
-            box-shadow: 3px 3px 0px #000000;
-          }
-          .academy-title {
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: 0.25em;
-            color: #ea580c;
-            text-transform: uppercase;
-            margin-bottom: 4px;
-          }
-          .main-title {
-            font-size: 32px;
-            font-weight: 800;
-            text-transform: uppercase;
-            color: #111827;
-            margin: 4px 0 12px 0;
-            font-style: italic;
-          }
-          .subtitle {
-            font-size: 14px;
-            font-weight: 700;
-            color: #4b5563;
-            margin-bottom: 12px;
-          }
-          .name-box {
-            display: inline-block;
-            border-bottom: 4px dashed #f59e0b;
-            padding: 4px 32px;
-            margin: 4px 0 16px 0;
-          }
-          .recipient-name {
-            font-size: 36px;
-            font-weight: 800;
-            color: #ea580c;
-            font-style: italic;
-          }
-          .description {
-            font-size: 13px;
-            font-weight: 700;
-            color: #374151;
-            max-width: 600px;
-            margin: 0 auto 20px auto;
-            line-height: 1.5;
-          }
-          .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            max-width: 450px;
-            margin: 0 auto 24px auto;
-            background: rgba(254, 243, 199, 0.7);
-            border: 2px solid #fcd34d;
-            border-radius: 16px;
-            padding: 12px 20px;
-            text-align: left;
-          }
-          .stat-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-          }
-          .stat-icon { font-size: 24px; }
-          .stat-label {
-            font-size: 10px;
-            font-weight: 800;
-            text-transform: uppercase;
-            color: #6b7280;
-          }
-          .stat-value {
-            font-size: 15px;
-            font-weight: 800;
-            color: #000000;
-          }
-          .footer-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            margin-top: 16px;
-            padding-top: 12px;
-            border-top: 2px solid #fde68a;
-          }
-          .sig-block { text-align: left; }
-          .sig-title {
-            font-size: 14px;
-            font-weight: 800;
-            font-style: italic;
-            color: #1f2937;
-          }
-          .sig-sub {
-            font-size: 9px;
-            font-weight: 800;
-            text-transform: uppercase;
-            color: #9ca3af;
-            border-top: 1px solid #9ca3af;
-            padding-top: 2px;
-            margin-top: 2px;
-          }
-          .date-block { text-align: right; }
-          .date-val {
-            font-size: 13px;
-            font-weight: 700;
-            color: #374151;
-          }
-          .star-emblem {
-            width: 56px;
-            height: 56px;
-            background: #facc15;
-            border: 3px solid #000000;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            box-shadow: 2px 2px 0px #000000;
-            transform: rotate(12deg);
-          }
-        </style>
-      </head>
-      <body>
-        <div class="cert-container">
-          <div class="corner top-left">👑</div>
-          <div class="corner top-right">✨</div>
-          <div class="corner bottom-left">🌟</div>
-          <div class="corner bottom-right">🏆</div>
-
-          <div class="badge-wrapper">${selectedBuddy}</div>
-          <div class="academy-title">STORYBOOK EDUCATION ACADEMY</div>
-          <h1 class="main-title">CERTIFICATE OF EXCELLENCE</h1>
-          <div class="subtitle">This official award is proudly presented to:</div>
-
-          <div class="name-box">
-            <span class="recipient-name">${displayName}</span>
-          </div>
-
-          <p class="description">
-            for outstanding enthusiasm, curiosity, and completing educational adventures in logic, colors, counting, phonics, math, and reading!
-          </p>
-
-          <div class="stats-grid">
-            <div class="stat-item">
-              <span class="stat-icon">⭐</span>
-              <div>
-                <div class="stat-label">Total Stars</div>
-                <div class="stat-value">${scoreState.stars} Stars Earned</div>
-              </div>
-            </div>
-            <div class="stat-item">
-              <span class="stat-icon">🏆</span>
-              <div>
-                <div class="stat-label">Activities</div>
-                <div class="stat-value">${completedCount} Games Completed</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="footer-row">
-            <div class="sig-block">
-              <div class="sig-title">Teddy & Friends</div>
-              <div class="sig-sub">Storybook Mascot</div>
-            </div>
-
-            <div class="star-emblem">🌟</div>
-
-            <div class="date-block">
-              <div class="date-val">${formattedDate}</div>
-              <div class="sig-sub">Date Issued</div>
-            </div>
-          </div>
-        </div>
-
-        <script>
-          window.onload = function() {
-            setTimeout(function() {
-              window.print();
-            }, 300);
-          };
-        </script>
-      </body>
-      </html>
-    `);
-    doc.close();
-
-    setTimeout(() => {
-      if (document.body.contains(printIframe)) {
-        document.body.removeChild(printIframe);
-      }
-    }, 2500);
+    setIsExporting(true);
+    await exportOrPrintElement({
+      element: certElement,
+      filename: `Storybook_Certificate_${displayName.replace(/\s+/g, '_')}`,
+      title: `Certificate of Excellence - ${displayName}`,
+      onSuccess: () => {
+        setIsExporting(false);
+      },
+      onError: () => {
+        setIsExporting(false);
+      },
+    });
+    setIsExporting(false);
   };
 
   const completedCount = Object.keys(scoreState.completedGames).length;
@@ -454,10 +216,20 @@ export default function CertificateModal({ isOpen, onClose, scoreState, onResetP
 
                   <button
                     onClick={handlePrint}
-                    className="w-full sm:w-auto px-6 py-3.5 bg-orange-500 hover:bg-orange-600 text-white font-black text-sm sm:text-base uppercase tracking-wider rounded-xl border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 cursor-pointer self-end"
+                    disabled={isExporting}
+                    className="w-full sm:w-auto px-6 py-3.5 bg-orange-500 hover:bg-orange-600 active:scale-95 disabled:opacity-75 text-white font-black text-sm sm:text-base uppercase tracking-wider rounded-xl border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 cursor-pointer self-end transition-all"
                   >
-                    <Printer className="w-5 h-5" />
-                    PRINT CERTIFICATE
+                    {isExporting ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        PREPARING...
+                      </>
+                    ) : (
+                      <>
+                        <Printer className="w-5 h-5" />
+                        PRINT / SAVE PDF
+                      </>
+                    )}
                   </button>
                 </div>
 

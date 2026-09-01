@@ -149,9 +149,6 @@ export default function App() {
     audioManager.playPop();
     setShowStarCelebration(false);
     setActiveModuleTab('worksheet');
-    setTimeout(() => {
-      window.print();
-    }, 300);
   };
 
   const resetAllStars = () => {

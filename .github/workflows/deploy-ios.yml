@@ -74,7 +74,7 @@ jobs:
           # Copy web build assets to iOS app
           npx cap copy ios
 
-          # Configure project.pbxproj with bundle ID, team ID, deployment target and build number
+          # Configure project.pbxproj with bundle ID, team ID, deployment target, iPad-only device family (2), and build number
           node -e '
             const fs = require("fs");
             const pbxPath = "ios/App/App.xcodeproj/project.pbxproj";
@@ -82,10 +82,22 @@ jobs:
               let content = fs.readFileSync(pbxPath, "utf-8");
               content = content.replace(/PRODUCT_BUNDLE_IDENTIFIER\s*=\s*[^;]+;/g, "PRODUCT_BUNDLE_IDENTIFIER = com.limon.storybookeducation;");
               content = content.replace(/IPHONEOS_DEPLOYMENT_TARGET\s*=\s*[0-9.]+;/g, "IPHONEOS_DEPLOYMENT_TARGET = 16.0;");
+              content = content.replace(/TARGETED_DEVICE_FAMILY\s*=\s*[^;]+;/g, "TARGETED_DEVICE_FAMILY = \"2\";");
               content = content.replace(/CURRENT_PROJECT_VERSION\s*=\s*[0-9.]+;/g, "CURRENT_PROJECT_VERSION = ${{ github.run_number }};");
               content = content.replace(/DEVELOPMENT_TEAM\s*=\s*[^;]+;/g, "DEVELOPMENT_TEAM = EYQARSHNW2;");
               fs.writeFileSync(pbxPath, content);
-              console.log("✅ Configured Bundle ID com.limon.storybookeducation and Team ID EYQARSHNW2");
+              console.log("✅ Configured Bundle ID com.limon.storybookeducation, iPad-Only (Family 2), and Team ID EYQARSHNW2");
+            }
+
+            // Configure Info.plist to bypass export compliance and support iPad orientations
+            const plistPath = "ios/App/App/Info.plist";
+            if (fs.existsSync(plistPath)) {
+              let plist = fs.readFileSync(plistPath, "utf-8");
+              if (!plist.includes("ITSAppUsesNonExemptEncryption")) {
+                plist = plist.replace("</dict>", "    <key>ITSAppUsesNonExemptEncryption</key>\n    <false/>\n</dict>");
+              }
+              fs.writeFileSync(plistPath, plist);
+              console.log("✅ Configured Info.plist with ITSAppUsesNonExemptEncryption = false");
             }
           '
 

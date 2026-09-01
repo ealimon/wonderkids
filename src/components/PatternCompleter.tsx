@@ -3,6 +3,7 @@ import { motion, AnimatePresence, PanInfo } from 'motion/react';
 import { PatternItem, PatternQuestion } from '../types';
 import { audioManager } from '../utils/audio';
 import ConfettiEffect from './ConfettiEffect';
+import { exportOrPrintElement } from '../utils/printHelper';
 import {
   RotateCcw,
   Star,
@@ -12,7 +13,8 @@ import {
   Sparkles,
   RefreshCw,
   Check,
-  FileText
+  FileText,
+  Loader2
 } from 'lucide-react';
 
 const SHAPE_EMOJIS = {
@@ -138,6 +140,7 @@ export default function PatternCompleter({
   const [wsMascotTheme, setWsMascotTheme] = useState<'jungle' | 'polar' | 'farm'>('jungle');
   const [wsType, setWsType] = useState<'next' | 'circle' | 'ab'>('next');
   const [wsProblems, setWsProblems] = useState<PatternQuestion[]>([]);
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     restartGame();
@@ -285,9 +288,18 @@ export default function PatternCompleter({
     setWsProblems(patterns);
   };
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     audioManager.playPop();
-    window.print();
+    const paperElement = document.getElementById('pattern-completer-worksheet-paper');
+    setIsExporting(true);
+    await exportOrPrintElement({
+      element: paperElement,
+      filename: `Storybook_Patterns_Worksheet_${wsMascotTheme}`,
+      title: `Pattern Sequencer Worksheet - ${getMascotDetails().title}`,
+      onSuccess: () => setIsExporting(false),
+      onError: () => setIsExporting(false),
+    });
+    setIsExporting(false);
   };
 
   const getMascotDetails = () => {
@@ -339,7 +351,7 @@ export default function PatternCompleter({
           onClick={() => {
             audioManager.playPop();
             if (activeTab === 'worksheet') {
-              window.print();
+              handlePrint();
             } else {
               setActiveTab('worksheet');
             }
@@ -675,10 +687,20 @@ export default function PatternCompleter({
               <div className="flex justify-end gap-3 border-t-2 border-purple-200 pt-6">
                 <button
                   onClick={handlePrint}
-                  className="flex items-center gap-2 px-8 py-4 bg-purple-500 hover:bg-purple-600 text-white border-4 border-black font-black uppercase rounded-2xl text-xs tracking-wider shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+                  disabled={isExporting}
+                  className="flex items-center gap-2 px-8 py-4 bg-purple-500 hover:bg-purple-600 disabled:opacity-75 text-white border-4 border-black font-black uppercase rounded-2xl text-xs tracking-wider shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
                 >
-                  <Printer className="w-4 h-4 stroke-[3]" />
-                  PRINT / DOWNLOAD PDF
+                  {isExporting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 stroke-[3] animate-spin" />
+                      PREPARING...
+                    </>
+                  ) : (
+                    <>
+                      <Printer className="w-4 h-4 stroke-[3]" />
+                      PRINT / DOWNLOAD PDF
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -698,6 +720,7 @@ export default function PatternCompleter({
                 }
               `}} />
               <div
+                id="pattern-completer-worksheet-paper"
                 className="bg-white border-4 border-black p-8 sm:p-12 rounded-[44px] shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] w-full max-w-[800px] font-sans relative overflow-hidden print:border-none print:shadow-none print:p-0 print:m-0 print:rounded-none print:max-w-none print:bg-white"
               >
                 {/* Lined Notebook Paper Aesthetics */}

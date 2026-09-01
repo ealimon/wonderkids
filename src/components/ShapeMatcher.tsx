@@ -3,7 +3,8 @@ import { motion, AnimatePresence, PanInfo } from 'motion/react';
 import { ShapeItem } from '../types';
 import { audioManager } from '../utils/audio';
 import ConfettiEffect from './ConfettiEffect';
-import { RotateCcw, Star, FileText, Check, RefreshCw, Printer, Scissors, ArrowRight } from 'lucide-react';
+import { exportOrPrintElement } from '../utils/printHelper';
+import { RotateCcw, Star, FileText, Check, RefreshCw, Printer, Scissors, ArrowRight, Loader2 } from 'lucide-react';
 
 const SHAPE_DESIGNS: { [key: string]: { path: string; color: string; label: string; emoji: string } } = {
   circle: {
@@ -89,6 +90,7 @@ export default function ShapeMatcher({
   const [wsType, setWsType] = useState<'match_line' | 'circle_shape' | 'cut_and_paste'>('match_line');
   const [wsProblems, setWsProblems] = useState<ShapeProblem[]>([]);
   const [shuffledTargets, setShuffledTargets] = useState<ShapeProblem[]>([]);
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     restartGame();
@@ -136,9 +138,18 @@ export default function ShapeMatcher({
     setShuffledTargets(shuffledTargs);
   };
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     audioManager.playPop();
-    window.print();
+    const paperElement = document.getElementById('shape-matcher-worksheet-paper');
+    setIsExporting(true);
+    await exportOrPrintElement({
+      element: paperElement,
+      filename: `Storybook_Shapes_Worksheet_${wsMascotTheme}`,
+      title: `Shape Explorer Worksheet - ${getMascotDetails().title}`,
+      onSuccess: () => setIsExporting(false),
+      onError: () => setIsExporting(false),
+    });
+    setIsExporting(false);
   };
 
   const getMascotDetails = () => {
@@ -353,7 +364,7 @@ export default function ShapeMatcher({
           onClick={() => {
             audioManager.playPop();
             if (activeTab === 'worksheet') {
-              window.print();
+              handlePrint();
             } else {
               setActiveTab('worksheet');
             }
@@ -700,10 +711,20 @@ export default function ShapeMatcher({
               <div className="flex justify-end gap-3 border-t-2 border-purple-200 pt-6">
                 <button
                   onClick={handlePrint}
-                  className="flex items-center gap-2 px-8 py-4 bg-purple-500 hover:bg-purple-600 text-white border-4 border-black font-black uppercase rounded-2xl text-xs tracking-wider shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+                  disabled={isExporting}
+                  className="flex items-center gap-2 px-8 py-4 bg-purple-500 hover:bg-purple-600 disabled:opacity-75 text-white border-4 border-black font-black uppercase rounded-2xl text-xs tracking-wider shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
                 >
-                  <Printer className="w-4 h-4 stroke-[3]" />
-                  PRINT / DOWNLOAD PDF
+                  {isExporting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 stroke-[3] animate-spin" />
+                      PREPARING...
+                    </>
+                  ) : (
+                    <>
+                      <Printer className="w-4 h-4 stroke-[3]" />
+                      PRINT / DOWNLOAD PDF
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -730,7 +751,10 @@ export default function ShapeMatcher({
                 }
               `}} />
 
-              <div className="bg-white border-4 border-black p-8 sm:p-12 rounded-[44px] shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] w-full max-w-[800px] relative overflow-hidden print:border-none print:shadow-none print:p-0 print:m-0 print:rounded-none print:max-w-none print:bg-white text-black text-left">
+              <div
+                id="shape-matcher-worksheet-paper"
+                className="bg-white border-4 border-black p-8 sm:p-12 rounded-[44px] shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] w-full max-w-[800px] relative overflow-hidden print:border-none print:shadow-none print:p-0 print:m-0 print:rounded-none print:max-w-none print:bg-white text-black text-left"
+              >
                 {/* Notebook margin line (hidden in print) */}
                 <div className="absolute top-0 bottom-0 left-10 w-1 bg-red-400 opacity-20 pointer-events-none print:hidden" />
 

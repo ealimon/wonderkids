@@ -20,5 +20,6 @@ To enable automatic cloud builds, add these 3 secrets to your GitHub repository 
 ## App Store Details Summary
 - **App Name**: Storybook Education (WonderKids Adventure Portal)
 - **Bundle ID**: `com.limon.storybookeducation`
-- **Platforms**: iOS (iPadOS / iPhone)
+- **Platforms**: iPadOS (iPad-Only)
 - **Pricing & Kids Category**: Made for Kids (Ages 5 and under / 6–8)
+- **Export Compliance**: Configured automatically (`ITSAppUsesNonExemptEncryption = false`)
