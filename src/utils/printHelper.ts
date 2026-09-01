@@ -13,6 +13,28 @@ export interface ExportPrintOptions {
 }
 
 /**
+ * Creates or updates an on-screen toast/modal feedback so the user always sees
+ * immediate feedback when tapping Print / Download on iPad, iPhone, or Desktop.
+ */
+function showStatusToast(message: string, isError = false) {
+  let toast = document.getElementById('print-status-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'print-status-toast';
+    toast.className = 'fixed bottom-8 left-1/2 -translate-x-1/2 z-[9999] px-6 py-3.5 rounded-2xl border-3 border-black font-black text-sm uppercase tracking-wider shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center gap-2';
+    document.body.appendChild(toast);
+  }
+  toast.style.display = 'flex';
+  toast.style.backgroundColor = isError ? '#f87171' : '#fde047';
+  toast.style.color = '#000000';
+  toast.innerText = message;
+
+  setTimeout(() => {
+    if (toast) toast.style.display = 'none';
+  }, 4000);
+}
+
+/**
  * Universal print, download, and native iPad / Apple App AirPrint helper.
  * 
  * Works seamlessly across:
@@ -28,6 +50,8 @@ export async function exportOrPrintElement({
   onSuccess,
   onError,
 }: ExportPrintOptions): Promise<boolean> {
+  showStatusToast('⏳ Rendering high-resolution worksheet...');
+
   if (!element) {
     try {
       window.print();
@@ -66,6 +90,8 @@ export async function exportOrPrintElement({
           directory: Directory.Cache,
         });
 
+        showStatusToast('🖨️ Opening AirPrint & Share Sheet...');
+
         // Open native iOS Action Sheet (AirPrint, Save Image, Files, AirDrop)
         await Share.share({
           title: title,
@@ -74,6 +100,7 @@ export async function exportOrPrintElement({
           dialogTitle: `Print or Save ${title}`,
         });
 
+        showStatusToast('✅ Worksheet ready!');
         if (onSuccess) onSuccess();
         return true;
       } catch (nativeErr) {
@@ -97,11 +124,13 @@ export async function exportOrPrintElement({
         // 2. Check if native iOS / iPadOS Web Share with file is available
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           try {
+            showStatusToast('🖨️ Opening AirPrint & Share Sheet...');
             await navigator.share({
               files: [file],
               title: title,
               text: `${title} - Storybook Education`,
             });
+            showStatusToast('✅ Worksheet ready!');
             if (onSuccess) onSuccess();
             resolve(true);
             return;
@@ -111,6 +140,7 @@ export async function exportOrPrintElement({
         }
 
         // 3. Fallback: Direct download anchor tag
+        showStatusToast('📥 Downloading high-res printable PNG...');
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -135,6 +165,7 @@ export async function exportOrPrintElement({
     });
   } catch (err) {
     console.error('Error generating document image:', err);
+    showStatusToast('⚠️ Print fallback initiated...', true);
     if (onError) onError(err);
     try {
       window.print();
