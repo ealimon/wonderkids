@@ -2,6 +2,8 @@ import { Capacitor } from '@capacitor/core';
 import { Printer } from '@capgo/capacitor-printer';
 import { Share } from '@capacitor/share';
 import { Filesystem, Directory } from '@capacitor/filesystem';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export interface ExportPrintOptions {
   element?: HTMLElement | null;
@@ -13,7 +15,7 @@ export interface ExportPrintOptions {
 }
 
 /**
- * Toast notification for clear feedback
+ * Toast notification for clear visual feedback
  */
 function showStatusToast(message: string, isError = false) {
   let toast = document.getElementById('print-status-toast');
@@ -21,7 +23,7 @@ function showStatusToast(message: string, isError = false) {
     toast = document.createElement('div');
     toast.id = 'print-status-toast';
     toast.className =
-      'fixed bottom-8 left-1/2 -translate-x-1/2 z-[999999] px-6 py-3.5 rounded-2xl border-3 border-black font-black text-sm uppercase tracking-wider shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center gap-2 pointer-events-none';
+      'fixed bottom-8 left-1/2 -translate-x-1/2 z-[999999] px-6 py-3.5 rounded-2xl border-3 border-black font-black text-sm uppercase tracking-wider shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center gap-2 pointer-events-none text-center';
     document.body.appendChild(toast);
   }
   toast.style.display = 'flex';
@@ -35,7 +37,7 @@ function showStatusToast(message: string, isError = false) {
 }
 
 /**
- * Extracts element HTML and wraps it in standalone print document with full styling
+ * Extracts element HTML and wraps it in a standalone print document with full styling and print settings
  */
 function buildPrintableHtml(element: HTMLElement, title: string): string {
   const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
@@ -51,31 +53,97 @@ function buildPrintableHtml(element: HTMLElement, title: string): string {
     ${styles}
     <style>
       @page {
-        size: portrait;
-        margin: 8mm;
+        size: letter portrait;
+        margin: 10mm 8mm;
+      }
+      *, *:before, *:after {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
       }
       body {
         margin: 0;
-        padding: 16px;
+        padding: 12px;
         background: #ffffff !important;
         color: #000000 !important;
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       }
-      * {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
       .print\\:hidden, button, [role="button"], #generate-sheet-btn, #print-sheet-btn {
         display: none !important;
+      }
+      /* Prevent worksheet cards and problem boxes from breaking across pages */
+      .grid > div, .flex > div, [class*="rounded-"] {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
       }
     </style>
   </head>
   <body>
-    <div style="max-width: 800px; margin: 0 auto;">
+    <div style="max-width: 800px; margin: 0 auto; width: 100%;">
       ${element.outerHTML}
     </div>
   </body>
 </html>`;
+}
+
+/**
+ * Generates a high-resolution, perfectly aligned Letter-sized PDF from any HTML element
+ */
+export async function generatePdfDocument(element: HTMLElement, title: string): Promise<jsPDF> {
+  const canvas = await html2canvas(element, {
+    scale: 2, // High resolution (crisp vectors & sharp text)
+    useCORS: true,
+    allowTaint: true,
+    backgroundColor: '#ffffff',
+    logging: false,
+    ignoreElements: (el) =>
+      el.classList.contains('print:hidden') ||
+      el.tagName === 'BUTTON' ||
+      el.id === 'generate-sheet-btn' ||
+      el.id === 'print-sheet-btn',
+  });
+
+  const imgData = canvas.toDataURL('image/jpeg', 0.96);
+
+  // Standard US Letter Portrait (215.9 mm x 279.4 mm)
+  const pdf = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'letter',
+    compress: true,
+  });
+
+  const pageWidth = pdf.internal.pageSize.getWidth(); // 215.9 mm
+  const pageHeight = pdf.internal.pageSize.getHeight(); // 279.4 mm
+  const marginSide = 8; // 8mm side margins
+  const marginTop = 8; // 8mm top margin
+  const printableWidth = pageWidth - marginSide * 2;
+  const printableHeight = pageHeight - marginTop * 2;
+
+  const imgWidth = canvas.width;
+  const imgHeight = canvas.height;
+
+  let renderWidth = printableWidth;
+  let renderHeight = (imgHeight * renderWidth) / imgWidth;
+
+  if (renderHeight > printableHeight) {
+    renderHeight = printableHeight;
+    renderWidth = (imgWidth * renderHeight) / imgHeight;
+  }
+
+  // Perfectly center horizontally
+  const xOffset = marginSide + (printableWidth - renderWidth) / 2;
+  const yOffset = marginTop;
+
+  pdf.addImage(imgData, 'JPEG', xOffset, yOffset, renderWidth, renderHeight, undefined, 'FAST');
+  pdf.setProperties({
+    title,
+    subject: 'Storybook Education Printable Worksheet',
+    author: 'Storybook Education',
+    creator: 'Storybook Education App',
+  });
+
+  return pdf;
 }
 
 /**
@@ -100,15 +168,13 @@ export async function executeDirectPrint(element: HTMLElement, title: string): P
     }
   }
 
-  // 2. On native platforms, window.print()/iframe printing is a silent no-op inside
-  // a WKWebView app shell (no native print handler is wired up), so if the AirPrint
-  // plugin failed above, tell the user plainly instead of pretending it worked.
+  // 2. On native platforms, window.print()/iframe printing is a silent no-op inside WKWebView
   if (Capacitor.isNativePlatform()) {
-    showStatusToast('⚠️ AirPrint unavailable — try Save/Share instead', true);
+    showStatusToast('⚠️ AirPrint unavailable — try Print PDF instead', true);
     return false;
   }
 
-  // 3. Web fallback (browser preview / dev testing only): iframe print
+  // 3. Web fallback: Hidden iframe print
   try {
     const existing = document.getElementById('print-iframe-target');
     if (existing) existing.remove();
@@ -158,59 +224,109 @@ export async function executeDirectPrint(element: HTMLElement, title: string): P
 }
 
 /**
- * Saves or shares the worksheet as a standalone HTML file
+ * Generates a perfectly aligned PDF and immediately triggers the native print dialog for the PDF
  */
-export async function executeSaveOrShare(element: HTMLElement, title: string, filename: string) {
-  const safeFilename = `${filename.replace(/[^a-z0-9_-]/gi, '_')}.html`;
-  const fullHtml = buildPrintableHtml(element, title);
+export async function executePrintPdf(
+  element: HTMLElement,
+  title: string,
+  filename: string
+): Promise<boolean> {
+  showStatusToast('📄 Preparing aligned PDF...');
+  const safeFilename = `${filename.replace(/[^a-z0-9_-]/gi, '_')}.pdf`;
 
-  if (Capacitor.isNativePlatform()) {
-    try {
-      const savedFile = await Filesystem.writeFile({
-        path: safeFilename,
-        data: fullHtml,
-        directory: Directory.Cache,
-      });
-
-      await Share.share({
-        title,
-        text: `${title} - Storybook Education`,
-        url: savedFile.uri,
-        dialogTitle: `Save or Print ${title}`,
-      });
-      showStatusToast('✅ Share sheet opened!');
-      return;
-    } catch (shareErr: any) {
-      // iOS reports the user tapping "Cancel" on the share sheet as a rejected
-      // promise too — that's not a real failure, so don't show an error toast for it.
-      const message = String(shareErr?.message || shareErr || '');
-      if (!/cancel/i.test(message)) {
-        console.warn('Native share error:', shareErr);
-        showStatusToast('⚠️ Unable to open Share sheet', true);
-      }
-      return;
-    }
-  }
-
-  // Web download fallback (browser preview only — not reachable on native, see above)
   try {
-    const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = safeFilename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    showStatusToast('💾 Worksheet saved!');
-  } catch (dlErr) {
-    console.error('Save error:', dlErr);
+    const pdf = await generatePdfDocument(element, title);
+
+    // 1. Native iOS / iPadOS App: Print PDF directly using Capacitor Native Printer
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const dataUri = pdf.output('datauristring');
+        const rawBase64 = dataUri.split(',')[1] || dataUri;
+
+        // Print base64 PDF directly to Apple AirPrint
+        await Printer.printBase64({
+          name: title,
+          data: rawBase64,
+          mimeType: 'application/pdf',
+        });
+        showStatusToast('✅ PDF sent to AirPrint!');
+        return true;
+      } catch (printErr) {
+        console.warn('Printer.printBase64 error, trying file save and share:', printErr);
+
+        // Fallback: Save file to cache and open native share sheet for printing/saving
+        const dataUri = pdf.output('datauristring');
+        const rawBase64 = dataUri.split(',')[1] || dataUri;
+
+        const savedFile = await Filesystem.writeFile({
+          path: safeFilename,
+          data: rawBase64,
+          directory: Directory.Cache,
+        });
+
+        await Share.share({
+          title: `${title}.pdf`,
+          text: `${title} - Storybook Education Worksheet (PDF)`,
+          url: savedFile.uri,
+          dialogTitle: `Print or Save ${title} (PDF)`,
+        });
+
+        showStatusToast('✅ PDF ready to print or save!');
+        return true;
+      }
+    }
+
+    // 2. Web browser preview: Open PDF in iframe to trigger print dialog
+    try {
+      const blob = pdf.output('blob');
+      const blobUrl = URL.createObjectURL(blob);
+
+      const iframe = document.createElement('iframe');
+      iframe.id = 'pdf-print-iframe';
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = '0';
+      iframe.src = blobUrl;
+      document.body.appendChild(iframe);
+
+      iframe.onload = () => {
+        setTimeout(() => {
+          try {
+            iframe.contentWindow?.focus();
+            iframe.contentWindow?.print();
+            showStatusToast('🖨️ PDF sent to printer!');
+          } catch {
+            pdf.save(safeFilename);
+            showStatusToast('💾 PDF downloaded!');
+          } finally {
+            setTimeout(() => {
+              iframe.remove();
+              URL.revokeObjectURL(blobUrl);
+            }, 3000);
+          }
+        }, 300);
+      };
+      return true;
+    } catch {
+      pdf.save(safeFilename);
+      showStatusToast('💾 PDF downloaded!');
+      return true;
+    }
+  } catch (err: any) {
+    const message = String(err?.message || err || '');
+    if (!/cancel/i.test(message)) {
+      console.error('PDF print error:', err);
+      showStatusToast('⚠️ Unable to print PDF', true);
+    }
+    return false;
   }
 }
 
 /**
- * Display interactive dialog with direct AirPrint, Save, and Print options
+ * Display interactive dialog with direct AirPrint and Print PDF options
  */
 function showPrintDialog({
   element,
@@ -243,8 +359,8 @@ function showPrintDialog({
       </div>
 
       <div class="w-full bg-amber-50 border-3 border-black rounded-2xl p-4 flex flex-col items-center gap-1 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-        <span class="text-sm font-black text-amber-950 uppercase">✨ Apple AirPrint Ready</span>
-        <span class="text-xs font-bold text-amber-800">Tap below to select your printer or save a copy.</span>
+        <span class="text-sm font-black text-amber-950 uppercase">✨ APPLE AIRPRINT READY</span>
+        <span class="text-xs font-bold text-amber-800">Tap below to select your printer or print a PDF copy.</span>
       </div>
 
       <div class="flex flex-col gap-3 w-full justify-center mt-1">
@@ -252,9 +368,9 @@ function showPrintDialog({
           <span class="text-base">🖨️</span>
           <span>CONNECT TO AIRPRINT</span>
         </button>
-        <button id="modal-save-file-btn" class="w-full flex items-center justify-center gap-2 bg-yellow-300 hover:bg-yellow-400 active:bg-yellow-500 text-black font-black text-sm uppercase px-5 py-3.5 rounded-2xl border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-[2px] transition-all cursor-pointer">
-          <span class="text-base">💾</span>
-          <span>SAVE / SHARE FILE</span>
+        <button id="modal-print-pdf-btn" class="w-full flex items-center justify-center gap-2 bg-yellow-300 hover:bg-yellow-400 active:bg-yellow-500 text-black font-black text-sm uppercase px-5 py-3.5 rounded-2xl border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-[2px] transition-all cursor-pointer">
+          <span class="text-base">📄</span>
+          <span>PRINT PDF</span>
         </button>
       </div>
 
@@ -290,30 +406,30 @@ function showPrintDialog({
         modal.remove();
         onClose();
       }
-      // On failure, executeDirectPrint already shows an error toast and the
-      // dialog stays open so the user can try Save/Share instead.
     };
   }
 
-  // Save / Share button handler
-  const saveBtn = document.getElementById('modal-save-file-btn') as HTMLButtonElement | null;
-  if (saveBtn) {
-    saveBtn.onclick = async () => {
-      if (saveBtn.disabled) return;
-      saveBtn.disabled = true;
-      const originalHtml = saveBtn.innerHTML;
-      saveBtn.innerHTML = '<span>Opening…</span>';
-      await executeSaveOrShare(element, title, safeFilename);
-      saveBtn.disabled = false;
-      saveBtn.innerHTML = originalHtml;
-      modal.remove();
-      onClose();
+  // Print PDF button handler
+  const printPdfBtn = document.getElementById('modal-print-pdf-btn') as HTMLButtonElement | null;
+  if (printPdfBtn) {
+    printPdfBtn.onclick = async () => {
+      if (printPdfBtn.disabled) return;
+      printPdfBtn.disabled = true;
+      const originalHtml = printPdfBtn.innerHTML;
+      printPdfBtn.innerHTML = '<span>Rendering PDF…</span>';
+      const ok = await executePrintPdf(element, title, safeFilename);
+      printPdfBtn.disabled = false;
+      printPdfBtn.innerHTML = originalHtml;
+      if (ok) {
+        modal.remove();
+        onClose();
+      }
     };
   }
 }
 
 /**
- * Universal print, download, and native iPad AirPrint entry point.
+ * Universal print, PDF export, and native iPad AirPrint entry point.
  */
 export async function exportOrPrintElement({
   element,
@@ -333,9 +449,6 @@ export async function exportOrPrintElement({
   try {
     if (onStart) onStart();
 
-    // Show the choice dialog once. The user picks AirPrint or Save/Share from
-    // there — we no longer fire AirPrint automatically first, since doing both
-    // at once caused the native sheet and the in-app dialog to fight each other.
     showPrintDialog({
       element: targetEl,
       title,
