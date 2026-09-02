@@ -39,24 +39,30 @@ jobs:
         run: |
           npm install -g @capacitor/cli
           npm install --save @capacitor/core @capacitor/ios @capacitor/share @capacitor/filesystem @capgo/capacitor-printer
-          
+
           # Initialize iOS platform and sync plugins automatically
           npx cap add ios || true
           npx cap sync ios
 
           # Configure deployment target in Podfile if present
-          if [ -f ios/App/Podfile ]; then
-            cat << 'EOF' >> ios/App/Podfile
+          node -e '
+            const fs = require("fs");
+            const podfilePath = "ios/App/Podfile";
+            if (fs.existsSync(podfilePath)) {
+              const postInstall = `
 
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.0'
+      config.build_settings["IPHONEOS_DEPLOYMENT_TARGET"] = "16.0"
     end
   end
 end
-EOF
-          fi
+`;
+              fs.appendFileSync(podfilePath, postInstall);
+              console.log("Appended post_install block to Podfile");
+            }
+          '
 
           # Copy web build assets to iOS app
           npx cap copy ios
@@ -159,28 +165,32 @@ EOF
             archive
 
           # 2. Write ExportOptions plist with direct upload destination
-          cat << 'EOF' > exportOptions.plist
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>destination</key>
-            <string>upload</string>
-            <key>method</key>
-            <string>app-store</string>
-            <key>teamID</key>
-            <string>EYQARSHNW2</string>
-            <key>signingStyle</key>
-            <string>automatic</string>
-            <key>stripSwiftSymbols</key>
-            <true/>
-            <key>uploadSymbols</key>
-            <true/>
-            <key>manageAppVersionAndBuildNumber</key>
-            <true/>
-          </dict>
-          </plist>
-          EOF
+          node -e '
+            const fs = require("fs");
+            const plist = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>destination</key>
+  <string>upload</string>
+  <key>method</key>
+  <string>app-store</string>
+  <key>teamID</key>
+  <string>EYQARSHNW2</string>
+  <key>signingStyle</key>
+  <string>automatic</string>
+  <key>stripSwiftSymbols</key>
+  <true/>
+  <key>uploadSymbols</key>
+  <true/>
+  <key>manageAppVersionAndBuildNumber</key>
+  <true/>
+</dict>
+</plist>
+`;
+            fs.writeFileSync("exportOptions.plist", plist);
+            console.log("✅ Wrote exportOptions.plist");
+          '
 
           # 3. Direct Native Upload to App Store Connect / TestFlight
           echo "🚀 Exporting and uploading directly via xcodebuild to TestFlight..."
