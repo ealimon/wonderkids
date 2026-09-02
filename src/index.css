@@ -1,19 +1,35 @@
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap');
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@theme {
-  --font-sans: "Fredoka", ui-sans-serif, system-ui, sans-serif;
+@layer base {
+  body {
+    @apply bg-amber-50 text-slate-900 antialiased selection:bg-purple-300 selection:text-purple-900;
+  }
 }
 
 @media print {
   /* Ensure page backgrounds print clean white and allow multi-page flow */
-  html, body {
+  html, body, #root, #app-root, main {
     background: #ffffff !important;
     margin: 0 !important;
     padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
     overflow: visible !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  /* Ensure worksheet papers expand across full printable page width */
+  [id$="-worksheet-paper"] {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    max-width: 100% !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
   }
 
   /* Page break helpers for worksheets */
@@ -39,8 +55,22 @@
   }
 
   @page {
-    size: portrait;
-    margin: 8mm;
+    size: letter portrait;
+    margin: 10mm 8mm;
   }
 }
 
+@keyframes bounce-slow {
+  0%, 100% {
+    transform: translateY(-5%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 3s infinite;
+}
