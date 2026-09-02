@@ -12,6 +12,9 @@ export interface ExportPrintOptions {
   onError?: (error: unknown) => void;
 }
 
+/**
+ * Toast notification for non-intrusive, clear feedback
+ */
 function showStatusToast(message: string, isError = false) {
   let toast = document.getElementById('print-status-toast');
   if (!toast) {
@@ -31,6 +34,10 @@ function showStatusToast(message: string, isError = false) {
   }, 3500);
 }
 
+/**
+ * Extracts element HTML and wraps it in a standalone print document with full styling and print settings
+ * (Used for computer/desktop browser print preview)
+ */
 function buildPrintableHtml(element: HTMLElement, title: string): string {
   const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
     .map((el) => el.outerHTML)
@@ -77,6 +84,18 @@ function buildPrintableHtml(element: HTMLElement, title: string): string {
 </html>`;
 }
 
+/**
+ * Universal Print & PDF entry point:
+ * - On Native iPad / iPhone (iOS App):
+ *   Uses `Printer.printWebView()` which hooks directly into Apple WKWebView's
+ *   `viewPrintFormatter()`. This renders with the real WebKit CSS engine (proper 4-column
+ *   grid, exact fonts, background colors, and clean page breaks).
+ *   In AirPrint, users can print or pinch-zoom to save/share as a PDF.
+ *
+ * - On Computer / Desktop Web Browser:
+ *   Opens the browser's high-resolution print window via an isolated iframe,
+ *   allowing users to print or choose "Save as PDF" directly.
+ */
 export async function exportOrPrintElement({
   element,
   filename = 'storybook_worksheet',
@@ -95,15 +114,14 @@ export async function exportOrPrintElement({
   try {
     if (onStart) onStart();
 
-    const htmlContent = buildPrintableHtml(targetEl, title);
-
-    // 1. Native iOS App (iPad & iPhone) -> 1-Tap Direct AirPrint
+    // ==========================================
+    // 1. NATIVE iOS APP (iPad & iPhone)
+    // ==========================================
     if (Capacitor.isNativePlatform()) {
       showStatusToast('🖨️ Opening AirPrint...');
       try {
-        await Printer.printHtml({
+        await Printer.printWebView({
           name: title,
-          html: htmlContent,
         });
         showStatusToast('✅ Sent to AirPrint!');
         if (onSuccess) onSuccess();
@@ -114,9 +132,10 @@ export async function exportOrPrintElement({
           return true;
         }
 
-        console.warn('AirPrint direct call failed, offering Share Sheet fallback:', pluginErr);
+        console.warn('AirPrint printWebView call failed, offering Share Sheet fallback:', pluginErr);
 
         try {
+          const htmlContent = buildPrintableHtml(targetEl, title);
           const savedFile = await Filesystem.writeFile({
             path: safeFilename,
             data: htmlContent,
@@ -141,9 +160,12 @@ export async function exportOrPrintElement({
       }
     }
 
-    // 2. Desktop / Computer Browser -> Native Print & PDF Dialog
+    // ==========================================
+    // 2. COMPUTER / DESKTOP WEB BROWSER
+    // ==========================================
     showStatusToast('🖨️ Opening print preview...');
 
+    const htmlContent = buildPrintableHtml(targetEl, title);
     const existing = document.getElementById('print-iframe-target');
     if (existing) existing.remove();
 
