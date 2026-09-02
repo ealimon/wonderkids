@@ -42,24 +42,36 @@ jobs:
 
           # Initialize iOS platform and sync plugins automatically
           npx cap add ios || true
-          npx cap sync ios
 
-          # Configure deployment target in Podfile if present
+          # Raise the Podfile's platform line BEFORE any pod install runs (cap add's
+          # own internal pod install already failed once above with "|| true" swallowing
+          # it - Capacitor 8 requires iOS 15.0+, and this project targets 16.0 everywhere
+          # else, so the Podfile's own platform line needs to match before cap sync ios
+          # triggers pod install again).
           node -e '
             const fs = require("fs");
             const podfilePath = "ios/App/Podfile";
             if (fs.existsSync(podfilePath)) {
-              const postInstall = "\n\npost_install do |installer|\n" +
-                "  installer.pods_project.targets.each do |target|\n" +
-                "    target.build_configurations.each do |config|\n" +
-                "      config.build_settings[\"IPHONEOS_DEPLOYMENT_TARGET\"] = \"16.0\"\n" +
-                "    end\n" +
-                "  end\n" +
-                "end\n";
-              fs.appendFileSync(podfilePath, postInstall);
-              console.log("Appended post_install block to Podfile");
+              let content = fs.readFileSync(podfilePath, "utf-8");
+              content = content.replace(/platform :ios, .[0-9.]+./, "platform :ios, \"16.0\"");
+              if (!content.includes("post_install")) {
+                const postInstall = "\n\npost_install do |installer|\n" +
+                  "  installer.pods_project.targets.each do |target|\n" +
+                  "    target.build_configurations.each do |config|\n" +
+                  "      config.build_settings[\"IPHONEOS_DEPLOYMENT_TARGET\"] = \"16.0\"\n" +
+                  "    end\n" +
+                  "  end\n" +
+                  "end\n";
+                content += postInstall;
+              }
+              fs.writeFileSync(podfilePath, content);
+              console.log("Patched Podfile: platform line raised to 16.0, post_install block ensured");
+            } else {
+              console.log("Podfile not found yet - will rely on post-copy patch step");
             }
           '
+
+          npx cap sync ios
 
           # Copy web build assets to iOS app
           npx cap copy ios
