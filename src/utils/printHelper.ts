@@ -100,7 +100,15 @@ export async function executeDirectPrint(element: HTMLElement, title: string): P
     }
   }
 
-  // 2. Fallback: Hidden iframe print
+  // 2. On native platforms, window.print()/iframe printing is a silent no-op inside
+  // a WKWebView app shell (no native print handler is wired up), so if the AirPrint
+  // plugin failed above, tell the user plainly instead of pretending it worked.
+  if (Capacitor.isNativePlatform()) {
+    showStatusToast('⚠️ AirPrint unavailable — try Save/Share instead', true);
+    return false;
+  }
+
+  // 3. Web fallback (browser preview / dev testing only): iframe print
   try {
     const existing = document.getElementById('print-iframe-target');
     if (existing) existing.remove();
@@ -125,7 +133,7 @@ export async function executeDirectPrint(element: HTMLElement, title: string): P
         try {
           iframe.contentWindow?.focus();
           iframe.contentWindow?.print();
-          showStatusToast('🖨️ Sent to AirPrint!');
+          showStatusToast('🖨️ Sent to printer!');
         } catch {
           window.print();
         } finally {
@@ -138,7 +146,7 @@ export async function executeDirectPrint(element: HTMLElement, title: string): P
     console.warn('Iframe print error:', iframeErr);
   }
 
-  // 3. Fallback: Window Print
+  // 4. Last-resort web fallback: Window Print
   try {
     window.print();
     return true;
@@ -172,12 +180,19 @@ export async function executeSaveOrShare(element: HTMLElement, title: string, fi
       });
       showStatusToast('✅ Share sheet opened!');
       return;
-    } catch (shareErr) {
-      console.warn('Native share error:', shareErr);
+    } catch (shareErr: any) {
+      // iOS reports the user tapping "Cancel" on the share sheet as a rejected
+      // promise too — that's not a real failure, so don't show an error toast for it.
+      const message = String(shareErr?.message || shareErr || '');
+      if (!/cancel/i.test(message)) {
+        console.warn('Native share error:', shareErr);
+        showStatusToast('⚠️ Unable to open Share sheet', true);
+      }
+      return;
     }
   }
 
-  // Web download fallback
+  // Web download fallback (browser preview only — not reachable on native, see above)
   try {
     const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -261,18 +276,38 @@ function showPrintDialog({
   }
 
   // AirPrint button handler
-  const airprintBtn = document.getElementById('modal-direct-airprint-btn');
+  const airprintBtn = document.getElementById('modal-direct-airprint-btn') as HTMLButtonElement | null;
   if (airprintBtn) {
     airprintBtn.onclick = async () => {
-      await executeDirectPrint(element, title);
+      if (airprintBtn.disabled) return;
+      airprintBtn.disabled = true;
+      const originalHtml = airprintBtn.innerHTML;
+      airprintBtn.innerHTML = '<span>Connecting…</span>';
+      const ok = await executeDirectPrint(element, title);
+      airprintBtn.disabled = false;
+      airprintBtn.innerHTML = originalHtml;
+      if (ok) {
+        modal.remove();
+        onClose();
+      }
+      // On failure, executeDirectPrint already shows an error toast and the
+      // dialog stays open so the user can try Save/Share instead.
     };
   }
 
   // Save / Share button handler
-  const saveBtn = document.getElementById('modal-save-file-btn');
+  const saveBtn = document.getElementById('modal-save-file-btn') as HTMLButtonElement | null;
   if (saveBtn) {
     saveBtn.onclick = async () => {
+      if (saveBtn.disabled) return;
+      saveBtn.disabled = true;
+      const originalHtml = saveBtn.innerHTML;
+      saveBtn.innerHTML = '<span>Opening…</span>';
       await executeSaveOrShare(element, title, safeFilename);
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = originalHtml;
+      modal.remove();
+      onClose();
     };
   }
 }
@@ -298,12 +333,9 @@ export async function exportOrPrintElement({
   try {
     if (onStart) onStart();
 
-    // Directly trigger native print dialog if on native device
-    if (Capacitor.isNativePlatform()) {
-      await executeDirectPrint(targetEl, title);
-    }
-
-    // Always show the dialog with direct buttons as well
+    // Show the choice dialog once. The user picks AirPrint or Save/Share from
+    // there — we no longer fire AirPrint automatically first, since doing both
+    // at once caused the native sheet and the in-app dialog to fight each other.
     showPrintDialog({
       element: targetEl,
       title,
@@ -317,7 +349,6 @@ export async function exportOrPrintElement({
     return true;
   } catch (err) {
     console.error('exportOrPrintElement error:', err);
-    await executeDirectPrint(targetEl, title);
     if (onError) onError(err);
     return false;
   }
