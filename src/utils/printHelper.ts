@@ -120,6 +120,8 @@ export async function exportOrPrintElement({
     if (Capacitor.isNativePlatform()) {
       showStatusToast('🖨️ Opening AirPrint...');
       try {
+        // printWebView uses the WKWebView's live rendering engine with @media print rules.
+        // This eliminates the distortion caused by UIMarkupTextPrintFormatter.
         await Printer.printWebView({
           name: title,
         });
@@ -134,6 +136,7 @@ export async function exportOrPrintElement({
 
         console.warn('AirPrint printWebView call failed, offering Share Sheet fallback:', pluginErr);
 
+        // Fallback for native device if AirPrint encounters an issue: Share sheet
         try {
           const htmlContent = buildPrintableHtml(targetEl, title);
           const savedFile = await Filesystem.writeFile({
