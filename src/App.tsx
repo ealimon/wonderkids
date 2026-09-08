@@ -282,36 +282,45 @@ export default function App() {
       <div className="h-3 w-full bg-orange-500 border-b-4 border-black print:hidden" />
 
       {/* Header Container */}
-      <header className="w-full max-w-6xl mx-auto px-6 py-6 flex flex-col gap-4 border-b-4 border-black print:hidden">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+      <header className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex flex-col gap-3 sm:gap-4 border-b-4 border-black print:hidden">
+        <div className="flex flex-col lg:flex-row items-center lg:justify-between gap-4 sm:gap-6">
           {/* Waving brand / Left logo */}
           <div
             onClick={goBack}
-            className="flex items-center gap-4 cursor-pointer group select-none"
+            className="flex items-center gap-3 sm:gap-4 cursor-pointer group select-none"
           >
-            <div className="bg-yellow-300 w-14 h-14 rounded-2xl flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-4 border-black transition-transform group-hover:scale-105 group-hover:rotate-3">
-              <span className="text-3xl filter drop-shadow-sm select-none">🧸</span>
+            <div className="bg-yellow-300 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-4 border-black transition-transform group-hover:scale-105 group-hover:rotate-3 shrink-0 overflow-hidden">
+              <img
+                src="/icon.svg"
+                alt="WonderKids Icon"
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  // Fallback to emoji if svg fails to load
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
             </div>
             <div className="flex flex-col">
-              <span className="text-xs uppercase tracking-widest font-black text-orange-500 leading-none mb-1">ADVENTURE PORTAL</span>
-              <h1 className="text-4xl font-black tracking-tighter leading-none italic uppercase" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
+              <span className="text-[10px] sm:text-xs uppercase tracking-widest font-black text-orange-500 leading-none mb-1">ADVENTURE PORTAL</span>
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tighter leading-none italic uppercase" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
                 WONDERKIDS
               </h1>
             </div>
           </div>
 
           {/* Scoring & Utility controls */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center justify-center lg:justify-end gap-2 sm:gap-3 max-w-full">
             {/* Stars Collected Indicator */}
             <div
-              className={`flex items-center gap-2 bg-yellow-300 border-4 border-black px-4 py-2 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all relative ${
+              className={`flex items-center gap-2 bg-yellow-300 border-4 border-black px-3.5 sm:px-4 py-2 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all relative ${
                 showStarCelebration ? 'scale-110 ring-4 ring-black ring-offset-2' : ''
               }`}
             >
-              <Star className={`w-6 h-6 fill-black text-black ${showStarCelebration ? 'animate-spin' : 'animate-bounce-slow'}`} />
+              <Star className={`w-5 h-5 sm:w-6 sm:h-6 fill-black text-black ${showStarCelebration ? 'animate-spin' : 'animate-bounce-slow'}`} />
               <div className="flex flex-col leading-none">
-                <span className="text-xs font-black uppercase tracking-wider">STARS</span>
-                <span className="text-xl font-black font-mono leading-none mt-0.5">
+                <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider">STARS</span>
+                <span className="text-lg sm:text-xl font-black font-mono leading-none mt-0.5">
                   {scoreState.stars}
                 </span>
               </div>
@@ -334,7 +343,7 @@ export default function App() {
             {/* Sound Toggle Button */}
             <button
               onClick={toggleMute}
-              className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer transition-all border-4 border-black ${
+              className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer transition-all border-4 border-black shrink-0 ${
                 muted
                   ? 'bg-rose-400 text-white hover:bg-rose-500'
                   : 'bg-white text-black hover:bg-gray-100'
@@ -342,7 +351,7 @@ export default function App() {
               title={muted ? 'Unmute Sounds' : 'Mute Sounds'}
               id="mute-toggle-btn"
             >
-              {muted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
+              {muted ? <VolumeX className="w-5 h-5 sm:w-6 sm:h-6" /> : <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />}
             </button>
 
             {/* Worksheets & Print Hub Button (Prominent Purple) */}
@@ -351,12 +360,13 @@ export default function App() {
                 audioManager.playPop();
                 setShowWorksheetHub(true);
               }}
-              className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white border-4 border-black px-4 py-2.5 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer font-black text-xs sm:text-sm uppercase tracking-wider"
+              className="flex items-center gap-1.5 sm:gap-2 bg-purple-500 hover:bg-purple-600 text-white border-4 border-black px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer font-black text-xs sm:text-sm uppercase tracking-wider"
               title="Open Printable Worksheets & Teacher Answer Keys"
               id="worksheets-hub-btn"
             >
-              <Printer className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
-              <span>WORKSHEETS (PRINT)</span>
+              <Printer className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5] shrink-0" />
+              <span>WORKSHEETS</span>
+              <span className="hidden md:inline"> (PRINT)</span>
             </button>
 
             {/* Certificate & Trophies Button */}
@@ -365,7 +375,7 @@ export default function App() {
                 audioManager.playPop();
                 setShowCertificateModal(true);
               }}
-              className={`flex items-center gap-2 border-4 border-black px-4 py-2.5 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer font-black text-xs sm:text-sm uppercase tracking-wider ${
+              className={`flex items-center gap-1.5 sm:gap-2 border-4 border-black px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer font-black text-xs sm:text-sm uppercase tracking-wider ${
                 Object.keys(scoreState.completedGames).length > 0
                   ? 'bg-emerald-400 hover:bg-emerald-500 text-black'
                   : 'bg-yellow-100 hover:bg-yellow-200 text-gray-800'
@@ -378,35 +388,36 @@ export default function App() {
               id="certificate-btn"
             >
               {Object.keys(scoreState.completedGames).length > 0 ? (
-                <Trophy className="w-5 h-5 text-black fill-yellow-300" />
+                <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-black fill-yellow-300 shrink-0" />
               ) : (
-                <span className="text-base">🔒</span>
+                <span className="text-sm sm:text-base leading-none">🔒</span>
               )}
-              <span className="hidden sm:inline">
-                {Object.keys(scoreState.completedGames).length > 0
-                  ? 'CERTIFICATE'
-                  : 'CERTIFICATE (LOCKED)'}
+              <span className="hidden xs:inline">
+                {Object.keys(scoreState.completedGames).length > 0 ? 'CERTIFICATE' : 'CERTIFICATE'}
+              </span>
+              <span className="hidden md:inline">
+                {Object.keys(scoreState.completedGames).length === 0 ? ' (LOCKED)' : ''}
               </span>
             </button>
           </div>
         </div>
 
-        {/* Navigation Quick Links (Visible on all screens, wrap-friendly) */}
-        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-6 gap-y-2 font-black text-xs sm:text-sm tracking-wide border-t-2 border-dashed border-black/15 pt-3 mt-1">
-          <button onClick={goBack} className={`pb-1 border-b-3 transition-colors cursor-pointer ${!activeGame ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-black'}`}>ALL GAMES</button>
-          <button onClick={() => { audioManager.playPop(); setShowWorksheetHub(true); }} className="pb-1 border-b-3 border-transparent text-purple-700 hover:text-purple-950 flex items-center gap-1 cursor-pointer font-black">
+        {/* Navigation Quick Links (Visible on all screens, swipeable with hidden scrollbars) */}
+        <div className="flex items-center gap-x-4 sm:gap-x-6 gap-y-2 overflow-x-auto no-scrollbar py-1 scroll-smooth max-w-full font-black text-xs sm:text-sm tracking-wide border-t-2 border-dashed border-black/15 pt-3 mt-1 justify-start md:justify-center">
+          <button onClick={goBack} className={`pb-1 border-b-3 transition-colors cursor-pointer whitespace-nowrap shrink-0 ${!activeGame ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-black'}`}>ALL GAMES</button>
+          <button onClick={() => { audioManager.playPop(); setShowWorksheetHub(true); }} className="pb-1 border-b-3 border-transparent text-purple-700 hover:text-purple-950 flex items-center gap-1 cursor-pointer font-black whitespace-nowrap shrink-0">
             <Printer className="w-3.5 h-3.5 stroke-[2.5]" />
             PRINTABLE WORKSHEETS
           </button>
-          <button onClick={() => selectGame('phonics')} className={`pb-1 border-b-3 transition-colors cursor-pointer ${activeGame === 'phonics' ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-black'}`}>PHONICS</button>
-          <button onClick={() => selectGame('math')} className={`pb-1 border-b-3 transition-colors cursor-pointer ${activeGame === 'math' ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-black'}`}>ADDITION</button>
-          <button onClick={() => selectGame('subtraction')} className={`pb-1 border-b-3 transition-colors cursor-pointer ${activeGame === 'subtraction' ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-black'}`}>SUBTRACTION</button>
-          <button onClick={() => selectGame('reading')} className={`pb-1 border-b-3 transition-colors cursor-pointer ${activeGame === 'reading' ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-black'}`}>READING</button>
+          <button onClick={() => selectGame('phonics')} className={`pb-1 border-b-3 transition-colors cursor-pointer whitespace-nowrap shrink-0 ${activeGame === 'phonics' ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-black'}`}>PHONICS</button>
+          <button onClick={() => selectGame('math')} className={`pb-1 border-b-3 transition-colors cursor-pointer whitespace-nowrap shrink-0 ${activeGame === 'math' ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-black'}`}>ADDITION</button>
+          <button onClick={() => selectGame('subtraction')} className={`pb-1 border-b-3 transition-colors cursor-pointer whitespace-nowrap shrink-0 ${activeGame === 'subtraction' ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-black'}`}>SUBTRACTION</button>
+          <button onClick={() => selectGame('reading')} className={`pb-1 border-b-3 transition-colors cursor-pointer whitespace-nowrap shrink-0 ${activeGame === 'reading' ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-black'}`}>READING</button>
         </div>
       </header>
 
       {/* Main Body */}
-      <main className="flex-grow w-full max-w-5xl mx-auto px-6 py-8 relative print:p-0 print:max-w-none print:w-full print:m-0">
+      <main className="flex-grow w-full max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 relative print:p-0 print:max-w-none print:w-full print:m-0">
         <AnimatePresence mode="wait">
           {activeGame === null ? (
             // DASHBOARD MENU
@@ -416,47 +427,49 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
               transition={{ duration: 0.3 }}
-              className="flex flex-col gap-10"
+              className="flex flex-col gap-8 sm:gap-10"
             >
               {/* Playful greeting card */}
-              <div className="bg-orange-500 rounded-[50px] border-4 border-black p-8 relative overflow-hidden shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] text-white">
+              <div className="bg-orange-500 rounded-[32px] sm:rounded-[50px] border-4 border-black p-5 sm:p-8 relative overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] sm:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] text-white">
                 <div className="absolute top-0 right-0 transform translate-x-12 -translate-y-12 w-64 h-64 bg-white/10 rounded-full pointer-events-none" />
                 <div className="absolute bottom-0 left-0 transform -translate-x-12 translate-y-12 w-48 h-48 bg-white/10 rounded-full pointer-events-none" />
 
-                <div className="max-w-xl relative z-10">
-                  <span className="bg-yellow-300 text-black border-2 border-black font-black text-sm px-4 py-1.5 rounded-full uppercase tracking-widest font-sans shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                    Welcome Friend! 👋
-                  </span>
-                  <h2 className="text-4xl sm:text-5xl font-black tracking-tighter mt-4 leading-tight italic uppercase" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
-                    Let's Play & Learn!
-                  </h2>
-                  <p className="text-base sm:text-lg font-extrabold mt-2 text-orange-50 leading-relaxed font-sans max-w-lg">
-                    Select any creative activity below. Count in the magical garden, sort colorful fruits, spell CVC words, solve math equations, or practice reading worksheets!
-                  </p>
-                </div>
-
-                {/* Trophy Case status card */}
-                <button
-                  onClick={() => {
-                    audioManager.playPop();
-                    setShowCertificateModal(true);
-                  }}
-                  className="absolute right-8 bottom-8 hidden sm:flex items-center gap-2.5 bg-yellow-300 text-black border-4 border-black px-5 py-3 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:scale-105 transition-transform cursor-pointer"
-                >
-                  <Trophy className="w-6 h-6 text-black fill-black/20" />
-                  <div className="flex flex-col text-left">
-                    <span className="text-xs font-black uppercase tracking-wider">Trophy Case</span>
-                    <span className="text-base font-black font-sans">
-                      {Object.keys(scoreState.completedGames).length === 0
-                        ? '0 Activities Completed'
-                        : `${Object.keys(scoreState.completedGames).length} ${
-                            Object.keys(scoreState.completedGames).length === 1
-                              ? 'Activity Completed!'
-                              : 'Activities Completed!'
-                          }`}
+                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
+                  <div className="max-w-xl">
+                    <span className="bg-yellow-300 text-black border-2 border-black font-black text-xs sm:text-sm px-3.5 sm:px-4 py-1.5 rounded-full uppercase tracking-widest font-sans shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] inline-block">
+                      Welcome Friend! 👋
                     </span>
+                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tighter mt-3 sm:mt-4 leading-tight italic uppercase" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
+                      Let's Play & Learn!
+                    </h2>
+                    <p className="text-sm sm:text-base lg:text-lg font-extrabold mt-2 text-orange-50 leading-relaxed font-sans">
+                      Select any creative activity below. Count in the magical garden, sort colorful fruits, spell CVC words, solve math equations, or practice reading worksheets!
+                    </p>
                   </div>
-                </button>
+
+                  {/* Trophy Case status card */}
+                  <button
+                    onClick={() => {
+                      audioManager.playPop();
+                      setShowCertificateModal(true);
+                    }}
+                    className="flex items-center gap-3 bg-yellow-300 text-black border-4 border-black px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:scale-105 active:scale-95 transition-transform cursor-pointer shrink-0 self-stretch sm:self-start lg:self-center"
+                  >
+                    <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-black fill-black/20 shrink-0" />
+                    <div className="flex flex-col text-left">
+                      <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider">Trophy Case</span>
+                      <span className="text-sm sm:text-base font-black font-sans">
+                        {Object.keys(scoreState.completedGames).length === 0
+                          ? '0 Activities Completed'
+                          : `${Object.keys(scoreState.completedGames).length} ${
+                              Object.keys(scoreState.completedGames).length === 1
+                                ? 'Activity Completed!'
+                                : 'Activities Completed!'
+                            }`}
+                      </span>
+                    </div>
+                  </button>
+                </div>
               </div>
 
               {/* Game Cards Grid */}
@@ -465,7 +478,7 @@ export default function App() {
                   CHOOSE YOUR ADVENTURE:
                 </h3>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
                   {gamesList.map((g, idx) => {
                     const completedTimes = scoreState.completedGames[g.id] || 0;
                     const isCompleted = completedTimes > 0;

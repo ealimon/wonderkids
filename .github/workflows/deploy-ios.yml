@@ -76,6 +76,57 @@ jobs:
           # Copy web build assets to iOS app
           npx cap copy ios
 
+          # Generate and inject high-resolution Apple app icons from assets/icon.svg
+          npm install --no-save sharp || true
+          node -e '
+            const fs = require("fs");
+            const path = require("path");
+            
+            async function generateAppIcons() {
+              const svgPath = path.resolve("assets/icon.svg");
+              const iconsetDir = path.resolve("ios/App/App/Assets.xcassets/AppIcon.appiconset");
+              if (!fs.existsSync(svgPath)) {
+                console.log("No assets/icon.svg found, skipping icon generation.");
+                return;
+              }
+              if (!fs.existsSync(iconsetDir)) {
+                fs.mkdirSync(iconsetDir, { recursive: true });
+              }
+
+              let sharp;
+              try {
+                sharp = require("sharp");
+              } catch (e) {
+                console.log("Sharp module unavailable on runner, attempting sips/convert fallback.");
+              }
+
+              const targetSizes = [
+                { file: "AppIcon-512@2x.png", size: 1024 },
+                { file: "AppIcon-20x20@1x.png", size: 20 },
+                { file: "AppIcon-20x20@2x.png", size: 40 },
+                { file: "AppIcon-29x29@1x.png", size: 29 },
+                { file: "AppIcon-29x29@2x.png", size: 58 },
+                { file: "AppIcon-40x40@1x.png", size: 40 },
+                { file: "AppIcon-40x40@2x.png", size: 80 },
+                { file: "AppIcon-76x76@1x.png", size: 76 },
+                { file: "AppIcon-76x76@2x.png", size: 152 },
+                { file: "AppIcon-83.5x83.5@2x.png", size: 167 }
+              ];
+
+              if (sharp) {
+                for (const t of targetSizes) {
+                  await sharp(svgPath)
+                    .resize(t.size, t.size)
+                    .png()
+                    .toFile(path.join(iconsetDir, t.file));
+                }
+                console.log("✅ Successfully generated all iOS AppIcon sizes using Sharp from assets/icon.svg");
+              }
+            }
+
+            generateAppIcons().catch(err => console.error("Error generating icons:", err));
+          '
+
           # Configure project.pbxproj with bundle ID, team ID, deployment target, iPad-only device family (2), and build number
           node -e '
             const fs = require("fs");

@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+/* Utility to hide scrollbars on swipeable navigation bars */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 @media print {
   /* Reset document and viewport for clean multi-page flow in Apple WebKit and Desktop */
   html, body, #root, #app-root, main {
