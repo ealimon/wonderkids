@@ -402,13 +402,9 @@ export default function App() {
           </div>
         </div>
 
-        {/* Navigation Quick Links (Visible on all screens, swipeable with hidden scrollbars) */}
-        <div className="flex items-center gap-x-4 sm:gap-x-6 gap-y-2 overflow-x-auto no-scrollbar py-1 scroll-smooth max-w-full font-black text-xs sm:text-sm tracking-wide border-t-2 border-dashed border-black/15 pt-3 mt-1 justify-start md:justify-center">
+        {/* Navigation Quick Links (Centered cleanly on all screens) */}
+        <div className="flex items-center justify-center gap-x-4 sm:gap-x-7 gap-y-2 overflow-x-auto no-scrollbar py-1 scroll-smooth max-w-full font-black text-xs sm:text-sm tracking-wide border-t-2 border-dashed border-black/15 pt-3 mt-1">
           <button onClick={goBack} className={`pb-1 border-b-3 transition-colors cursor-pointer whitespace-nowrap shrink-0 ${!activeGame ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-black'}`}>ALL GAMES</button>
-          <button onClick={() => { audioManager.playPop(); setShowWorksheetHub(true); }} className="pb-1 border-b-3 border-transparent text-purple-700 hover:text-purple-950 flex items-center gap-1 cursor-pointer font-black whitespace-nowrap shrink-0">
-            <Printer className="w-3.5 h-3.5 stroke-[2.5]" />
-            PRINTABLE WORKSHEETS
-          </button>
           <button onClick={() => selectGame('phonics')} className={`pb-1 border-b-3 transition-colors cursor-pointer whitespace-nowrap shrink-0 ${activeGame === 'phonics' ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-black'}`}>PHONICS</button>
           <button onClick={() => selectGame('math')} className={`pb-1 border-b-3 transition-colors cursor-pointer whitespace-nowrap shrink-0 ${activeGame === 'math' ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-black'}`}>ADDITION</button>
           <button onClick={() => selectGame('subtraction')} className={`pb-1 border-b-3 transition-colors cursor-pointer whitespace-nowrap shrink-0 ${activeGame === 'subtraction' ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-black'}`}>SUBTRACTION</button>
