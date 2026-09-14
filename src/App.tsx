@@ -12,6 +12,7 @@ import MathSubtraction from './components/MathSubtraction';
 import SimpleReading from './components/SimpleReading';
 import CertificateModal from './components/CertificateModal';
 import WorksheetHubModal from './components/WorksheetHubModal';
+import BearIcon from './components/BearIcon';
 import {
   Volume2,
   VolumeX,
@@ -290,16 +291,7 @@ export default function App() {
             className="flex items-center gap-3 sm:gap-4 cursor-pointer group select-none"
           >
             <div className="bg-yellow-300 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-4 border-black transition-transform group-hover:scale-105 group-hover:rotate-3 shrink-0 overflow-hidden">
-              <img
-                src="/icon.svg"
-                alt="WonderKids Icon"
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-                onError={(e) => {
-                  // Fallback to emoji if svg fails to load
-                  (e.target as HTMLElement).style.display = 'none';
-                }}
-              />
+              <BearIcon className="w-full h-full object-cover" />
             </div>
             <div className="flex flex-col">
               <span className="text-[10px] sm:text-xs uppercase tracking-widest font-black text-orange-500 leading-none mb-1">ADVENTURE PORTAL</span>
