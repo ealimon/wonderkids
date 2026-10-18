@@ -38,7 +38,7 @@ jobs:
       - name: Initialize and Configure iOS Project
         run: |
           # Initialize iOS platform and sync plugins automatically
-          npx cap add ios || true
+          npx cap add ios --packagemanager CocoaPods || true
 
           # Raise the Podfile's platform line BEFORE any pod install runs (cap add's
           # own internal pod install already failed once above with "|| true" swallowing
