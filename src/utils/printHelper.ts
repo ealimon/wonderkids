@@ -147,7 +147,7 @@ export async function exportOrPrintElement({
 
           await Share.share({
             title: `${title}`,
-            text: `${title} - Storybook Education Worksheet`,
+            text: `${title} - WonderKids Worksheet`,
             url: savedFile.uri,
             dialogTitle: `Print or Save ${title}`,
           });

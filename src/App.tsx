@@ -642,7 +642,7 @@ export default function App() {
 
       {/* Footer credits block */}
       <footer className="w-full text-center py-6 text-xs sm:text-sm font-black text-amber-900/70 font-sans mt-auto print:hidden flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
-        <span>© 2026 Storybook Education. Built for active play & early learning.</span>
+        <span>© 2026 WonderKids. Built for active play & early learning.</span>
         <button
           onClick={handleResetProgress}
           className="text-amber-900 hover:text-black underline cursor-pointer font-black"
