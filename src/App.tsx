@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { GameType, ScoreState } from './types';
 import { audioManager } from './utils/audio';
-import ColorSorter from './components/ColorSorter';
-import ShapeMatcher from './components/ShapeMatcher';
-import PatternCompleter from './components/PatternCompleter';
-import CountingGarden from './components/CountingGarden';
-import WordPhonics from './components/WordPhonics';
-import MathAddition from './components/MathAddition';
-import MathSubtraction from './components/MathSubtraction';
-import SimpleReading from './components/SimpleReading';
+const ColorSorter = lazy(() => import('./components/ColorSorter'));
+const ShapeMatcher = lazy(() => import('./components/ShapeMatcher'));
+const PatternCompleter = lazy(() => import('./components/PatternCompleter'));
+const CountingGarden = lazy(() => import('./components/CountingGarden'));
+const WordPhonics = lazy(() => import('./components/WordPhonics'));
+const MathAddition = lazy(() => import('./components/MathAddition'));
+const MathSubtraction = lazy(() => import('./components/MathSubtraction'));
+const SimpleReading = lazy(() => import('./components/SimpleReading'));
 import CertificateModal from './components/CertificateModal';
 import WorksheetHubModal from './components/WorksheetHubModal';
 import BearIcon from './components/BearIcon';
@@ -602,6 +602,13 @@ export default function App() {
                 transition={{ type: 'spring', damping: 15 }}
                 className="w-full bg-white rounded-[44px] p-8 border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] print:border-none print:shadow-none print:p-0 print:bg-white"
               >
+                <Suspense
+                  fallback={
+                    <div className="py-24 text-center text-xl font-black uppercase tracking-wider text-black">
+                      Loading...
+                    </div>
+                  }
+                >
                 {activeGame === 'sorter' && (
                   <ColorSorter onGameWin={handleGameWin} onNextGame={handleNextModule} initialTab={activeModuleTab} />
                 )}
@@ -626,6 +633,7 @@ export default function App() {
                 {activeGame === 'reading' && (
                   <SimpleReading onGameWin={handleGameWin} onNextGame={handleNextModule} initialTab={activeModuleTab} />
                 )}
+                </Suspense>
               </motion.div>
             </motion.div>
           )}
@@ -634,7 +642,7 @@ export default function App() {
 
       {/* Footer credits block */}
       <footer className="w-full text-center py-6 text-xs sm:text-sm font-black text-amber-900/70 font-sans mt-auto print:hidden flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
-        <span>© 2026 Storybook Education. Built for active play & early learning.</span>
+        <span>© 2026 WonderKids. Built for active play & early learning.</span>
         <button
           onClick={handleResetProgress}
           className="text-amber-900 hover:text-black underline cursor-pointer font-black"

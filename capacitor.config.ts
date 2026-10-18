@@ -15,7 +15,7 @@ interface CapacitorConfig {
 
 const config: CapacitorConfig = {
   appId: 'com.limon.storybookeducation',
-  appName: 'WonderKids Adventure Portal',
+  appName: 'WonderKids',
   webDir: 'dist',
   server: {
     androidScheme: 'https'

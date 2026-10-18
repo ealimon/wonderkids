@@ -190,7 +190,7 @@ export default function WorksheetHubModal({
           <div className="bg-sky-100 border-3 border-black rounded-2xl p-4 flex items-start gap-3 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] font-sans">
             <Info className="w-6 h-6 text-sky-700 flex-shrink-0 mt-0.5" />
             <div className="text-xs sm:text-sm font-bold text-sky-950 leading-relaxed">
-              <span className="font-black text-black">Printing on Apple iPad / iPhone:</span> When you tap <span className="font-black text-purple-700">PRINT / DOWNLOAD PDF</span> inside any lab, your iPad will automatically open the native AirPrint & Share sheet so you can print wirelessly, save to Photos, or export to Apple Files!
+              <span className="font-black text-black">Printing on iPad:</span> When you tap <span className="font-black text-purple-700">PRINT / DOWNLOAD PDF</span> inside any lab, your iPad will automatically open the native AirPrint & Share sheet so you can print wirelessly, save to Photos, or export to Apple Files!
             </div>
           </div>
 
