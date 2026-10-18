@@ -1,4 +1,4 @@
-# Storybook Education
+# WonderKids
 
 An interactive, educational, and fully responsive digital playground for kids. This application is crafted with **React, TypeScript, Tailwind CSS, and Framer Motion**, featuring delightful animations, micro-interactions, and sound synthesis designed to keep children engaged while they learn.
 
@@ -53,16 +53,8 @@ This repository is pre-configured with a modern, official **GitHub Actions** wor
 
 ---
 
-## 💸 Commercialization & Selling Recommendations
+---
 
-To turn **Storybook Education** into a profitable business or SaaS, we recommend the following professional upgrades:
+## 📱 iOS Releases
 
-### 1. Custom Domain
-Set up a custom domain (e.g., `wonderkidsplayground.com`) to establish credibility. You can configure this directly in your repository’s **Pages** settings under **Custom domain**.
-
-### 2. Monetization Model
-- **Stripe Checkout**: Integrate Stripe for secure payments. You can offer a one-time lifetime purchase (e.g., $9.99) or a monthly/annual subscription.
-- **Paywall / Auth Integration**: Add **Firebase Authentication** and **Firestore** (available natively in this environment) to allow parents to create accounts, save their children's progress, and restrict access to premium games until they subscribe.
-
-### 3. Progressive Web App (PWA) Support
-Add a PWA plugin (like `vite-plugin-pwa`) to allow parents to install the application directly onto iPads, tablets, or phones as a native app, which is how most children access digital games.
+The iOS build runs in GitHub Actions (see `IOS_DEPLOYMENT_GUIDE.md`). It no longer runs on every push: push a version tag (for example `git tag v1.1.0 && git push origin v1.1.0`) or start it manually from the Actions tab to upload a build to TestFlight.
